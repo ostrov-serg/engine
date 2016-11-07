@@ -88,3 +88,6 @@
 #define REGEX_ERROR_JIT_BADOPTION   (-31)
 #define REGEX_ERROR_BADLENGTH       (-32)
 #define REGEX_ERROR_UNSET           (-33)
+
+struct real_regex16;
+typedef struct real_regex16 regex16;

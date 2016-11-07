@@ -47,6 +47,7 @@
     <IncludePath>e:\Разработка\prj\engine\;e:\OpenSSL-Win64\include\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <SourcePath>e:\Разработка\prj\engine\;$(VC_SourcePath);</SourcePath>
     <LibraryWPath>$(WindowsSDK_MetadataPath);</LibraryWPath>
+    <TargetName>$(ProjectName)d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -64,6 +65,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>ssh_regx.def</ModuleDefinitionFile>
+      <ImportLibrary>e:\Разработка\lib\$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -85,6 +88,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>ssh_regx.def</ModuleDefinitionFile>
+      <ImportLibrary>e:\Разработка\lib\$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -101,6 +106,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ssh_regx.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

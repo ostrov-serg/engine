@@ -1,0 +1,6 @@
+EXPORTS
+
+regx_compile		@1
+regx_exec			@2
+regx_free			@3
+

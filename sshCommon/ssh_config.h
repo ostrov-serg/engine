@@ -18,19 +18,17 @@
 #include <smmintrin.h>
 #include <pmmintrin.h>
 #include <io.h>
-#include <fcntl.h>
 #include <new.h>
 // CSIDL_LOCAL_XXX
 #include <Shlobj.h>
 //#include <sys\stat.h>
 //#include <sys\types.h>
-//#include <openssl\ssl.h>
-//#include <openssl\md5.h>
-//#include <Lmcons.h>
-#include <sshCommon\ssh_regex.h>
+#include <openssl\ssl.h>
+#include <openssl\md5.h>
+#include <Lmcons.h>
+#include <sshCommon\ssh_regx.h>
 #include <sshCommon\mysql\mysql.h>
 #include <sshCommon\ssh_cnv.h>
-#include <sshCommon\ssh_ext.h>
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "libeay32.lib")
@@ -38,6 +36,7 @@
 #pragma comment(lib, "libmysql.lib")
 
 #pragma warning(disable:4996)
+//#pragma warning(disable:4334)
 #pragma warning(disable:4251)
 #pragma warning(disable:4291)
 #pragma warning(disable:4838)
@@ -54,12 +53,14 @@
 	#endif
 	#define SSH_ASSERT(express, msg, ...)
 	#define SSH_TRACE
+	#define SSH_LOG(msg, ...)
 #else
 	#ifdef SSH_DLL
 		#pragma comment(lib, "sshSTDd.lib")
 	#endif
-	#define SSH_ASSERT(express, msg, ...)		if(!(express)) Log::add(Log::mAssert, #express, __FILEW__, __LINE__, msg, __VA_ARGS__);
+	#define SSH_ASSERT(express, msg, ...)		if(!(express)) Log::add(Log::mAssert, __FILEW__, __LINE__, msg, #express, __VA_ARGS__);
 	#define SSH_TRACE							Tracer tracer(__FUNCTIONW__, __FILEW__, __LINE__);
+#define SSH_LOG(msg, ...)						Log::add(Log::mInfo, __FUNCTIONW__, __FILEW__, __LINE__, msg, __VA_ARGS__)
 #endif
 
 #define MAIL_PASS				L"IfnfkjdCthutq"

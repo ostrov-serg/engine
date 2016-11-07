@@ -28,34 +28,16 @@ typedef wchar_t*						ssh_pws;
 										{\
 											return (cls*)Base::operator new(sz, (Base**)obj, name, String(L#cls)); \
 										}
-#define SSH_NEW_SDECL(cls, SIZE)		static MemArray<cls, SIZE>* get_MemArray##cls() { static MemArray<cls, SIZE> memarray; return &memarray; } \
+#define SSH_NEW_DECL(cls, SIZE)			static MemArray<cls, SIZE>* get_MemArray##cls() { static MemArray<cls, SIZE> memarray; return &memarray; } \
 										void* operator new(size_t sz) {return (void*)get_MemArray##cls()->Alloc();} \
 										void operator delete(void* p) { get_MemArray##cls()->Free((cls*)p); } \
-										static void reset() { get_MemArray##cls()->Reset(); } \
-										static bool valid() { return get_MemArray##cls()->Valid(); } \
-										static size_t count() { return get_MemArray##cls()->Count(); } \
-										static struct MemArray<cls, SIZE>::BlockFix* root() { return get_MemArray##cls()->Root(); }
-#define SSH_NEW_DDECL(cls, SIZE)		static MemArray<cls, SIZE>* get_MemArray##cls() { static MemArray<cls, SIZE>* memarray(nullptr); if(!memarray) memarray = new MemArray<cls, SIZE>; return memarray; } \
-										void* operator new(size_t sz) {return (void*)get_MemArray##cls()->Alloc();} \
-										void operator delete(void* p) { get_MemArray##cls()->Free((cls*)p); } \
-										static void reset() { get_MemArray##cls()->Reset(); } \
-										static bool valid() { return get_MemArray##cls()->Valid(); } \
-										static size_t count() { return get_MemArray##cls()->Count(); } \
-										static struct MemArray<cls, SIZE>::BlockFix* root() { return get_MemArray##cls()->Root(); }
-#define SSH_CAST(v)						static_cast<ssh_u>(v)
+										static void reset() { get_MemArray##cls()->Reset(); }
+#define SSH_IS_PTR(t)					(bool)std::is_pointer<t>()
+#define SSH_CAST(v1, v2)				static_cast<v1>(v2)
 #define SSH_FFL							__FUNCTIONW__, __FILEW__, __LINE__
-#define SSH_RTTI_DECL(cls)				class RTTI_##cls : public RTTI \
-										{ \
-										public: \
-											RTTI_##cls() {name = L#cls;} \
-											virtual RTTI* create() override {return (RTTI*)new cls();} \
-										}; \
-										static RTTI_##cls cls##_rtti;
-#define SSH_RTTI_IMPL(cls)				cls::RTTI_##cls cls::cls##_rtti;
 
 #define SSH_CLAMP(val, low, high)		(val < low ? low : (val > high ? high : val))
 #define SSH_THROW(msg, ...)				throw Exception(SSH_FFL, msg, __VA_ARGS__)
-#define SSH_LOG(msg, ...)				log->add(Log::mInfo, SSH_FFL, msg, __VA_ARGS__)
 #define SSH_FAULT(code, except)			log->fault(code, SSH_FFL, except)
 // константы
 #define SSH_EPSILON						(1e-06)
@@ -69,30 +51,7 @@ typedef wchar_t*						ssh_pws;
 #define SSH_RGBA(r, g, b, a)			((((a) << 24) | ((b) << 16) | ((g) << 8) | (r)))
 #define SSH_DEG2RAD						(SSH_PI / 180.0f)
 #define SSH_RAD2DEG						(180.0f / SSH_PI)
-#define SSH_TYPE						0
-#define SSH_PTR							1
 #define SSH_
-
-// индексы синглонов
-
-#define SSH_SINGL_SQL					0
-#define SSH_SINGL_ARCHIVE				1
-#define SSH_SINGL_KEYBOARD				2
-#define SSH_SINGL_MOUSE					3
-#define SSH_SINGL_GAMEPAD				4
-#define SSH_SINGL_LOG					5
-#define SSH_SINGL_STACKTRACE			6
-#define SSH_SINGL_HELPER				7
-#define SSH_SINGL_						8
 
 #define cp_ansi							L"windows-1251"
 #define cp_utf							L"utf-16le"
-
-#define ID_LIST_BASE					100
-#define ID_ATTACH_STK_MAIL				101
-#define ID_ATTACH_MAIL					102
-#define ID_RECIPIENTS_MAIL				103
-#define ID_TREE_XML						104
-#define ID_RESOURCES_ARCHIVE			105
-#define ID_STK_MOUSE					106
-#define ID_DLL_MODULES					107

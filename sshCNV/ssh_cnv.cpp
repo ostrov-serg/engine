@@ -229,7 +229,7 @@ unsigned int parse_charset(ssh_cws str, int* idx)
 	return ap->encoding_index;
 }
 
-ssh_cnv __declspec(dllexport) cnv_open(ssh_cws tocode, ssh_cws fromcode)
+ssh_cnv cnv_open(ssh_cws tocode, ssh_cws fromcode)
 {
 	struct conv_struct* cd;
 	ssh_i to_index, from_index;
@@ -257,19 +257,19 @@ ssh_cnv __declspec(dllexport) cnv_open(ssh_cws tocode, ssh_cws fromcode)
 	return (ssh_cnv)cd;
 }
 
-ssh_u __declspec(dllexport) cnv_exec(ssh_cnv icd, ssh_ccs* inbuf, ssh_u *inbytesleft, char** outbuf, ssh_u* outbytesleft)
+ssh_u cnv_exec(ssh_cnv icd, ssh_ccs* inbuf, ssh_u *inbytesleft, char** outbuf, ssh_u* outbytesleft)
 {
 	conv_t cd((conv_t)icd);
 	if(!inbuf || !*inbuf) return cd->lfuncs.loop_reset(icd, outbuf, outbytesleft); else return cd->lfuncs.loop_convert(icd, (ssh_ccs*)inbuf, inbytesleft, outbuf, outbytesleft);
 }
 
-int __declspec(dllexport) cnv_close(ssh_cnv icd)
+int cnv_close(ssh_cnv icd)
 {
 	free((conv_t)icd);
 	return 0;
 }
 
-int __declspec(dllexport) cnv_ctl(ssh_cnv icd, int request, void* argument)
+int cnv_ctl(ssh_cnv icd, int request, void* argument)
 {
 	conv_t cd((conv_t)icd);
 	switch(request)

@@ -12,8 +12,8 @@
 #define OVFLMASK    0xffff0000    
 #define OVFLBIT     0x00010000    
 
-#define MATCH_CONDASSERT     1  
-#define MATCH_CBEGROUP       2  
+#define MATCH_CONDASSERT   1  
+#define MATCH_CBEGROUP     2  
 #define MATCH_MATCH        1
 #define MATCH_NOMATCH      0
 #define MATCH_ACCEPT       (-999)
@@ -2401,7 +2401,7 @@ ENDLOOP03:
 #undef fc
 #undef fi
 
-__declspec(dllexport) ssh_l regex16_exec(const regex16 *argument_re, ssh_cws subject, ssh_l length, ssh_l start_offset, ssh_l options, ssh_l* offsets, ssh_l offsetcount)
+ssh_l regx_exec(const regex16 *argument_re, ssh_cws subject, ssh_l length, ssh_l start_offset, ssh_l options, ssh_l* offsets, ssh_l offsetcount)
 {
 	ssh_l rc, ocount, arg_offset_max;
 	ssh_l newline;

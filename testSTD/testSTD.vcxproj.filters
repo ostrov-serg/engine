@@ -26,19 +26,8 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
-    <ClCompile Include="regex_compile.cpp">
+    <ClCompile Include="testSTD.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
-    <ClCompile Include="regex_exec.cpp">
-      <Filter>Файлы исходного кода</Filter>
-    </ClCompile>
-    <ClCompile Include="regex_newline.cpp">
-      <Filter>Файлы исходного кода</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ssh_regx.def">
-      <Filter>Файлы исходного кода</Filter>
-    </None>
   </ItemGroup>
 </Project>

@@ -3343,7 +3343,7 @@ NAMED_REF_OR_RECURSE:
 									{
 										open_capitem *oc;
 										recno = GET2(slot, 0);
-										cd->backref_map |= (recno < 32) ? (1 << recno) : 1;
+										cd->backref_map |= (recno < 32) ? (1ULL << recno) : 1;
 										if(recno > cd->top_backref) cd->top_backref = recno;
 										for(oc = cd->open_caps; oc != nullptr; oc = oc->next)
 										{
@@ -3675,7 +3675,7 @@ HANDLE_REFERENCE:
 						previous = code;
 						*code++ = ((options & REGEX_CASELESS) != 0) ? OP_REFI : OP_REF;
 						PUT2INC(code, 0, recno);
-						cd->backref_map |= (recno < 32) ? (1 << recno) : 1;
+						cd->backref_map |= (recno < 32) ? (1ULL << recno) : 1;
 						if(recno > cd->top_backref) cd->top_backref = recno;
 						for(oc = cd->open_caps; oc != nullptr; oc = oc->next)
 						{
@@ -4095,12 +4095,12 @@ static void add_name(compile_data *cd, ssh_cws name, ssh_l length, ssh_u groupno
 	cd->names_found++;
 }
 
-__declspec(dllexport) void regex_free(void* p)
+void regx_free(void* p)
 {
 	::free(p);
 }
 
-__declspec(dllexport) regex16* regex16_compile(ssh_cws pattern, ssh_l options)
+regex16* regx_compile(ssh_cws pattern, ssh_l options)
 {
 	REAL_PCRE *re;
 	ssh_l length = 1;

@@ -2,14 +2,11 @@
 #pragma once
 
 #include <sshCommon\ssh_defs.h>
-#include <sshCommon\ssh_regex.h>
+#include <sshCommon\ssh_regx.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
-
-struct real_regex16;
-typedef struct real_regex16 regex16;
 
 struct regex16_extra
 {
@@ -183,7 +180,7 @@ static void* regex_memmove(void *d, const void *s, size_t n)
 #define MAGIC_NUMBER  0x50435245UL   
 #define REVERSED_MAGIC_NUMBER  0x45524350UL   
 #define REQ_BYTE_MAX 1000
-typedef int BOOL;
+//typedef int BOOL;
 
 #ifndef FALSE
 #define FALSE   0

@@ -562,22 +562,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="encodings.def">
-      <Filter>Файлы исходного кода</Filter>
-    </None>
-    <None Include="encodings_aix.def">
-      <Filter>Файлы исходного кода</Filter>
-    </None>
-    <None Include="encodings_dos.def">
-      <Filter>Файлы исходного кода</Filter>
-    </None>
-    <None Include="encodings_extra.def">
-      <Filter>Файлы исходного кода</Filter>
-    </None>
-    <None Include="encodings_local.def">
-      <Filter>Файлы исходного кода</Filter>
-    </None>
-    <None Include="encodings_osf1.def">
+    <None Include="ssh_cnv.def">
       <Filter>Файлы исходного кода</Filter>
     </None>
   </ItemGroup>

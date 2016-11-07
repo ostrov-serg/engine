@@ -1,0 +1,7 @@
+EXPORTS
+
+cnv_open		@1
+cnv_exec		@2
+cnv_close		@3
+cnv_ctl			@4
+
