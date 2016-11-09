@@ -7,15 +7,15 @@ template <typename T> class Array
 {
 public:
 	// конструктор по умолчанию
-	Array(int _ID) : ID(_ID) { }
+	Array() { }
 	// инициализирующий конструктор
-	Array(int _ID, ssh_u _count, ssh_u _grow) : ID(_ID), grow(_grow) { alloc(_count); }
+	Array(ssh_u _count, ssh_u _grow) : grow(_grow) { alloc(_count); }
 	// конструктор из списка инициализации
-	Array(int _ID, const std::initializer_list<T>& _list) : ID(_ID) { insert(0, _list.begin(), _list.size()); }
+	Array(const std::initializer_list<T>& _list) { insert(0, _list.begin(), _list.size()); }
 	// конструктор копии
-	Array(int _ID, const Array<T>& src) : ID(_ID) { *this = src; }
+	Array(const Array<T>& src) : ID(_ID) { *this = src; }
 	// конструктор переноса
-	Array(Array<T>&& src) { ID = src.ID; data = src.data; count = src.count; max_count = src.max_count; grow = src.grow; src.init(); }
+	Array(Array<T>&& src) { data = src.data; count = src.count; max_count = src.max_count; grow = src.grow; src.init(); }
 	// деструктор
 	~Array() { reset(); }
 	// сброс
@@ -31,17 +31,16 @@ public:
 	// оператор индекса
 	T& operator [] (ssh_u idx) const { return data(idx); }
 	// оператор переноса
-	const Array& operator = (Array<T>&& src) { reset(); ID = src.ID; data = src.data; count = src.count; max_count = src.max_count; grow = src.grow; src.init(); return *this; }
+	const Array& operator = (Array<T>&& src) { reset(); data = src.data; count = src.count; max_count = src.max_count; grow = src.grow; src.init(); return *this; }
 	// установка элемента по индексу
 	const Array& set(ssh_u idx, const T& elem)
 	{
 		if(idx < count)
 		{
-			BaseNode<T, SSH_IS_PTR(T)>::release(data[idx]);
+			release_node<T, SSH_IS_PTR(T)>::release(data[idx]);
 			data[idx] = elem;
-			return *this;
 		}
-		SSH_THROW(L"Индекс (%i) за пределами (%i) массива (%i)!", idx, count, ID);
+		return *this;
 	}
 	// вставка элемента по индексу
 	const Array& insert(ssh_u idx, const T* elem, ssh_u _count)
@@ -60,7 +59,7 @@ public:
 		if(idx < count)
 		{
 			if((idx + _count) > count) _count = (count - idx);
-			for(ssh_u i = 0; i < _count; i++) BaseNode<T, SSH_IS_PTR(T)>::release(data[i + idx]);
+			for(ssh_u i = 0; i < _count; i++) release_node<T, SSH_IS_PTR(T)>::release(data[i + idx]);
 			ssh_u ll(idx + _count);
 			memcpy(data + idx, data + ll, (count - ll) * sizeof(T));
 			count -= _count;
@@ -79,10 +78,10 @@ public:
 	// вернуть размер
 	ssh_u size() const { return count; }
 	// вернуть по индексу
-	T& get(ssh_u idx) const
+	T& at(ssh_u idx) const
 	{
 		if(idx < count) return data[idx];
-		SSH_THROW(L"Индекс (%i) за пределами (%i) массива (%i)!", idx, count, ID);
+		return release_node<T, SSH_IS_PTR(T)>::dummy();
 	}
 	// вернуть указатель на данные
 	const T* getData() const { return (const T*)data; }
@@ -110,8 +109,6 @@ protected:
 		}
 		count += _count;
 	}
-	// идентификатор массива
-	int ID = -1;
 	// количество элементов
 	ssh_u count = 0;
 	// приращение

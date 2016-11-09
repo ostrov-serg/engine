@@ -15,7 +15,7 @@ namespace ssh
 			Node() : prev(nullptr), next(nullptr) {}
 			Node(const T& t, Node* p, Node* n) : prev(p), next(n), value(t) {}
 			// деструктор
-			~Node() { BaseNode<T, SSH_IS_PTR(T)>::release(value); }
+			~Node() { release_node<T, SSH_IS_PTR(T)>::release(value); }
 			// следующий
 			Node* next;
 			// предыдущий
@@ -24,13 +24,13 @@ namespace ssh
 			T value;
 		};
 		// конструктор
-		List(int _ID) : ID(_ID) { }
+		List() { }
 		// конструктор копии
-		List(int _ID, const List<T>& src) : ID(_ID) { *this = src; }
+		List(const List<T>& src) { *this = src; }
 		// конструктор из списка инициализации
-		List(int _ID, const std::initializer_list<T>& _list) : ID(_ID) { for(auto& t : _list) insert(nlast, t); }
+		List(const std::initializer_list<T>& _list) { for(auto& t : _list) insert(nlast, t); }
 		// конструктор переноса
-		List(List<T>&& src) { ID = src.ID; nroot = src.nroot; nlast = src.nlast; src.init(); }
+		List(List<T>&& src) { nroot = src.nroot; nlast = src.nlast; src.init(); }
 		// деструктор
 		~List() { reset(); }
 		// приращение
@@ -38,7 +38,7 @@ namespace ssh
 		const List& operator += (const List<T>& src) { auto n(src.root()); while(n) insert(nlast, n->value), n = n->next; return *this; }
 		// присваивание
 		const List& operator = (const List<T>& src) { reset(); return operator += (src); }
-		const List& operator = (List<T>&& src) { reset(); ID = src.ID; nroot = src.nroot; nlast = src.nlast; src.init(); return *this; }
+		const List& operator = (List<T>&& src) { reset(); nroot = src.nroot; nlast = src.nlast; src.init(); return *this; }
 		// вставка
 		Node* insert(Node* n, const T& t)
 		{
@@ -77,8 +77,6 @@ namespace ssh
 	protected:
 		// очистить
 		void init() { nroot = nlast = nullptr; Node::reset(); }
-		// идентификатор
-		int ID = -1;
 		// корень
 		Node* nroot = nullptr;
 		// последний

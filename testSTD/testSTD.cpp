@@ -5,6 +5,8 @@
 //typedef void* (CALLBACK* __cnv_open)(ssh_cws to, ssh_cws from);
 typedef ssh_cs* (CALLBACK* __ext_undname)(char* out, const char* name, int len_out, unsigned long flags);
 
+
+
 ssh_u ssh_dll_proc(ssh_cws dll, ssh_ccs nm)
 {
 	HMODULE hdll;
@@ -12,42 +14,36 @@ ssh_u ssh_dll_proc(ssh_cws dll, ssh_ccs nm)
 	return (ssh_u)GetProcAddress(hdll, nm);
 }
 
-class tp
+class tp : public Serialize
 {
-	SSH_RTTI_DECL(tp);
 public:
 //	tp() : x(0), y(0) {}
-	~tp()
+	virtual ~tp() { x = y = nullptr; }
+	struct stk2 { String str[3]; ssh_cws _cws; };
+	struct stk { double xx, *yy[4]; stk2 _stk2; };
+	virtual SCHEME* get_scheme() const override
 	{
-		x = y = -1;
+		SCHEME_BEGIN(tp)
+			SCHEME_NODE_BEGIN(tp, _stk)
+				SCHEME_VAR(stk, xx, L"null", 0, nullptr)
+					SCHEME_NODE_BEGIN(stk, _stk2)
+						SCHEME_VAR(stk2, str, L"null", 0, nullptr)
+						SCHEME_VAR(stk2, _cws, L"null", 0, nullptr)
+					SCHEME_NODE_END()
+				SCHEME_VAR(stk, yy, L"null", 0, nullptr)
+			SCHEME_NODE_END()
+			SCHEME_VAR(tp, x, L"null", 0, nullptr)
+			SCHEME_VAR(tp, y, L"null", 0, nullptr)
+		SCHEME_END(tp);
 	}
-	ssh_u x, y;
+	float* x, *y;
+	stk _stk;
 };
-
-SSH_RTTI_IMPL(tp);
 
 int main() noexcept
 {
-	ssh_ccs c1 = typeid(tp).raw_name();
-	ssh_ccs c2 = typeid(tp*).raw_name();
-	Array<tp> a1(1, {{1, 2}, {3, 4}});
-	a1.reset();
-	tp* t1 = new tp{1,1};
-	tp* t2 = new tp{2, 2};
-	tp* t3 = new tp{3, 3};
-	List<tp*> l1(1, {t1, t2, t3});
-	Array<tp*> a2(1, {t1, t2, t3});
-	a2.reset();
-	try
-	{
-		tp* t = (tp*)RTTI::createClass(L"tp");
-		int a = sizeof(decltype(t));
-//		t->exec(100);
-	}
-	catch(const Exception& e)
-	{
-		e.add(L"111");
-	}
+	tp t;
+	Serialize::SCHEME* _sc = t.get_scheme();
 	return 0;
 }
 

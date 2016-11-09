@@ -5,7 +5,7 @@
 
 namespace ssh
 {
-	List<MemMgr::Block> MemMgr::blocks(1);
+	List<MemMgr::Block> MemMgr::blocks;
 	typedef List<MemMgr::Block>::Node NodeMem;
 
 	MemMgr::~MemMgr() { blocks.reset(); }
@@ -41,7 +41,7 @@ namespace ssh
 	{
 		Section cs;
 
-		char* p((char*)::malloc(sz + sizeof(NodeMem*)));
+		char* p((char*)::malloc(sz + sizeof(NodeMem*) + 4));
 		NodeMem* nd(nullptr);
 		if(is_enabled)
 		{

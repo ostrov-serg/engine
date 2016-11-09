@@ -39,6 +39,16 @@ typedef wchar_t*						ssh_pws;
 #define SSH_CLAMP(val, low, high)		(val < low ? low : (val > high ? high : val))
 #define SSH_THROW(msg, ...)				throw Exception(SSH_FFL, msg, __VA_ARGS__)
 #define SSH_FAULT(code, except)			log->fault(code, SSH_FFL, except)
+
+#define SSH_PURE_TYPE1(T)				std::remove_all_extents_t<T>
+#define SSH_PURE_TYPE2(T)				std::remove_pointer_t<SSH_PURE_TYPE1(T)>
+#define SSH_IS_STRING(T)				std::is_same<SSH_PURE_TYPE2(T), String>()
+#define SSH_IS_BOOL(T)					std::is_same<SSH_PURE_TYPE2(T), bool>()
+#define SSH_PURE_TYPE1_D(T)				std::remove_all_extents_t<decltype(T)>
+#define SSH_PURE_TYPE2_D(T)				std::remove_pointer_t<SSH_PURE_TYPE1_D(T)>
+#define SSH_IS_STRING_D(T)				std::is_same<SSH_PURE_TYPE2_D(T), String>()
+#define SSH_IS_BOOL_D(T)				std::is_same<SSH_PURE_TYPE2_D(T), bool>()
+
 // константы
 #define SSH_EPSILON						(1e-06)
 #define SSH_EPSILON2					(SSH_EPSILON * SSH_EPSILON)
