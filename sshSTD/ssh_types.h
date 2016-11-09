@@ -40,6 +40,7 @@ namespace ssh
 				{
 					// существует, тогда увеличиваем счётчик
 					n->ref++;
+					*obj = n;
 					return nullptr;
 				}
 				n = n->next;
@@ -47,10 +48,9 @@ namespace ssh
 			// не существует, создаем новый
 			*obj = (Base*)::operator new(sz);
 			(*obj)->ref = 1;
-			(*obj)->next = nullptr;
+			(*obj)->next = root;
 			(*obj)->nm = new String(name);
 			(*obj)->tp = new String(type);
-			if(root) root->next = root;
 			root = *obj;
 			return (void*)*obj;
 		}
@@ -62,11 +62,7 @@ namespace ssh
 				Base* p(nullptr);
 				auto n(root);
 				while(n && n != this) p = n, n = n->next;
-				if(n)
-				{
-					if(p) p->next = n->next;
-					else root = n;
-				}
+				if(p) p->next = n->next; else root = root->next;
 				delete this;
 			}
 		}

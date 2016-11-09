@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "ssh_array.h"
+
 namespace ssh
 {
 	#define SSH_ENUM( enumName, ... ) SSH_ENUM_DETAIL_MAKE( class, enumName, __VA_ARGS__ )
@@ -37,53 +39,37 @@ namespace ssh
 	{
 	public:
 		template<typename EnumType> static const EnumReflector& get(EnumType val = EnumType()) { return _detail_reflector_(val); }
-		class Enumerator
+		struct Enumerator
 		{
-		public:
-			const String& name() const { return _er._data->values[_index].name; }
-			int value() const { return _er._data->values[_index].value; }
-			int index() const { return _index; }
-			const EnumReflector& Reflector() const { return _er; }
-			bool operator!=(const Enumerator& rhs) const { return _index != rhs._index; }
-			Enumerator& operator++() { ++_index; return *this; }
-			const Enumerator& operator*() const { return *this; }
-		private:
-			friend class EnumReflector;
-			Enumerator(const EnumReflector& er, int index) : _er(er), _index(index) {}
-			const EnumReflector& _er;
-			int _index;
+			String name;
+			int value;
 		};
+		// конструктор
 		EnumReflector(const int*, int, ssh_cws, ssh_cws);
-		EnumReflector(EnumReflector&& rhs) : _data(rhs._data) { rhs._data = nullptr; }
-		~EnumReflector() { delete _data; }
-		int count() const { return (int)_data->count; }
-		Enumerator find(const String& name) const
+		// количество элементов
+		ssh_u count() const { return values.size(); }
+		// найти по имени
+		ssh_u find(const String& name) const
 		{
-			for(int i = 0; i < (int)_data->count; ++i)
-				if(_data->values[i].name == name) return at(i);
-			return at(count());
+			for(ssh_u i = 0; i < count(); ++i)
+				if(values[i].name == name) return i;
+			return -1;
 		}
-		Enumerator find(int value) const
+		// найти по значению
+		ssh_u find(int value) const
 		{
-			for(int i = 0; i < (int)_data->count; ++i)
-				if(_data->values[i].value == value) return at(i);
-			return at(count());
+			for(ssh_u i = 0; i < count(); ++i)
+				if(values[i].value == value) return i;
+			return -1;
 		}
-		Enumerator at(int index) const { return Enumerator(*this, index); }
-		Enumerator operator[](int index) const { return at(index); }
+		// вернуть по индексу
+		Enumerator at(ssh_u index) const { return values[index]; }
+		Enumerator operator[](ssh_u index) const { return at(index); }
 	private:
-		struct Private
-		{
-			struct Enumerator
-			{
-				String name;
-				int value;
-			};
-			Enumerator values[32];
-			String enumName;
-			int count;
-		};
-		Private* _data;
+		// массив перечислений
+		Array<Enumerator> values;
+		// имя перечисления
+		String enumName;
 	};
 
 	static bool IsIdentChar(ssh_ws c)
@@ -91,10 +77,10 @@ namespace ssh
 		return (c >= L'A' && c <= L'Z') || (c >= L'a' && c <= L'z') || (c >= L'0' && c <= L'9') || (c == L'_');
 	}
 
-	EnumReflector::EnumReflector(const int* vals, int count, ssh_cws name, ssh_cws body) : _data(new Private)
+	inline EnumReflector::EnumReflector(const int* vals, int count, ssh_cws name, ssh_cws body)
 	{
-		_data->enumName = name;
-		_data->count = 0;
+		enumName = name;
+		values.resize(count);
 		enum states { state_start, state_ident, state_skip, } state = state_start;
 		++body;
 		ssh_cws ident_start(nullptr);
@@ -111,9 +97,8 @@ namespace ssh
 					if(!IsIdentChar(*body))
 					{
 						state = state_skip;
-						_data->values[value_index].name = String(ident_start, body - ident_start);
-						_data->values[value_index].value = vals[value_index];
-						_data->count++;
+						values[value_index].name = String(ident_start, body - ident_start);
+						values[value_index].value = vals[value_index];
 						++value_index;
 					}
 					else ++body;

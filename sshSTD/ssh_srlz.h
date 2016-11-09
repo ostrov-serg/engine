@@ -27,6 +27,7 @@
 #define SCHEME_NODE_BEGIN(cls, var) {L#var, nullptr, nullptr, offsetof(cls, var), SCHEME_SPEC(cls, var, SC_NODE) },
 #define SCHEME_NODE_END()			{nullptr, nullptr, nullptr, 0, 0, 0, 0},
 
+#include "ssh_enums.h"
 
 namespace ssh
 {
@@ -43,7 +44,7 @@ namespace ssh
 			// значение по умолчанию
 			ssh_cws def;
 			// структуры для преобразования флагов и перечислений
-			int* stk;
+			const EnumReflector* stk;
 			// смещение переменной относительно родителя
 			ssh_u offs;
 			// спецификатор типа

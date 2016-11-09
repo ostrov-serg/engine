@@ -143,46 +143,52 @@ namespace ssh
 	{
 		return (val1 > val2 ? val1 : val2);
 	}
+	// разбить строку на элементы
+	template <typename T> T* ssh_explode(ssh_cws split, const String& src, T* dst, ssh_u count_dst, const T& def, ENUM_DATA* stk = nullptr, bool is_hex = false)
+	{
+		ssh_ws* _wcs(src.buffer()), *t;
+		ssh_u i(0), j(wcslen(split));
+		T tmp;
+		while(i < count_dst && *_wcs)
+		{
+			if((t = wcsstr(_wcs, split))) *t = 0;
+			if(stk) tmp = (T)ssh_cnv_value(_wcs, stk, (ssh_u)def);
+			else if(is_hex) tmp = String(_wcs).toNum<T>(0, String::_hex);
+			else tmp = String(_wcs);
+			dst[i] = tmp;
+			if(t) { *t = *split; _wcs = t + j; }
+			i++;
+		}
+		// заполн€ем значени€ми по умолчанию
+		for(; i < count_dst; i++) dst[i] = def;
+		return dst;
+	}
+	// соеденить элементы в строку
+	template <typename T> String ssh_implode(ssh_wcs split, T* src, ssh_u count_src, ssh_wcs def, ENUM_DATA* stk = nullptr, bool is_enum = true, bool is_hex = false)
+	{
+		String ret, _tmp;
+
+		for(ssh_u i = 0; i < count_src; i++)
+		{
+			T tmp(src[i]);
+			if(stk) _tmp = ssh_cnv_string((ssh_u)tmp, stk, def, is_enum);
+			else _tmp = (tmp, is_hex ? String::_hex : String::_dec);
+			if(i) ret += split;
+			ret += _tmp;
+		}
+		return ret;
+	}
+
+
+
+
+
+
 	/*
 	ssh_u SSH ssh_cnv_value(ssh_wcs str, ENUM_DATA* stk, ssh_u def);
 	String SSH ssh_cnv_string(ssh_u flags, ENUM_DATA* stk, ssh_wcs def, bool enumerate = true);
 	void SSH ssh_remove_comments(String* lst, ssh_u count, bool is_simple);
 
-	// разбить строку на элементы
-	template <typename T> T* ssh_explode(ssh_wcs split, const String& src, T* dst, ssh_u count_dst, const T& def, ENUM_DATA* stk = nullptr, bool is_hex = false)
-	{
-	ssh_ws* _wcs(src.buffer()), *t;
-	ssh_u i(0), j(wcslen(split));
-	T tmp;
-	while(i < count_dst && *_wcs)
-	{
-	if((t = wcsstr(_wcs, split))) *t = 0;
-	if(stk) tmp = (T)ssh_cnv_value(_wcs, stk, (ssh_u)def);
-	else if(is_hex) tmp = String(_wcs).toNum<T>(0, String::_hex);
-	else tmp = String(_wcs);
-	dst[i] = tmp;
-	if(t) { *t = *split; _wcs = t + j; }
-	i++;
-	}
-	// заполн€ем значени€ми по умолчанию
-	for(; i < count_dst; i++) dst[i] = def;
-	return dst;
-	}
-	// соеденить элементы в строку
-	template <typename T> String ssh_implode(ssh_wcs split, T* src, ssh_u count_src, ssh_wcs def, ENUM_DATA* stk = nullptr, bool is_enum = true, bool is_hex = false)
-	{
-	String ret, _tmp;
-
-	for(ssh_u i = 0; i < count_src; i++)
-	{
-	T tmp(src[i]);
-	if(stk) _tmp = ssh_cnv_string((ssh_u)tmp, stk, def, is_enum);
-	else _tmp = (tmp, is_hex ? String::_hex : String::_dec);
-	if(i) ret += split;
-	ret += _tmp;
-	}
-	return ret;
-	}
 	template <typename T > String ssh_make_hex_string(T* p, ssh_u count, String& txt, bool is_cont)
 	{
 	String bytes(L'\0', count * 3);
