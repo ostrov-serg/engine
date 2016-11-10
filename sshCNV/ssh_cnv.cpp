@@ -3,12 +3,6 @@
 
 #define USE_DOS
 
-struct loop_funcs
-{
-	ssh_u(*loop_convert) (ssh_cnv icd, ssh_ccs* inbuf, ssh_u* inbytesleft, char** outbuf, ssh_u* outbytesleft);
-	ssh_u(*loop_reset) (ssh_cnv icd, char** outbuf, ssh_u* outbytesleft);
-};
-
 #include "converters.h"
 #include "cjk_variants.h"
 #include "translit.h"
@@ -243,8 +237,6 @@ ssh_cnv cnv_open(ssh_cws tocode, ssh_cws fromcode)
 	cd->oindex = to_index;
 	cd->ofuncs = all_encodings[to_index].ofuncs;
 	cd->oflags = all_encodings[to_index].oflags;
-	cd->lfuncs.loop_convert = unicode_loop_convert;
-	cd->lfuncs.loop_reset = unicode_loop_reset;
 	memset(&cd->istate, '\0', sizeof(state_t));
 	memset(&cd->ostate, '\0', sizeof(state_t));
 	cd->transliterate = 0;
@@ -257,40 +249,17 @@ ssh_cnv cnv_open(ssh_cws tocode, ssh_cws fromcode)
 	return (ssh_cnv)cd;
 }
 
-ssh_u cnv_exec(ssh_cnv icd, ssh_ccs* inbuf, ssh_u *inbytesleft, char** outbuf, ssh_u* outbytesleft)
+void cnv_make(ssh_cnv icd, const ssh_b* inbuf, ssh_u inbytesleft, ssh_b* out)
 {
-	conv_t cd((conv_t)icd);
-	if(!inbuf || !*inbuf) return cd->lfuncs.loop_reset(icd, outbuf, outbytesleft); else return cd->lfuncs.loop_convert(icd, (ssh_ccs*)inbuf, inbytesleft, outbuf, outbytesleft);
+	unicode_loop_convert(icd, inbuf, inbytesleft, out);
 }
 
-int cnv_close(ssh_cnv icd)
+ssh_u cnv_calc(ssh_cnv icd, const ssh_b* inbuf, ssh_u inbytesleft)
+{
+	return unicode_loop_calc(icd, inbuf, inbytesleft);
+}
+
+void cnv_close(ssh_cnv icd)
 {
 	free((conv_t)icd);
-	return 0;
-}
-
-int cnv_ctl(ssh_cnv icd, int request, void* argument)
-{
-	conv_t cd((conv_t)icd);
-	switch(request)
-	{
-		case ICONV_TRIVIALP:
-			*(int *)argument = ((cd->lfuncs.loop_convert == unicode_loop_convert && cd->iindex == cd->oindex) || cd->lfuncs.loop_convert == wchar_id_loop_convert ? 1 : 0);
-			return 0;
-		case ICONV_GET_TRANSLITERATE:
-			*(int *)argument = cd->transliterate;
-			return 0;
-		case ICONV_SET_TRANSLITERATE:
-			cd->transliterate = (*(const int *)argument ? 1 : 0);
-			return 0;
-		case ICONV_GET_DISCARD_ILSEQ:
-			*(int *)argument = cd->discard_ilseq;
-			return 0;
-		case ICONV_SET_DISCARD_ILSEQ:
-			cd->discard_ilseq = (*(const int *)argument ? 1 : 0);
-			return 0;
-		default:
-			errno = EINVAL;
-			return -1;
-	}
 }

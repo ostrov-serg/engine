@@ -2,12 +2,14 @@
 #include "stdafx.h"
 #include "ssh_globals.h"
 #include "ssh_rtti.h"
+#include "ssh_map.h"
 
 namespace ssh
 {
 	__cnv_open ssh_cnv_open(nullptr);
 	__cnv_close ssh_cnv_close(nullptr);
 	__cnv_make ssh_cnv_make(nullptr);
+	__cnv_calc ssh_cnv_calc(nullptr);
 	__regx_compile ssh_regx_compile(nullptr);
 	__regx_exec ssh_regx_exec(nullptr);
 	__regx_free ssh_regx_free(nullptr);
@@ -44,15 +46,15 @@ namespace ssh
 		return begin + (tmp % ((end - begin) + 1));
 	}
 
-	buffer SSH ssh_base64(const String& str)
+	Buffer SSH ssh_base64(const String& str)
 	{
 		ssh_u len_buf(0);
-		return buffer(asm_ssh_from_base64(str.buffer(), str.length(), &len_buf), len_buf);
+		return Buffer(asm_ssh_from_base64(str.buffer(), str.length(), &len_buf), len_buf, false);
 	}
 
-	String SSH ssh_base64(const buffer& buf)
+	String SSH ssh_base64(const Buffer& buf)
 	{
-		return String();// buffer(asm_ssh_to_base64(buf, buf.size()), 0, true));
+		return String((ssh_cws)asm_ssh_to_base64(buf, buf.size()));
 	}
 
 	String SSH ssh_base64(ssh_cws charset, const String& str)
@@ -70,46 +72,26 @@ namespace ssh
 		return ret;
 	}
 
-	buffer SSH ssh_convert(ssh_cws to, ssh_cws str)
+	Buffer SSH ssh_convert(ssh_cws charset, ssh_cws str)
 	{
 		ssh_cnv h;
-		buffer out(wcslen(str) * 2);
-		ssh_u in_c(out.size()), out_c(in_c);
-		ssh_ccs _in((ssh_ccs)str);
-		ssh_cs* _out(out);
-		if(ssh_cnv_open)
-		{
-			if((h = ssh_cnv_open(to, cp_utf)) != (ssh_cnv)-1)
-			{
-				while(in_c > 0)
-				{
-					if(ssh_cnv_make(h, &_in, &in_c, &_out, &out_c) == -1) { out_c = 0; break; }
-				}
-				ssh_cnv_close(h);
-			}
-		}
-		return buffer(out, _out - out);
+		ssh_u in_c(wcslen(str) * 2);
+		h = ssh_cnv_open(charset, cp_utf);
+		Buffer out(ssh_cnv_calc(h, (ssh_b*)str, in_c));
+		ssh_cnv_make(h, (ssh_b*)str, in_c, out);
+		ssh_cnv_close(h);
+		return out;
 	}
 
-	String SSH ssh_convert(ssh_cws from, const buffer& in, ssh_u offs)
+	String SSH ssh_convert(ssh_cws charset, const Buffer& in, ssh_u offs)
 	{
 		ssh_cnv h;
-		ssh_u in_c(in.size() - offs), out_c(in_c * 2);
-		buffer out(out_c);
-		ssh_ccs _in(in); _in += offs;
-		ssh_cs* _out(out);
-		if(ssh_cnv_open)
-		{
-			if((h = ssh_cnv_open(cp_utf, from)) != (ssh_cnv)-1)
-			{
-				while(in_c > 0)
-				{
-					if(ssh_cnv_make(h, &_in, &in_c, &_out, &out_c) == -1) { out_c = 0; break; }
-				}
-				ssh_cnv_close(h);
-			}
-		}
-		return String();// out, (_out - out) / 2);
+		ssh_u in_c(in.size() - offs), out_c(0);
+		h = ssh_cnv_open(cp_utf, charset);
+		Buffer out(ssh_cnv_calc(h, (ssh_b*)in + offs, in_c));
+		ssh_cnv_make(h, (ssh_b*)in + offs, in_c, out);
+		ssh_cnv_close(h);
+		return String(out.to<ssh_cws>(), out.size() / 2);
 	}
 
 	// добавить слеш на конец пути
@@ -428,25 +410,21 @@ namespace ssh
 
 	ssh_u SSH ssh_dll_proc(ssh_cws dll, ssh_ccs proc, ssh_cws suffix)
 	{
-		/*
-		SSH_TRACE;
 		// хэндлы загруженных dll
 		HMODULE hdll;
-		static Map<HMODULE, String, SSH_TYPE, SSH_TYPE> dlls(ID_DLL_MODULES);
+		static Map<HMODULE, String> dlls;
 
 		String module(ssh_file_path_title(dll));
-		#ifdef _DEBUG
+#ifdef _DEBUG
 		if(suffix) module += suffix;
-		#endif
+#endif
 		module += (ssh_file_ext(dll, true));
 		if(!(hdll = dlls[module]))
 		{
-		if(!(hdll = LoadLibrary(module))) return 0;
-		dlls[module] = hdll;
+			if(!(hdll = LoadLibrary(module))) return 0;
+			dlls[module] = hdll;
 		}
 		return (ssh_u)GetProcAddress(hdll, proc);
-		*/
-		return 0;
 	}
 
 	static void ssh_init_libs()
@@ -454,11 +432,12 @@ namespace ssh
 		// инициализировать функции стандартных библиотек - sshREGX, sshCNV, sshEXT
 		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");
 		ssh_cnv_close = (__cnv_close)ssh_dll_proc(L"sshCNV.dll", "cnv_close");
-		ssh_cnv_make = (__cnv_make)ssh_dll_proc(L"sshCNV.dll", "cnv");
-		ssh_regx_compile = (__regx_compile)ssh_dll_proc(L"sshREGX.dll", "regex16_compile");
-		ssh_regx_exec = (__regx_exec)ssh_dll_proc(L"sshREGX.dll", "regex16_exec");
-		ssh_regx_free = (__regx_free)ssh_dll_proc(L"sshREGX.dll", "regex_free");
-		// получить возможости процессора
+		ssh_cnv_make = (__cnv_make)ssh_dll_proc(L"sshCNV.dll", "cnv_make");
+		ssh_cnv_calc = (__cnv_calc)ssh_dll_proc(L"sshCNV.dll", "cnv_calc");
+		ssh_regx_compile = (__regx_compile)ssh_dll_proc(L"sshREGX.dll", "regx_compile");
+		ssh_regx_exec = (__regx_exec)ssh_dll_proc(L"sshREGX.dll", "regx_exec");
+		ssh_regx_free = (__regx_free)ssh_dll_proc(L"sshREGX.dll", "regx_free");
+		// получить возможности процессора
 		ssh_cws avx(ssh_system_value(SystemInfo::CPU_CAPS, CpuCaps::AVX) ? L"sshAVX" : L"sshSSE");
 		// инициализировать процессорно-зависимые функции
 
@@ -471,7 +450,6 @@ namespace ssh
 	static int CALLBACK SelectFolderCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM pData)
 	{
 		String* folder((String*)pData);
-		ssh_ws tmp[MAX_PATH];
 
 		switch(uMsg)
 		{
@@ -491,12 +469,7 @@ namespace ssh
 
 				hFont = (HFONT)::SendMessage(hwnd, WM_GETFONT, 0, 0);
 				::SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, MAKELPARAM(TRUE, 0));
-
-				if(folder->is_empty())
-				{
-					::GetCurrentDirectory(MAX_PATH, tmp);
-					*folder = tmp;
-				}
+				if(folder->is_empty()) *folder = ssh_system_paths(SystemInfo::WORK_FOLDER);
 				::SendMessage(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)folder->buffer());
 				break;
 			case BFFM_SELCHANGED:
@@ -514,12 +487,11 @@ namespace ssh
 
 	bool SSH ssh_dlg_sel_folder(ssh_cws title, String& folder, HWND hWnd)
 	{
-		bool result = false;
+		bool result(false);
 		BROWSEINFO m_bi;
 		LPITEMIDLIST pidl;
 		LPMALLOC pMalloc;
-		buffer tmp(MAX_PATH);
-		wcscpy(tmp, folder.buffer());
+		Buffer tmp((ssh_b*)folder.buffer(), MAX_PATH, false);
 
 		SSH_MEMZERO(&m_bi, sizeof(BROWSEINFO));
 
@@ -536,7 +508,7 @@ namespace ssh
 			if((pidl = SHBrowseForFolder(&m_bi)))
 			{
 				pMalloc->Free(pidl);
-				folder = ssh_slash_path((ssh_cws)(ssh_ws*)tmp);
+				folder = ssh_slash_path(tmp.to<ssh_cws>());
 				result = true;
 			}
 			pMalloc->Release();

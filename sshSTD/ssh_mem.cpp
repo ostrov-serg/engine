@@ -51,6 +51,7 @@ namespace ssh
 			if(use_max_mem < use_mem) use_max_mem = use_mem;
 		}
 		*(NodeMem**)p = nd;
+		*(ssh_w*)(p + sz + sizeof(NodeMem*)) = 0;
 		return (void*)(p + sizeof(NodeMem*));
 	}
 
@@ -58,17 +59,20 @@ namespace ssh
 	{
 		Section cs;
 
-		auto nd(*(NodeMem**)(p - sizeof(NodeMem*)));
-		if(nd)
+		if(p)
 		{
-			ssh_u sz(nd->value.sz);
+			auto nd(*(NodeMem**)(p - sizeof(NodeMem*)));
+			if(nd)
+			{
+				ssh_u sz(nd->value.sz);
 #ifdef _DEBUG
-			memset(p, 0xaa, sz);
+				memset(p, 0xaa, sz);
 #endif
-			// корректируем статистику
-			total_free += sz;
-			use_mem -= sz;
-			blocks.remove(nd);
+				// корректируем статистику
+				total_free += sz;
+				use_mem -= sz;
+				blocks.remove(nd);
+			}
 		}
 	}
 }

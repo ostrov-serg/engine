@@ -15,7 +15,7 @@ namespace ssh
 			Node() : next(nullptr) {}
 			Node(const K& k, const T& t, Node* n) : next(n), key(k), value(t) {}
 			// деструктор
-			~Node() { release_node<T, SSH_IS_PTR(T)>::release(n->value); release_node<T, SSH_IS_PTR(K)>::release(n->key); }
+			~Node() { release_node<T, SSH_IS_PTR(T)>::release(value); release_node<T, SSH_IS_PTR(K)>::release(key); }
 			// ключь
 			K key;
 			// значение
@@ -85,6 +85,6 @@ namespace ssh
 		// вернуть узел по ключу
 		Node* get_key(const K& key, Node** p) const { auto n(cells); while(n) {if(n->key == key) return n; if(p) *p = n; n = n->next;} return nullptr; }
 		// корневой элемент
-		Node* cells = nullre;
+		Node* cells = nullptr;
 	};
 }

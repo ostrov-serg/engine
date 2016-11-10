@@ -4,7 +4,7 @@
 
 namespace ssh
 {
-	void ssh::Serialize::open(const buffer & buf, void * srlz, bool is_xml)
+	void ssh::Serialize::open(const Buffer & buf, void * srlz, bool is_xml)
 	{
 	}
 

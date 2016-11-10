@@ -59,7 +59,7 @@ namespace ssh
 
 	template <typename T> class List;
 
-	class MemMgr
+	class SSH MemMgr
 	{
 	public:
 		struct Block
@@ -101,11 +101,7 @@ namespace ssh
 	};
 }
 
-#ifdef SSH_MEM
-
-	inline void* operator new(ssh_u sz){return ssh::MemMgr::instance()->alloc(sz);}
-	inline void operator delete(void* p) { ssh::MemMgr::instance()->free((ssh_b*)p); }
-	inline void* operator new[](ssh_u sz) { return ssh::MemMgr::instance()->alloc(sz); }
-	inline void operator delete[](void* p) { ssh::MemMgr::instance()->free((ssh_b*)p); }
-
-#endif
+inline void* operator new(ssh_u sz){return ssh::MemMgr::instance()->alloc(sz);}
+inline void operator delete(void* p) { ssh::MemMgr::instance()->free((ssh_b*)p); }
+inline void* operator new[](ssh_u sz) { return ssh::MemMgr::instance()->alloc(sz); }
+inline void operator delete[](void* p) { ssh::MemMgr::instance()->free((ssh_b*)p); }

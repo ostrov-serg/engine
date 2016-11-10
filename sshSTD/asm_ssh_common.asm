@@ -365,7 +365,7 @@ asm_ssh_from_base64 proc
 		push r10
 		push r12
 		mov rsi, rcx			; src
-		lea r12, [rcx + rdx * 2]
+		mov r12, rdx
 		mov r10, rsi
 		mov rcx, 3dh
 		call _wcschr

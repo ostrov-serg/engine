@@ -22,7 +22,6 @@ struct wctomb_funcs
 
 struct conv_struct
 {
-	struct loop_funcs lfuncs;
 	int iindex;
 	struct mbtowc_funcs ifuncs;
 	state_t istate;

@@ -52,26 +52,26 @@ namespace ssh
 		// закрыть
 		void close() { if(h) _close(h); h = 0; }
 		// чтение в предоставленный буфер определенного размера
-		buffer read(const buffer& buf, ssh_u size) const
+		Buffer read(const Buffer& buf, ssh_u size) const
 		{
 			if(size > buf.size())  SSH_THROW(L"Размер буфера %i слишком мал для чтения файла %s!", buf.size(), path);
 			if(_read(h, buf, (ssh_i)size) != size) SSH_THROW(L"Ошибка чтения файла %s!", path);
 			return buf;
 		}
 		// чтение определенного размера
-		buffer read(ssh_u size) const
+		Buffer read(ssh_u size) const
 		{
 			if(!size) size = (length() - get_pos());
-			return read(buffer(size), size);
+			return read(Buffer(size), size);
 		}
 		// чтение определенного размера с определенной позиции
-		buffer read(ssh_u size, ssh_u pos, int flags) const
+		Buffer read(ssh_u size, ssh_u pos, int flags) const
 		{
 			set_pos(pos, flags);
 			return read(size);
 		}
 		// чтение в предоставленный буфер определенного размера с определенной позиции
-		buffer read(const buffer& buf, ssh_u size, ssh_u pos, int flags) const
+		Buffer read(const Buffer& buf, ssh_u size, ssh_u pos, int flags) const
 		{
 			set_pos(pos, flags);
 			return read(buf, size);
@@ -82,13 +82,13 @@ namespace ssh
 			return ssh_convert(cnv, read(size), 0);
 		}
 		// запись буфера определенного размера
-		void write(const buffer& buf, ssh_u size = 0) const
+		void write(const Buffer& buf, ssh_u size = 0) const
 		{
 			if(!size) size = buf.size();
 			if(_write(h, buf, (ssh_i)size) != size) SSH_THROW(L"Ошибка записи файла %s!", path);
 		}
 		// запись буфера определенного размера в определенную позицию
-		void write(const buffer& buf, ssh_u size, ssh_u pos, int flags) const
+		void write(const Buffer& buf, ssh_u size, ssh_u pos, int flags) const
 		{
 			set_pos(pos, flags);
 			return write(buf, size);

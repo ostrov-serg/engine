@@ -73,8 +73,17 @@ int main() noexcept
 	int dst[8];
 	String str(L"_1|_7|_8,_2,_1|_3,_8,_7,_7|_8");
 	String str1(__FILEW__);
-	//		, , , , , , COMP_NAME, , , , , , 
+
 	ssh_u num = ssh_system_value(SystemInfo::PLATFORM, CpuCaps::AES);
+	Buffer buf(ssh_convert(L"utf-8", L"Шаталов Сергей"));//utf-16le
+	str = ssh_convert(L"utf-8", buf, 0);
+	str = ssh_base64(buf);
+	Buffer buf1(ssh_base64(str));
+	str1 = ssh_convert(L"utf-8", buf1, 0);
+	for(ssh_u i = 0; i < 100; i++)
+	{
+		num = ssh_rand(10, 20);
+	}
 	num = ssh_system_value(SystemInfo::CPU_CAPS, CpuCaps::AVX512CD);
 	num = ssh_system_value(SystemInfo::TOTAL_MEMORY, CpuCaps::AES);
 	str = ssh_num_volume(num);

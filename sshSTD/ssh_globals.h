@@ -4,8 +4,8 @@
 extern "C"
 {
 	ssh_u	asm_ssh_capability();
-	ssh_b* asm_ssh_to_base64(ssh_b* ptr, ssh_u count);
-	ssh_b* asm_ssh_from_base64(ssh_ws* str, ssh_u count, ssh_u* len_buf);
+	ssh_b*	asm_ssh_to_base64(ssh_b* ptr, ssh_u count);
+	ssh_b*	asm_ssh_from_base64(ssh_ws* str, ssh_u count, ssh_u* len_buf);
 	ssh_l	asm_ssh_parse_xml(ssh_ws* src, ssh_w* vec);
 };
 
@@ -16,8 +16,9 @@ namespace ssh
 {
 	//typedef ssh_cnv (CALLBACK* __cnv_open)(ssh_cws to, ssh_cws from);
 	using __cnv_open = ssh_cnv (CALLBACK*)(ssh_cws to, ssh_cws from);
-	typedef int (CALLBACK* __cnv_close)(void* h);
-	typedef ssh_u (CALLBACK* __cnv_make)(void* cd, ssh_ccs* inbuf, size_t* inbytesleft, ssh_cs** outbuf, ssh_u* outbytesleft);
+	typedef void (CALLBACK* __cnv_close)(void* h);
+	typedef void (CALLBACK* __cnv_make)(void* cd, const ssh_b* inbuf, ssh_u inbytesleft, ssh_b* out);
+	typedef ssh_u (CALLBACK* __cnv_calc)(void* cd, const ssh_b* inbuf, ssh_u inbytesleft);
 	typedef regex16* (CALLBACK* __regx_compile)(ssh_cws pattern, ssh_l options);
 	typedef ssh_l (CALLBACK* __regx_exec)(const void* re, ssh_cws subj, ssh_l len_subj, ssh_l idx, ssh_l options, ssh_l* vec, ssh_l count_vec);
 	typedef ssh_l (CALLBACK* __regx_free)(void* p);
@@ -29,6 +30,7 @@ namespace ssh
 	extern __cnv_open ssh_cnv_open;
 	extern __cnv_close ssh_cnv_close;
 	extern __cnv_make ssh_cnv_make;
+	extern __cnv_calc ssh_cnv_calc;
 	extern __regx_compile ssh_regx_compile;
 	extern __regx_exec ssh_regx_exec;
 	extern __regx_free ssh_regx_free;
@@ -99,15 +101,15 @@ namespace ssh
 	String SSH ssh_gen_name(ssh_cws nm, bool is_long = true);
 	String SSH ssh_md5(const String& str);
 	String SSH ssh_base64(ssh_cws to, const String& str);
-	String SSH ssh_base64(const buffer& buf);
+	String SSH ssh_base64(const Buffer& buf);
 	String SSH ssh_translate(ssh_cws text, bool to_eng);
 	String SSH ssh_num_volume(ssh_u num);
 	String SSH ssh_path_in_range(const String& path, ssh_u range);
 	String SSH ssh_make_guid(const GUID& guid);
-	String SSH ssh_convert(ssh_cws from, const buffer& in, ssh_u offs);
+	String SSH ssh_convert(ssh_cws charset, const Buffer& in, ssh_u offs);
 	GUID   SSH ssh_make_guid(ssh_cws src);
-	buffer SSH ssh_base64(const String& str);
-	buffer SSH ssh_convert(ssh_cws to, ssh_cws str);
+	Buffer SSH ssh_base64(const String& str);
+	Buffer SSH ssh_convert(ssh_cws charset, ssh_cws str);
 	void SSH ssh_make_path(ssh_cws path, bool is_file);
 	void SSH ssh_remove_comments(String* lst, ssh_u count, bool is_simple);
 	bool SSH ssh_is_null(ssh_cws str);

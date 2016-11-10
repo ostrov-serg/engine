@@ -143,186 +143,111 @@ translit_failed:
   return RET_ILUNI;
 }
 
-static ssh_u unicode_loop_convert(ssh_cnv icd, const char* * inbuf, ssh_u *inbytesleft, char* * outbuf, ssh_u *outbytesleft)
+static void unicode_loop_convert(ssh_cnv icd, const ssh_b* inptr, ssh_u inleft, ssh_b* outptr)
 {
-	conv_t cd = (conv_t)icd;
-	ssh_u result = 0;
-	const unsigned char* inptr = (const unsigned char*)*inbuf;
-	ssh_u inleft = *inbytesleft;
-	unsigned char* outptr = (unsigned char*)*outbuf;
-	ssh_u outleft = *outbytesleft;
+	conv_t cd((conv_t)icd);
 	while(inleft > 0)
 	{
-		state_t last_istate = cd->istate;
 		ucs4_t wc;
-		int incount;
-		int outcount;
-		incount = cd->ifuncs.xxx_mbtowc(cd, &wc, inptr, inleft);
+		int incount(cd->ifuncs.xxx_mbtowc(cd, &wc, inptr, inleft));
 		if(incount < 0)
 		{
 			if(incount == RET_ILSEQ)
 			{
-				/* Case 1: invalid input */
+				// Case 1: invalid input
 				if(cd->discard_ilseq)
 				{
 					switch(cd->iindex)
 					{
 						case ei_ucs4: case ei_ucs4be: case ei_ucs4le:
 						case ei_utf32: case ei_utf32be: case ei_utf32le:
-						case ei_ucs4internal: case ei_ucs4swapped:
-							incount = 4; break;
+						case ei_ucs4internal: case ei_ucs4swapped: incount = 4; break;
 						case ei_ucs2: case ei_ucs2be: case ei_ucs2le:
 						case ei_utf16: case ei_utf16be: case ei_utf16le:
-						case ei_ucs2internal: case ei_ucs2swapped:
-							incount = 2; break;
-						default:
-							incount = 1; break;
+						case ei_ucs2internal: case ei_ucs2swapped: incount = 2; break;
+						default: incount = 1; break;
 					}
 					goto outcount_zero;
 				}
-				errno = EILSEQ;
-				result = -1;
-				break;
+				return;
 			}
-			if(incount == RET_TOOFEW(0))
-			{
-				/* Case 2: not enough bytes available to detect anything */
-				errno = EINVAL;
-				result = -1;
-				break;
-			}
-			/* Case 3: k bytes read, but only a shift sequence */
+			if(incount == RET_TOOFEW(0)) return;
 			incount = -2 - incount;
 		}
 		else
 		{
-			/* Case 4: k bytes read, making up a wide character */
-			if(outleft == 0)
-			{
-				cd->istate = last_istate;
-				errno = E2BIG;
-				result = -1;
-				break;
-			}
-			outcount = cd->ofuncs.xxx_wctomb(cd, outptr, wc, outleft);
-			if(outcount != RET_ILUNI)
-				goto outcount_ok;
-			/* Handle Unicode tag characters (range U+E0000..U+E007F). */
-			if((wc >> 7) == (0xe0000 >> 7))
-				goto outcount_zero;
-			/* Try transliteration. */
-			result++;
+			int outcount(cd->ofuncs.xxx_wctomb(cd, outptr, wc, 8));
+			if(outcount != RET_ILUNI) goto outcount_ok;
+			if((wc >> 7) == (0xe0000 >> 7)) goto outcount_zero;
 			if(cd->transliterate)
 			{
-				outcount = unicode_transliterate(cd, wc, outptr, outleft);
-				if(outcount != RET_ILUNI)
-					goto outcount_ok;
+				if((outcount = unicode_transliterate(cd, wc, outptr, 8)) != RET_ILUNI) goto outcount_ok;
 			}
-			if(cd->discard_ilseq)
-				goto outcount_zero;
-			outcount = cd->ofuncs.xxx_wctomb(cd, outptr, 0xFFFD, outleft);
-			if(outcount != RET_ILUNI)
-				goto outcount_ok;
-			cd->istate = last_istate;
-			errno = EILSEQ;
-			result = -1;
-			break;
+			if(cd->discard_ilseq) goto outcount_zero;
+			if((outcount = cd->ofuncs.xxx_wctomb(cd, outptr, 0xFFFD, 8)) != RET_ILUNI) goto outcount_ok;
+			return;
 outcount_ok:
-			if(outcount < 0)
-			{
-				cd->istate = last_istate;
-				errno = E2BIG;
-				result = -1;
-				break;
-			}
-			if(!(outcount <= outleft)) abort();
-			outptr += outcount; outleft -= outcount;
+			if(outcount < 0) return;
+			outptr += outcount;
 		}
 outcount_zero:
-		if(!(incount <= inleft)) abort();
+		if(incount > inleft) return;
 		inptr += incount; inleft -= incount;
 	}
-	*inbuf = (const char*)inptr;
-	*inbytesleft = inleft;
-	*outbuf = (char*)outptr;
-	*outbytesleft = outleft;
-	return result;
 }
 
-static ssh_u unicode_loop_reset(ssh_cnv icd, char* * outbuf, ssh_u *outbytesleft)
+static ssh_u unicode_loop_calc(ssh_cnv icd, const ssh_b* inptr, ssh_u inleft)
 {
-	conv_t cd = (conv_t)icd;
-	if(outbuf == NULL || *outbuf == NULL)
+	conv_t cd((conv_t)icd);
+	ssh_b outptr[8];
+	int result(0);
+	while(inleft > 0)
 	{
-		/* Reset the states. */
-		memset(&cd->istate, '\0', sizeof(state_t));
-		memset(&cd->ostate, '\0', sizeof(state_t));
-		return 0;
-	}
-	else
-	{
-		ssh_u result = 0;
-		if(cd->ifuncs.xxx_flushwc)
+		state_t last_istate(cd->istate);
+		ucs4_t wc;
+		int incount(cd->ifuncs.xxx_mbtowc(cd, &wc, inptr, inleft));
+		if(incount < 0)
 		{
-			state_t last_istate = cd->istate;
-			ucs4_t wc;
-			if(cd->ifuncs.xxx_flushwc(cd, &wc))
+			if(incount == RET_ILSEQ)
 			{
-				unsigned char* outptr = (unsigned char*)*outbuf;
-				ssh_u outleft = *outbytesleft;
-				int outcount = cd->ofuncs.xxx_wctomb(cd, outptr, wc, outleft);
-				if(outcount != RET_ILUNI)
-					goto outcount_ok;
-				/* Handle Unicode tag characters (range U+E0000..U+E007F). */
-				if((wc >> 7) == (0xe0000 >> 7))
-					goto outcount_zero;
-				/* Try transliteration. */
-				result++;
-				if(cd->transliterate)
-				{
-					outcount = unicode_transliterate(cd, wc, outptr, outleft);
-					if(outcount != RET_ILUNI)
-						goto outcount_ok;
-				}
 				if(cd->discard_ilseq)
-					goto outcount_zero;
-				outcount = cd->ofuncs.xxx_wctomb(cd, outptr, 0xFFFD, outleft);
-				if(outcount != RET_ILUNI)
-					goto outcount_ok;
-				cd->istate = last_istate;
-				errno = EILSEQ;
-				return -1;
-outcount_ok:
-				if(outcount < 0)
 				{
-					cd->istate = last_istate;
-					errno = E2BIG;
-					return -1;
+					switch(cd->iindex)
+					{
+						case ei_ucs4: case ei_ucs4be: case ei_ucs4le:
+						case ei_utf32: case ei_utf32be: case ei_utf32le:
+						case ei_ucs4internal: case ei_ucs4swapped: incount = 4; break;
+						case ei_ucs2: case ei_ucs2be: case ei_ucs2le:
+						case ei_utf16: case ei_utf16be: case ei_utf16le:
+						case ei_ucs2internal: case ei_ucs2swapped: incount = 2; break;
+						default: incount = 1; break;
+					}
+					goto outcount_zero;
 				}
-				if(!(outcount <= outleft)) abort();
-				outptr += outcount;
-				outleft -= outcount;
-outcount_zero:
-				*outbuf = (char*)outptr;
-				*outbytesleft = outleft;
+				return 0;
 			}
+			if(incount == RET_TOOFEW(0)) return 0;
+			incount = -2 - incount;
 		}
-		if(cd->ofuncs.xxx_reset)
+		else
 		{
-			unsigned char* outptr = (unsigned char*)*outbuf;
-			ssh_u outleft = *outbytesleft;
-			int outcount = cd->ofuncs.xxx_reset(cd, outptr, outleft);
-			if(outcount < 0)
+			int outcount(cd->ofuncs.xxx_wctomb(cd, outptr, wc, 8));
+			if(outcount != RET_ILUNI) goto outcount_ok;
+			if((wc >> 7) == (0xe0000 >> 7)) goto outcount_zero;
+			if(cd->transliterate)
 			{
-				errno = E2BIG;
-				return -1;
+				if((outcount = unicode_transliterate(cd, wc, outptr, 8)) != RET_ILUNI) goto outcount_ok;
 			}
-			if(!(outcount <= outleft)) abort();
-			*outbuf = (char*)(outptr + outcount);
-			*outbytesleft = outleft - outcount;
+			if(cd->discard_ilseq) goto outcount_zero;
+			if((outcount = cd->ofuncs.xxx_wctomb(cd, outptr, 0xFFFD, 8)) != RET_ILUNI) goto outcount_ok;
+			return 0;
+outcount_ok:
+			if(outcount < 0) return 0;
+			result += outcount;
 		}
-		memset(&cd->istate, '\0', sizeof(state_t));
-		memset(&cd->ostate, '\0', sizeof(state_t));
-		return result;
+outcount_zero:
+		if(incount > inleft) return 0;
+		inptr += incount; inleft -= incount;
 	}
+	return result;
 }

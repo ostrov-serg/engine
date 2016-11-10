@@ -58,7 +58,7 @@ namespace ssh
 		Serialize() {}
 		virtual ~Serialize() {}
 		virtual SCHEME* get_scheme() const = 0;
-		virtual void open(const buffer& buf, void* srlz, bool is_xml);
+		virtual void open(const Buffer& buf, void* srlz, bool is_xml);
 		virtual void save(const String& path, void* srlz, bool is_xml);
 	protected:
 		//virtual void readXml(HXML hp, ssh_l p_offs, ssh_l idx = 0);
