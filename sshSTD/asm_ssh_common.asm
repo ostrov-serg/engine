@@ -34,7 +34,7 @@ base64_chars	dw 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 
 .code
 
 
-; преобразовать число в строку, в зависимости от системы счисления 0-decimal, (1-bin, 2-oct, 3-hex, 4-float,5-double)
+; преобразовать число в строку, в зависимости от системы счисления 0-decimal, (1-bin, 2-oct, 3-hex, 4-float,5-double,6-bool)
 ; rcx - число
 ; rdx - система счисления
 ; ret - result of whar_t*
@@ -57,7 +57,16 @@ asm_ssh_ntow proc public
 		pop r11
 		pop r10
 		ret
-tbl_radix dq nto_dec, 0, 10, nto_ohb, 1, 1, nto_ohb, 7, 3, nto_ohb, 15, 4, nto_dbl, 0, 10, nto_flt, 0, 10
+str_bool db 'f', 0, 'a', 0, 'l', 0, 's', 0, 'e', 0, 0, 0, 't', 0, 'r', 0, 'u', 0, 'e', 0, 0, 0, 0, 0
+tbl_radix dq nto_dec, 0, 10, nto_ohb, 1, 1, nto_ohb, 7, 3, nto_ohb, 15, 4, nto_dbl, 0, 10, nto_flt, 0, 10, nto_bool, offset str_bool, 12
+nto_bool:
+		test rax, rax
+		cmovnz rax, rcx
+		mov rdx, [rax + r10]
+		mov eax, [rax + r10 + 8]
+		mov [r9], rdx
+		mov [r9 + 8], eax
+		ret
 nto_ohb:sub r9, 2
 		mov rdx, rax
 		and rdx, r10
@@ -95,8 +104,8 @@ nto_dbl:; read double from rax
 		mov r11, 8
 		movd xmm0, rax
 		; отбросим дробную часть
-@@:		cvttsd2si rax, xmm0
-		cvtsi2sd xmm1, rax
+@@:		roundsd xmm1, xmm0, 0
+		cvttsd2si rax, xmm1
 		; преобразуем целую часть в строку
 		call nto_dec
 		mov rdx, offset result + 128
@@ -109,15 +118,15 @@ nto_dbl:; read double from rax
 @@:		; дробная часть
 		subsd xmm0, xmm1
 		mulsd xmm0, qword ptr [r8]
-		cvttsd2si rax, xmm0
-		cvtsi2sd xmm1, rax
+		roundsd xmm1, xmm0, 0
+		cvttsd2si rax, xmm1
 		test rax, rax
 		cmovnz r10, rdx
 		add rax, 48
 		mov [rdx], ax
 		add rdx, 2
 		loop @b
-		mov word ptr [r10 + 2], 0
+		mov [r10 + 2], cx
 		ret
 asm_ssh_ntow endp
 
@@ -157,7 +166,16 @@ _HEX	= 4
 _DEC	= 8
 tbl_hex dw 0, _HEX, _HEX, _HEX, _HEX, _HEX, _HEX, 0, 0, 0, 0, 0, 0, 0, 0, 0, _DEC + _BIN + _OCT + _HEX, _DEC + _BIN + _OCT + _HEX, _DEC + _OCT + _HEX, _DEC + _OCT + _HEX, _DEC + _OCT + _HEX
 		dw _DEC + _OCT + _HEX, _DEC + _OCT + _HEX, _DEC + _OCT + _HEX, _DEC + _HEX, _DEC + _HEX
-radix	dq wto_dec, 10, _DEC, wto_obh, 2, _BIN, wto_obh, 8, _OCT, wto_obh, 16, _HEX, wto_dbl, 10, _DEC, wto_flt, 10, _DEC
+radix	dq wto_dec, 10, _DEC, wto_obh, 2, _BIN, wto_obh, 8, _OCT, wto_obh, 16, _HEX, wto_dbl, 10, _DEC, wto_flt, 10, _DEC, wto_bool, 0, 0
+wto_bool:
+		xor rax, rax
+		cmp dword ptr [rcx], 00720074h
+		setz al
+		cmp dword ptr [rcx + 4], 00650075h
+		setz ah
+		and al, ah
+		movzx rax, al
+		ret
 wto_obh:sub rcx, 2
 		mov rdx, offset tbl_hex
 @@:		add rcx, 2

@@ -67,8 +67,50 @@ public:
 private:
 	Base::Base;
 };
+SSH_ENUM_NS(serg, _1 = 1, _2 = 2, _3 = 4, _4 = 8, _5 = 16, _6 = 32, _7 = 32768, _8 = 16384)
 int main() noexcept
 {
+	int dst[8];
+	String str(L"_1|_7|_8,_2,_1|_3,_8,_7,_7|_8");
+	String str1(__FILEW__);
+	//		, , , , , , COMP_NAME, , , , , , 
+	ssh_u num = ssh_system_value(SystemInfo::PLATFORM, CpuCaps::AES);
+	num = ssh_system_value(SystemInfo::CPU_CAPS, CpuCaps::AVX512CD);
+	num = ssh_system_value(SystemInfo::TOTAL_MEMORY, CpuCaps::AES);
+	str = ssh_num_volume(num);
+	num = ssh_system_value(SystemInfo::PHYSICAL_MEMORY, CpuCaps::AES);
+	str = ssh_num_volume(num);
+	num = ssh_system_value(SystemInfo::CPU_SPEED, CpuCaps::AES);
+	str = ssh_system_paths(SystemInfo::COMP_NAME);
+	str = ssh_system_paths(SystemInfo::PROG_FOLDER);
+	str = ssh_system_paths(SystemInfo::WORK_FOLDER);
+	str = ssh_system_paths(SystemInfo::TEMP_FOLDER);
+	str = ssh_system_paths(SystemInfo::USER_FOLDER);
+	str = ssh_system_paths(SystemInfo::PROG_NAME);
+	str = ssh_system_paths(SystemInfo::USER_NAME);
+	str = ssh_system_paths(SystemInfo::CUSTOM);
+	ssh_u l = str1.length();
+	str = ssh_path_in_range(str1, 42);
+	l = str.length();
+	num = 0x10;
+	str = ssh_num_volume(num);
+	GUID _g = ssh_make_guid(nullptr);
+	str = ssh_make_guid(_g);
+	GUID _g1 = ssh_make_guid((ssh_cws)str);
+	str = ssh_gen_name(L"value = ", false);
+	str = ssh_gen_name(L"value = ", true);
+	str = ssh_file_ext(str1, false);
+	str = ssh_file_name(str1);
+	str = ssh_file_path(str1);
+	str = ssh_file_title(str1);
+	str = ssh_file_path_title(str1);
+	str = ssh_slash_path(str);
+	str = ssh_slash_path(str);
+	ssh_u vec[20];
+	ssh_u c = ssh_split(L'\\', str, vec, 20);
+	ssh_explode(L",", str, dst, 8, 0, &EnumReflector::get<serg>(), Radix::_dec);
+	str1 = ssh_make_hex_string((ssh_d*)dst, 8, str, true, true);
+	String ret(ssh_implode(L",", dst, 8, L"null", &EnumReflector::get<serg>(), false, Radix::_dec));
 	tp t;
 	Serialize::SCHEME* _sc = t.get_scheme();
 	bs1* b, *b1;

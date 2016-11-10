@@ -10,11 +10,11 @@ extern "C"
 namespace ssh
 {
 	ssh_u SSH ssh_hash(ssh_cws wcs);
+	enum class Radix { _dec, _bin, _oct, _hex, _dbl, _flt, _bool };
 
 	class SSH String
 	{
 	public:
-		enum Radix { _dec, _bin, _oct, _hex, _dbl, _flt };
 		// конструкторы
 		String() { init(); }
 		String(String&& str) { buf = str.buf; str.init(); }
@@ -30,11 +30,12 @@ namespace ssh
 		~String() { empty(); }
 		// привидение типа
 		operator ssh_cws() const { return buf; }
-		operator double() const { return num<double>(0, _dbl); }
-		operator float() const { return num<float>(0, _flt); }
-		template<typename T> operator T() const { return num<T>(0, _dec); }
-		template <typename T> T num(ssh_l idx, Radix R = String::_dec) const { return *(T*)asm_ssh_wton(buf + idx, R, nullptr); }
-		template <typename T> void num(const T& v, Radix R = String::_dec) { ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, R); }
+		operator double() const { return to_num<double>(0, Radix::_dbl); }
+		operator float() const { return to_num<float>(0, Radix::_flt); }
+		operator bool() const { return to_num<bool>(0, Radix::_bool); }
+		template<typename T> operator T() const { return to_num<T>(0, Radix::_dec); }
+		template <typename T> T to_num(ssh_l idx, Radix R = Radix::_dec) const { return *(T*)asm_ssh_wton(buf + idx, (ssh_u)R, nullptr); }
+		template <typename T> void num(const T& v, Radix R = Radix::_dec) { ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, (ssh_u)R); }
 		// вернуть по индексу
 		ssh_ws operator[](ssh_u idx) const { return get(idx); }
 		// операторы сравнения

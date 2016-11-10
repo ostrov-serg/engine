@@ -24,7 +24,7 @@ namespace ssh
 			while(fix)
 			{
 				Block* blk(&fix->value);
-				String bytes;// (ssh_make_hex_string<ssh_b>(nd->ptr, nd->sz > 48 ? 48 : n->sz, txt, n->sz > 48));
+				String bytes(ssh_make_hex_string((ssh_b*)blk->ptr, blk->sz > 48 ? 48 : blk->sz, txt, true, blk->sz > 48));
 //				log->add_msg(String::fmt(L"node <0x%X, %i, <%s>, <%s>", nd->ptr, nd->sz, bytes, txt));
 				fix = fix->next;
 			}

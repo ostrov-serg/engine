@@ -218,7 +218,7 @@ namespace ssh
 	String String::fmt(ssh_cws pattern, va_list argList)
 	{
 		String result(L'\0', _vscwprintf(pattern, argList));
-		vswprintf(result, result.length() + 1, pattern, argList);
+		vswprintf(result.buf, result.length() + 1, pattern, argList);
 		result.data()->update();
 		return result;
 	}

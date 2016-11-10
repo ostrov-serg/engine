@@ -152,9 +152,8 @@ namespace ssh
 	String SSH ssh_gen_name(ssh_cws nm, bool is_long)
 	{
 		static ssh_u gen_count(0);
-		String message;
 		gen_count++;
-		return (is_long ? message.fmt(L"%s%I64X%016I64X", nm, gen_count, __rdtsc()) : message.fmt(L"%s%I64X", nm, gen_count));
+		return (is_long ? String::fmt(L"%s%I64X%016I64X", nm, gen_count, __rdtsc()) : String::fmt(L"%s%I64X", nm, __rdtsc()));
 	}
 
 	ssh_u SSH ssh_offset_line(const String& text, ssh_l ln)
@@ -215,7 +214,7 @@ namespace ssh
 		GetCurrentDirectory(MAX_PATH, dir);
 		while(true)
 		{
-			if(is = ((_path = wcschr(_path, L'\\')) != 0)) *_path = 0;
+			if(is = (_path = wcschr(_path, L'\\')) != 0) *_path = 0;
 			if(!SetCurrentDirectory(path))
 			{
 				if(!is) is = !is_file;
@@ -268,8 +267,7 @@ namespace ssh
 		{
 			suffix = L"Á";
 		}
-		String ret;
-		return ret.fmt(L"%.4f %s", fNum, suffix);
+		return String::fmt(L"%.4f %s", fNum, suffix);
 	}
 
 	String SSH ssh_path_in_range(const String& path, ssh_u range)
@@ -282,17 +280,17 @@ namespace ssh
 			if(pl)
 			{
 				String resultF, resultL;
-				if((strs[1] + strs[pl * 2 + 1] + 5) <= range)
+				if((strs[1] + strs[pl * 2 + 1]) <= range)
 				{
 					while(pf < pl)
 					{
-						String tmpF(resultF + String(result[strs[pf * 2]], strs[pf * 2 + 1]) + L'\\'), tmpL(resultL);
+						String tmpF(resultF + String(result + strs[pf * 2], strs[pf * 2 + 1]) + L"\\"), tmpL(resultL);
 						if(!tmpL.is_empty()) tmpL = L'\\' + tmpL;
-						tmpL = String(result[strs[pl * 2]], strs[pl * 2 + 1]) + tmpL;
+						tmpL = String(result + strs[pl * 2], strs[pl * 2 + 1]) + tmpL;
 						if((ssh_u)(tmpL.length() + tmpF.length() + 4) > range)
 						{
-							ssh_u ll(resultF.length() + tmpL.length() + 4);
-							ssh_u lf(resultL.length() + tmpF.length() + 4);
+							ssh_u ll(resultF.length() + tmpL.length());
+							ssh_u lf(resultL.length() + tmpF.length());
 							if(ll > range || lf > range) break;
 							if(lf > ll) resultL = tmpL; else resultF = tmpF;
 							break;
@@ -303,11 +301,11 @@ namespace ssh
 						pf++;
 					}
 				}
-				if(resultL.is_empty()) resultL = String(result[strs[pll * 2]], strs[pll * 2 + 1]);
-				result = resultF + L"...\\" + resultL;
+				if(resultL.is_empty()) resultL = String(result + strs[pll * 2], strs[pll * 2 + 1]);
+				return resultF + L"...\\" + resultL;
 			}
 		}
-		return result;
+		return path;
 	}
 
 	String SSH ssh_make_guid(const GUID& guid)
@@ -330,18 +328,6 @@ namespace ssh
 		String txt(text);
 		if(to_eng) return txt.replace(rus1, eng1);
 		return txt.replace(eng2, rus2);
-	}
-
-	String SSH ssh_make_params(ssh_cws fmt, ...)
-	{
-		String q;
-
-		va_list args;
-		va_start(args, fmt);
-		q.fmt(fmt, args);
-		va_end(args);
-
-		return q;
 	}
 
 	ssh_u SSH ssh_system_value(SystemInfo type, CpuCaps value)

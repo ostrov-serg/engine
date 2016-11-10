@@ -129,8 +129,7 @@ namespace ssh
 	void Xml::save(const String& path, ssh_cws code)
 	{
 		SSH_TRACE;
-		String txt;
-		txt.fmt(L"<?xml version=\"1.0\" encoding=\"%s\" ?>\r\n", code);
+		String txt(Sting::fmt(L"<?xml version=\"1.0\" encoding=\"%s\" ?>\r\n", code));
 		txt += _save(tree.get_root(), 0);
 		File f(path, File::create_write);
 		ssh_u bom(0);
