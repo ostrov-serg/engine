@@ -27,10 +27,6 @@ namespace ssh
 	ssh_u SSH ssh_ext_exec_hash(ssh_ccs str);
 	String SSH ssh_ext_exec(ssh_ccs str);
 
-	extern __cnv_open ssh_cnv_open;
-	extern __cnv_close ssh_cnv_close;
-	extern __cnv_make ssh_cnv_make;
-	extern __cnv_calc ssh_cnv_calc;
 	extern __regx_compile ssh_regx_compile;
 	extern __regx_exec ssh_regx_exec;
 	extern __regx_free ssh_regx_free;
@@ -114,7 +110,7 @@ namespace ssh
 	Buffer SSH ssh_convert(ssh_cws charset, ssh_cws str);
 	void SSH ssh_make_path(ssh_cws path);
 	void SSH ssh_remove_comments(String* lst, ssh_u count, bool is_simple);//
-	bool SSH ssh_is_null(ssh_cws str);
+	inline bool ssh_is_null(ssh_cws str) { return (!str || !str[0]); }
 	bool SSH ssh_is_wrong_lex(const String& str, ssh_cws errLexs = nullptr);
 	bool SSH ssh_dlg_sel_folder(ssh_cws title, String& folder, HWND hWnd);
 	bool SSH ssh_make_wnd(const DESC_WND& desc, bool is_show_wnd);//

@@ -9,8 +9,7 @@ namespace ssh
 	struct XmlNode
 	{
 		// конструктор
-		XmlNode() {}
-		XmlNode(ssh_cws name, const String& v) : XmlNode() { nm = name; val = v; }
+		XmlNode(ssh_cws name, const String& v) { nm = name; val = v; }
 		// вернуть атрибут по имени
 		XmlNode* attr(ssh_cws name) const
 		{
@@ -25,7 +24,7 @@ namespace ssh
 		}
 		void add_attr(XmlNode* n) { attrs += n; }
 		// вернуть имя
-		const String& name() const { return nm; }
+		String name() const { return nm; }
 		// имя узла/атрибута
 		String nm;
 		// значение узла/атрибута

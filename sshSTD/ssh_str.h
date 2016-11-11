@@ -14,9 +14,11 @@ namespace ssh
 
 	class SSH String
 	{
+		friend class Base;
 	public:
 		// конструкторы
 		String() { init(); }
+		String(std::nullptr_t) { }
 		String(String&& str) { buf = str.buf; str.init(); }
 		String(ssh_cws cws, ssh_l len = -1);
 		String(ssh_ws* ws, ssh_l len = -1) : String((ssh_cws)ws, len) {}

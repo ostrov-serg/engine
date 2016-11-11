@@ -258,11 +258,6 @@ namespace ssh
 		}
 	}
 
-	bool SSH ssh_is_null(ssh_cws str)
-	{
-		return (!str || !str[0]);
-	}
-
 	bool SSH ssh_is_wrong_lex(const String& str, ssh_cws errLexs)
 	{
 		static ssh_cws wrong_lexem = L",#\"?&^%$:;\'|~<>/!{}[]";

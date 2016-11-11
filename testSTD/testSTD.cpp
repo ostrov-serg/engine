@@ -55,7 +55,7 @@ public:
 			SCHEME_NODE_BEGIN(tp, _stk)
 				SCHEME_VAR(stk, xx, L"null", 0, nullptr)
 					SCHEME_NODE_BEGIN(stk, _stk2)
-						SCHEME_VAR(stk2, str, L"null", 0, nullptr)
+						SCHEME_VAR(stk2, str, L"null", SC_BASE64, nullptr)
 					SCHEME_NODE_END()
 				SCHEME_VAR(stk, yy, L"null", 0, nullptr)
 			SCHEME_NODE_END()
@@ -73,7 +73,7 @@ public:
 	ttt _t[3];
 	void make()
 	{
-		Serialize::save(L"c:\\1.bin", false);
+		Serialize::save(L"c:\\1.xml", true);
 	}
 };
 
@@ -87,22 +87,31 @@ private:
 	String nm;
 };
 
-class bs1
+class bs1 : public Base
 {
+	SSH_DYNCREATE(bs1);
 public:
 	bs1() { x = 0; }
 	bs1(int _x, const String& _s) : x(_x), str(_s) { }
+	String get_str() { return str; }
+
 	int x;
 	String str;
+
 };
 SSH_ENUM_NS(serg, _1 = 1, _2 = 2, _3 = 4, _4 = 8, _5 = 16, _6 = 32, _7 = 32768, _8 = 16384)
+
 int main() noexcept
 {
-	const wchar_t* _ws[2];// [2] = {L"11", L"222"};
-	std::remove_all_extents_t<decltype(_ws)> _ws1;
-	std::remove_pointer_t<decltype(_ws1)> _ws2 = 0;
-	std::remove_const_t<decltype(_ws2)> _ws3;
-	bool is = std::is_same<decltype(_ws3), ssh_ws>();
+	bs1* b;
+	new(&b, "ddd") bs1();
+	Array<int> arr;// {1, 2, 3, 4, 5};
+	int v;
+	for(auto n : arr)
+	{
+		v = n;
+//		v = n.value;
+	}
 	Xml xml;
 	tp t;
 	t.make();

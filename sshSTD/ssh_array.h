@@ -75,6 +75,9 @@ namespace ssh
 			}
 			return -1;
 		}
+		// диапазонный цикл
+		T* begin() const { return data; }
+		T* end() const { return &data[count]; }
 		// вернуть размер
 		ssh_u size() const { return count; }
 		// вернуть по индексу

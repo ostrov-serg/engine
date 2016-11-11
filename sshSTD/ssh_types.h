@@ -49,8 +49,10 @@ namespace ssh
 			*obj = (Base*)::operator new(sz);
 			(*obj)->ref = 1;
 			(*obj)->next = root;
-			(*obj)->nm = new String(name);
-			(*obj)->tp = new String(type);
+			(*obj)->nm.init();
+			(*obj)->nm = name;
+			(*obj)->tp.init();
+			(*obj)->tp = type;
 			root = *obj;
 			return (void*)*obj;
 		}
@@ -69,19 +71,20 @@ namespace ssh
 		// увеличить счётчик
 		void add_ref() { ref++; }
 		// вернуть имя
-		const String& name() const { return *nm; }
+		String name() const { return nm; }
 		// вернуть тип
-		const String& type() const { return *tp; }
+		String type() const { return tp; }
 	protected:
+		Base() : nm(nullptr), tp(nullptr) {}
 		// деструктор
-		virtual ~Base() { SSH_DEL(nm); SSH_DEL(tp); }
+		virtual ~Base() {  }
 		// число ссылок
 		ssh_l ref;
 		// имя
-		String* nm;
+		String nm;
 	private:
 		// имя типа
-		String* tp;
+		String tp;
 		// корень списка
 		static Base* root;
 		// следующий в списке

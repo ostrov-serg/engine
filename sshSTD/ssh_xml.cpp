@@ -161,7 +161,7 @@ namespace ssh
 		ssh_u bom(0);
 		if(code == L"utf-16le") bom = 0xfeff;
 		else if(code == L"utf-16be") bom = 0xfffe;
-		if(bom) f.write(Buffer(&bom, 2, false), 0);
+		if(bom) f.write(&bom, 2);
 		f.write(txt, code);
 	}
 

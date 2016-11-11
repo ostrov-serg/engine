@@ -165,7 +165,7 @@ namespace ssh
 				}
 				offs += width;
 			}
-			if(!(opt & (SC_CV | SC_PTR |SC_NODE))) xml->add_attr(h, sc->name, val);
+			if(!(opt & (SC_CV | SC_PTR | SC_NODE))) xml->add_attr(h, sc->name, (opt & SC_BASE64) ? ssh_base64(L"utf-16le", val) : val);
 			_sc++;
 		}
 	}

@@ -18,6 +18,7 @@
 #define SC_STR			0x0100// строка
 #define SC_LIT			0x0200// литеральный
 #define SC_CV			0x0400// константный
+#define SC_BASE64		0x0800// данные кодируются в base64
 
 #define SCHEME_SPEC(cls, var, flg)	(std::is_pointer<SSH_PURE_TYPE1_D(cls::var)>() * SC_PTR) | (std::is_floating_point<SSH_PURE_TYPE2_D(cls::var)>() * SC_FLT) | \
 									(SSH_IS_STRING_D(cls::var) * SC_STR) | (SSH_IS_BOOL_D(cls::var) * SC_BOOL) | (SSH_IS_LITERAL_D(cls::var) * SC_LIT) |  \
