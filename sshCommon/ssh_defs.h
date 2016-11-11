@@ -44,10 +44,12 @@ typedef wchar_t*						ssh_pws;
 #define SSH_PURE_TYPE2(T)				std::remove_pointer_t<SSH_PURE_TYPE1(T)>
 #define SSH_IS_STRING(T)				std::is_same<SSH_PURE_TYPE2(T), String>()
 #define SSH_IS_BOOL(T)					std::is_same<SSH_PURE_TYPE2(T), bool>()
+#define SSH_IS_LITERAL(T)				std::is_same<SSH_PURE_TYPE2(T), ssh_ws>() | std::is_same<SSH_PURE_TYPE2(T), ssh_cs>()
 #define SSH_PURE_TYPE1_D(T)				std::remove_all_extents_t<decltype(T)>
 #define SSH_PURE_TYPE2_D(T)				std::remove_pointer_t<SSH_PURE_TYPE1_D(T)>
 #define SSH_IS_STRING_D(T)				std::is_same<SSH_PURE_TYPE2_D(T), String>()
 #define SSH_IS_BOOL_D(T)				std::is_same<SSH_PURE_TYPE2_D(T), bool>()
+#define SSH_IS_LITERAL_D(T)				(std::is_same<SSH_PURE_TYPE2_D(T), ssh_ws>() | std::is_same<SSH_PURE_TYPE2_D(T), ssh_cs>())
 
 // константы
 #define SSH_EPSILON						(1e-06)

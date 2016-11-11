@@ -14,37 +14,67 @@ ssh_u ssh_dll_proc(ssh_cws dll, ssh_ccs nm)
 	return (ssh_u)GetProcAddress(hdll, nm);
 }
 
+class ttt : public Serialize
+{
+public:
+	ttt() : a(999), b(111), c(222) {}
+	virtual SCHEME* get_scheme() const override
+	{
+		SCHEME_BEGIN(ttt)
+			SCHEME_VAR(ttt, a, L"1", SC_BIN, nullptr)
+			SCHEME_VAR(ttt, b, L"2", SC_OCT, nullptr)
+			SCHEME_VAR(ttt, c, L"3", SC_HEX, nullptr)
+		SCHEME_END(ttt);
+	}
+		ssh_w a, b, c;
+};
 class tp : public Serialize
 {
 public:
-//	tp() : x(0), y(0) {}
 	SSH_ENUM(_enum, _one = 1, _two = 2);
-	virtual ~tp() { x = y = nullptr; }
-	struct stk2 { String str[3]; ssh_cws _cws; };
-	struct stk { double xx, *yy[4]; stk2 _stk2; };
+	tp() : x(_one), y(_two) { }
+	virtual ~tp() { }
+	struct stk2
+	{
+		//stk2() { str[0] = L"Сергей"; str[1] = L"Влад"; str[2] = L"Макс"; _cws = L'!'; }
+		String str[3];
+	};
+	struct stk
+	{
+		stk() { xx = 10.0; yy[0] = 1.0; yy[1] = 2.0; yy[2] = 3.0; yy[3] = 4.0; }
+		double xx, yy[4];
+		stk2 _stk2[3]{{L"1",L"2",L"3"},{L"11",L"22",L"33"},{L"111",L"222",L"333"}};
+	};
 	virtual SCHEME* get_scheme() const override
 	{
 		auto& reflector = ssh::EnumReflector::get<_enum>();
-		for(int i = 0; i < reflector.count(); i++)
-		{
-			String nm = reflector.at(i).name;
-			int val = reflector.at(i).value;
-		}
 		SCHEME_BEGIN(tp)
+			SCHEME_VAR(tp, _cws, L"null", 0, nullptr)
+			SCHEME_VAR(tp, x, L"null", 0, &reflector)
+			SCHEME_VAR(tp, _ccs, L"null", 0, nullptr)
 			SCHEME_NODE_BEGIN(tp, _stk)
-				SCHEME_VAR(stk, xx, L"null", 0, &reflector)
+				SCHEME_VAR(stk, xx, L"null", 0, nullptr)
 					SCHEME_NODE_BEGIN(stk, _stk2)
 						SCHEME_VAR(stk2, str, L"null", 0, nullptr)
-						SCHEME_VAR(stk2, _cws, L"null", 0, nullptr)
 					SCHEME_NODE_END()
 				SCHEME_VAR(stk, yy, L"null", 0, nullptr)
 			SCHEME_NODE_END()
-			SCHEME_VAR(tp, x, L"null", 0, nullptr)
-			SCHEME_VAR(tp, y, L"null", 0, nullptr)
+			SCHEME_VAR(tp, y, L"null", 0, &reflector)
+			SCHEME_VAR(tp, is, L"false", 0, nullptr)
+			SCHEME_NODE_BEGIN(tp, _t)
+			SCHEME_NODE_END()
 		SCHEME_END(tp);
 	}
-	float* x, *y;
-	stk _stk;
+	int x, y;
+	const bool is = true;
+	ssh_ws _cws[10] = L"Влад";
+	ssh_cs _ccs = '?';
+	stk _stk[2];
+	ttt _t[3];
+	void make()
+	{
+		Serialize::save(L"c:\\1.bin", false);
+	}
 };
 
 class bs
@@ -57,77 +87,24 @@ private:
 	String nm;
 };
 
-class bs1 : public Base
+class bs1
 {
-	SSH_DYNCREATE(bs1);
 public:
 	bs1() { x = 0; }
+	bs1(int _x, const String& _s) : x(_x), str(_s) { }
 	int x;
 	String str;
-private:
-	Base::Base;
 };
 SSH_ENUM_NS(serg, _1 = 1, _2 = 2, _3 = 4, _4 = 8, _5 = 16, _6 = 32, _7 = 32768, _8 = 16384)
 int main() noexcept
 {
-	int dst[8];
-	String str(L"_1|_7|_8,_2,_1|_3,_8,_7,_7|_8");
-	String str1(__FILEW__);
-
-	ssh_u num = ssh_system_value(SystemInfo::PLATFORM, CpuCaps::AES);
-	Buffer buf(ssh_convert(L"utf-8", L"Шаталов Сергей"));//utf-16le
-	str = ssh_convert(L"utf-8", buf, 0);
-	str = ssh_base64(buf);
-	Buffer buf1(ssh_base64(str));
-	str1 = ssh_convert(L"utf-8", buf1, 0);
-	for(ssh_u i = 0; i < 100; i++)
-	{
-		num = ssh_rand(10, 20);
-	}
-	num = ssh_system_value(SystemInfo::CPU_CAPS, CpuCaps::AVX512CD);
-	num = ssh_system_value(SystemInfo::TOTAL_MEMORY, CpuCaps::AES);
-	str = ssh_num_volume(num);
-	num = ssh_system_value(SystemInfo::PHYSICAL_MEMORY, CpuCaps::AES);
-	str = ssh_num_volume(num);
-	num = ssh_system_value(SystemInfo::CPU_SPEED, CpuCaps::AES);
-	str = ssh_system_paths(SystemInfo::COMP_NAME);
-	str = ssh_system_paths(SystemInfo::PROG_FOLDER);
-	str = ssh_system_paths(SystemInfo::WORK_FOLDER);
-	str = ssh_system_paths(SystemInfo::TEMP_FOLDER);
-	str = ssh_system_paths(SystemInfo::USER_FOLDER);
-	str = ssh_system_paths(SystemInfo::PROG_NAME);
-	str = ssh_system_paths(SystemInfo::USER_NAME);
-	str = ssh_system_paths(SystemInfo::CUSTOM);
-	ssh_u l = str1.length();
-	str = ssh_path_in_range(str1, 42);
-	l = str.length();
-	num = 0x10;
-	str = ssh_num_volume(num);
-	GUID _g = ssh_make_guid(nullptr);
-	str = ssh_make_guid(_g);
-	GUID _g1 = ssh_make_guid((ssh_cws)str);
-	str = ssh_gen_name(L"value = ", false);
-	str = ssh_gen_name(L"value = ", true);
-	str = ssh_file_ext(str1, false);
-	str = ssh_file_name(str1);
-	str = ssh_file_path(str1);
-	str = ssh_file_title(str1);
-	str = ssh_file_path_title(str1);
-	str = ssh_slash_path(str);
-	str = ssh_slash_path(str);
-	ssh_u vec[20];
-	ssh_u c = ssh_split(L'\\', str, vec, 20);
-	ssh_explode(L",", str, dst, 8, 0, &EnumReflector::get<serg>(), Radix::_dec);
-	str1 = ssh_make_hex_string((ssh_d*)dst, 8, str, true, true);
-	String ret(ssh_implode(L",", dst, 8, L"null", &EnumReflector::get<serg>(), false, Radix::_dec));
+	const wchar_t* _ws[2];// [2] = {L"11", L"222"};
+	std::remove_all_extents_t<decltype(_ws)> _ws1;
+	std::remove_pointer_t<decltype(_ws1)> _ws2 = 0;
+	std::remove_const_t<decltype(_ws2)> _ws3;
+	bool is = std::is_same<decltype(_ws3), ssh_ws>();
+	Xml xml;
 	tp t;
-	Serialize::SCHEME* _sc = t.get_scheme();
-	bs1* b, *b1;
-	new(&b, L"fff") bs1();
-	new(&b1, L"fff1") bs1();
-	b1->release();
-	b1->add_ref();
-	b1->release();
-	b->release();
+	t.make();
 	return 0;
 }

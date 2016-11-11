@@ -11,8 +11,7 @@ namespace ssh
 		struct Node
 		{
 			SSH_NEW_DECL(Node, 128);
-			// конструкторы
-			Node() : next(nullptr) {}
+			// конструктор
 			Node(const K& k, const T& t, Node* n) : next(n), key(k), value(t) {}
 			// деструктор
 			~Node() { release_node<T, SSH_IS_PTR(T)>::release(value); release_node<T, SSH_IS_PTR(K)>::release(key); }
@@ -44,12 +43,14 @@ namespace ssh
 		// конструктор копии
 		Map(const Map<T, K>& src) { *this = src; }
 		// конструктор переноса
-		Map(Map<T, K>&& src) { cells = src.cells; src.init(); }
+		Map(Map<T, K>&& src) { cells = src.cells; src.free(); }
 		// деструктор
 		~Map() { reset(); }
+		// принудительное освобождение
+		void free() { cells = nullptr; Node::reset(); }
 		// присваивание
 		const Map& operator = (const Map<T, K>& src) { reset(); return operator += (src); }
-		const Map& operator = (Map<T, K>&& src) { reset(); cells = src.cells; src.init(); return *this; }
+		const Map& operator = (Map<T, K>&& src) { reset(); cells = src.cells; src.free(); return *this; }
 		// приращение
 		const Map& operator += (const Map<T, K>& src) { auto n(src.root()); while(n) { operator[](n->key) = n->value; n = n->next; } return *this; }
 		// количество элементов
@@ -78,10 +79,8 @@ namespace ssh
 		// вернуть корень
 		bool is_empty() const { return (cells == nullptr); }
 		// удаление всего
-		void reset() { auto n(cells); while(cells) { n = n->next; delete cells; cells = n; } init(); }
+		void reset() { auto n(cells); while(cells) { n = n->next; delete cells; cells = n; } free(); }
 	protected:
-		// очистить
-		void init() { cells = nullptr; Node::reset(); }
 		// вернуть узел по ключу
 		Node* get_key(const K& key, Node** p) const { auto n(cells); while(n) {if(n->key == key) return n; if(p) *p = n; n = n->next;} return nullptr; }
 		// корневой элемент

@@ -41,7 +41,7 @@ namespace ssh
 			count++;
 			Block* b(free);
 			free = free->next;
-			::new((T*)(b->t)) T();
+//			::new((T*)(b->t)) T();
 			return (T*)(b->t);
 		}
 		void Free(T* t)

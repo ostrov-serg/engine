@@ -14,7 +14,7 @@ extern "C"
 
 namespace ssh
 {
-	//typedef ssh_cnv (CALLBACK* __cnv_open)(ssh_cws to, ssh_cws from);
+	class EnumReflector;
 	using __cnv_open = ssh_cnv (CALLBACK*)(ssh_cws to, ssh_cws from);
 	typedef void (CALLBACK* __cnv_close)(void* h);
 	typedef void (CALLBACK* __cnv_make)(void* cd, const ssh_b* inbuf, ssh_u inbytesleft, ssh_b* out);
@@ -86,9 +86,10 @@ namespace ssh
 
 	ssh_u SSH ssh_system_value(SystemInfo type, CpuCaps value);
 	ssh_u SSH ssh_dll_proc(ssh_cws dll, ssh_ccs proc, ssh_cws suffix = L"d");
-	ssh_u SSH ssh_hash(ssh_cws wcs);
+	ssh_u SSH ssh_hash(ssh_cws wcs);//
 	ssh_u SSH ssh_rand(ssh_u begin, ssh_u end);
 	ssh_u SSH ssh_offset_line(const String& text, ssh_l ln);
+	ssh_u SSH ssh_count_lines(const String& text);
 	ssh_u SSH ssh_split(ssh_ws split, ssh_cws src, ssh_u* vec, ssh_u count_vec);
 	ssh_u SSH ssh_rand(ssh_u begin, ssh_u end);
 	String SSH ssh_system_paths(SystemInfo type, int csidl = CSIDL_LOCAL_APPDATA);
@@ -107,16 +108,17 @@ namespace ssh
 	String SSH ssh_path_in_range(const String& path, ssh_u range);
 	String SSH ssh_make_guid(const GUID& guid);
 	String SSH ssh_convert(ssh_cws charset, const Buffer& in, ssh_u offs);
+	String SSH ssh_implode2(ssh_u val, const EnumReflector* stk, ssh_cws def, bool is_enum);
 	GUID   SSH ssh_make_guid(ssh_cws src);
 	Buffer SSH ssh_base64(const String& str);
 	Buffer SSH ssh_convert(ssh_cws charset, ssh_cws str);
-	void SSH ssh_make_path(ssh_cws path, bool is_file);
-	void SSH ssh_remove_comments(String* lst, ssh_u count, bool is_simple);
+	void SSH ssh_make_path(ssh_cws path);
+	void SSH ssh_remove_comments(String* lst, ssh_u count, bool is_simple);//
 	bool SSH ssh_is_null(ssh_cws str);
 	bool SSH ssh_is_wrong_lex(const String& str, ssh_cws errLexs = nullptr);
 	bool SSH ssh_dlg_sel_folder(ssh_cws title, String& folder, HWND hWnd);
-	bool SSH ssh_make_wnd(const DESC_WND& desc, bool is_show_wnd);
-	ssh_u SSH ssh_dlg_save_or_open(bool bOpen, ssh_cws title, ssh_cws filter, ssh_cws ext, String& folder, HWND hWnd, String* arr, ssh_u count);
+	bool SSH ssh_make_wnd(const DESC_WND& desc, bool is_show_wnd);//
+	ssh_u SSH ssh_dlg_save_or_open(bool bOpen, ssh_cws title, ssh_cws filter, ssh_cws ext, String& folder, HWND hWnd, String* arr = nullptr, ssh_u count = 0);
 	// преобразовать значение в ближайшую степень двойки
 	inline ssh_u ssh_pow2(ssh_u val, bool nearest)
 	{
@@ -146,7 +148,6 @@ namespace ssh
 		return (val1 > val2 ? val1 : val2);
 	}
 	// разбить строку на элементы
-	class EnumReflector;
 	template <typename T> void ssh_explode(ssh_cws split, const String& src, T* dst, ssh_u count, const T& def, const EnumReflector* stk = nullptr, Radix R = Radix::_dec)
 	{
 		ssh_ws* _wcs(src.buffer()), *t(_wcs);
@@ -190,21 +191,7 @@ namespace ssh
 			if(stk)
 			{
 				_tmp.empty();
-				ssh_u idx;
-				int t((int)tmp);
-				if(is_enum) _tmp = ((idx = stk->find(t)) == -1 ? def : stk->at(idx).name);
-				else
-				{
-					for(idx = 0; idx < stk->count(); idx++)
-					{
-						if((t & stk->at(idx).value))
-						{
-							if(!_tmp.is_empty()) _tmp += L'|';
-							_tmp += stk->at(idx).name;
-						}
-					}
-					if(_tmp.is_empty()) _tmp = def;
-				}
+				_tmp = ssh_implode2((int)tmp, def, is_enum);
 			}
 			else _tmp = String(tmp, R);
 			if(!ret.is_empty()) ret += split;

@@ -5,15 +5,16 @@
 
 namespace ssh
 {
-	/*
-	template <typename T, ssh_u ops = SSH_PTR> class Tree
+	template <typename T> class Tree
 	{
 	public:
 		struct Node
 		{
-			SSH_NEW_SDECL(Node, 512);
-			Node() : fchild(nullptr), lchild(nullptr), next(nullptr), prev(nullptr), parent(nullptr), count(0){}
+			SSH_NEW_DECL(Node, 256);
+			// конструктор узла
 			Node(const T& t, Node* p) : fchild(nullptr), lchild(nullptr), next(nullptr), prev(nullptr), parent(p), count(0), value(t) {}
+			// деструктор
+			~Node() { release_node<T, SSH_IS_PTR(T)>::release(value); }
 			// значение
 			T value;
 			// первый дочерний
@@ -30,36 +31,26 @@ namespace ssh
 			ssh_u count;
 		};
 		// конструктор
-		Tree() : ID(-1) {clear(); }
-		Tree(ssh_u _ID) : ID(_ID) { clear(); }
+		Tree() { }
 		// конструктор копии
-		Tree(const Tree<T, ops>& src) { clear(); *this = src; }
-		Tree(Tree<T, ops>&& src) { ID = src.ID; root = src.root; src.root = nullptr; }
+		Tree(const Tree<T>& src) { *this = src; }
+		// конструктор переноса
+		Tree(Tree<T>&& src) { root = src.root; src.free(); }
 		// деструктор
-		~Tree()
-		{
-			reset();
-			Node::get_MemArrayNode()->Reset();
-		}
-		void setID(ssh_u _ID) { ID = _ID; }
-		// очистить
-		void clear() { root = nullptr; }
+		~Tree() { reset(); }
+		// принудительное освобождение
+		void free() { root = nullptr; Node::reset(); }
 		// сброс
-		void reset()
-		{
-			if(Node::get_MemArrayNode()->Valid())
-				reset(root);
-			clear();
-		}
+		void reset() { reset(root); free(); }
 		// присваивание
-		const Tree& operator = (const Tree<T, ops>& src) { reset(); return *this += src; }
-		const Tree& operator = (Tree<T, ops>&& src) { reset(); ID = src.ID; root = src.root; src.root = nullptr; return *this; }
+		const Tree& operator = (const Tree<T>& src) { reset(); return operator += (src); }
+		const Tree& operator = (Tree<T>&& src) { reset(); root = src.root; src.free(); return *this; }
 		// приращение
-		const Tree& operator += (const Tree<T, ops>& src) { add(root, src); return *this; }
+		const Tree& operator += (const Tree<T>& src) { add(root, src); return *this; }
 		// удаление узла
 		void remove(Node* n) { remove(n, true); }
 		// установить значение узла
-		void set(Node* n, const T& t) { BaseNode<T, ops>::release(n->value); n->value = t; }
+		void set(Node* n, const T& t) { release_node<T, SSH_IS_PTR(T)>::release(n->value); n->value = t; }
 		// возможно ли перемещение узла? в первом случае p = перемещаемый узел->fchild
 		bool is_move(Node* p, Node* n) const
 		{
@@ -77,11 +68,11 @@ namespace ssh
 		// добавить дочерний
 		Node* add(Node* n, const T& t) { return add(n, new Node(t, n)); }
 		// добавить дерево
-		Node* add(Node* n, const Tree<T, ops>& src) { return add(n, src.root); }
+		Node* add(Node* n, const Tree<T>& src) { return add(n, src.root); }
 		// вставить дочерний		
 		Node* insert(Node* n, const T& t) { return insert(n, new Node(t, n)); }
 		// вставить другое дерево
-		Node* insert(Node* n, const Tree<T, ops>& src) { return insert(n, src.get_root()); }
+		Node* insert(Node* n, const Tree<T>& src) { return insert(n, src.get_root()); }
 		// вернуть узел по индексу
 		Node* get_node_index(Node* n, ssh_l idx) const
 		{
@@ -105,13 +96,13 @@ namespace ssh
 			return nullptr;
 		}
 		// найти дочерний по имени
-		Node* get_node_hash(Node* n, ssh_u name) const
+		Node* get_node_name(Node* n, const String& name) const
 		{
 			Node* nn;
 			while(n)
 			{
-				if(n->value->name().hash() == name) return n;
-				if(n->fchild) { if((nn = get_node_hash(n->fchild, name))) return nn; }
+				if(n->value->name() == name) return n;
+				if(n->fchild) { if((nn = get_node_name(n->fchild, name))) return nn; }
 				n = n->next;
 			}
 			return nullptr;
@@ -119,12 +110,12 @@ namespace ssh
 		// корень
 		Node* get_root() const { return root; }
 	protected:
+		// сброс
 		void reset(Node* n)
 		{
 			while(n)
 			{
 				if(n->fchild) reset(n->fchild);
-				BaseNode<T, ops>::release(n->value);
 				auto nn(n->next); delete n;
 				n = nn;
 			}
@@ -134,7 +125,7 @@ namespace ssh
 			Node* p(n->parent), *nn(n->next), *pn(n->prev);
 			n->next = n->prev = nullptr;
 			if(p) {p->count--; if(n == p->fchild) p->fchild = nn; if(n == p->lchild) p->lchild = pn;}
-			if(is_del) { BaseNode<T, ops>::release(n->value); delete n; }
+			if(is_del) delete n;
 			if(nn) nn->prev = pn;
 			if(pn) pn->next = nn;
 			if(n == root) root = nullptr;
@@ -163,10 +154,7 @@ namespace ssh
 			else if(!root) root = n;
 			return n;
 		}
-		// идентификатор
-		ssh_u ID;
 		// корень
-		Node* root;
+		Node* root = nullptr;
 	};
-	*/
 }

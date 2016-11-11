@@ -115,40 +115,20 @@ inline static unsigned int aliases_hash(ssh_cws str, ssh_i len)
 
 	switch(hval)
 	{
-		default:
-			hval += asso_values[str[10]];
-			/*FALLTHROUGH*/
-		case 10:
-			hval += asso_values[str[9]];
-			/*FALLTHROUGH*/
-		case 9:
-			hval += asso_values[str[8]];
-			/*FALLTHROUGH*/
-		case 8:
-			hval += asso_values[str[7]];
-			/*FALLTHROUGH*/
-		case 7:
-			hval += asso_values[str[6]];
-			/*FALLTHROUGH*/
-		case 6:
-			hval += asso_values[str[5]];
-			/*FALLTHROUGH*/
-		case 5:
-			hval += asso_values[str[4]];
-			/*FALLTHROUGH*/
-		case 4:
-			hval += asso_values[str[3]];
-			/*FALLTHROUGH*/
-		case 3:
-			hval += asso_values[str[2]];
-			/*FALLTHROUGH*/
+		default: hval += asso_values[str[10]];
+		case 10: hval += asso_values[str[9]];
+		case 9: hval += asso_values[str[8]];
+		case 8: hval += asso_values[str[7]];
+		case 7: hval += asso_values[str[6]];
+		case 6: hval += asso_values[str[5]];
+		case 5: hval += asso_values[str[4]];
+		case 4: hval += asso_values[str[3]];
+		case 3: hval += asso_values[str[2]];
 		case 2:
-		case 1:
-			hval += asso_values[str[0]];
-			break;
+		case 1: hval += asso_values[str[0]]; break;
 	}
 	hval += asso_values[str[len - 1]];
-	return hval;//384
+	return hval;
 }
 
 const struct alias* aliases_lookup(ssh_cws str, ssh_i len)
@@ -229,9 +209,9 @@ ssh_cnv cnv_open(ssh_cws tocode, ssh_cws fromcode)
 	ssh_i to_index, from_index;
 	int to_wchar, from_wchar;
 
-	if((to_index = parse_charset(tocode, &to_wchar)) == -1) return (ssh_cnv)-1;
-	if((from_index = parse_charset(fromcode, &from_wchar)) == -1) return (ssh_cnv)-1;
-	if(!(cd = (struct conv_struct*)malloc(from_wchar != to_wchar ? sizeof(struct wchar_conv_struct) : sizeof(struct conv_struct)))) return (ssh_cnv)(-1);
+	if((to_index = parse_charset(tocode, &to_wchar)) == -1) return (ssh_cnv)0;
+	if((from_index = parse_charset(fromcode, &from_wchar)) == -1) return (ssh_cnv)0;
+	if(!(cd = (struct conv_struct*)malloc(from_wchar != to_wchar ? sizeof(struct wchar_conv_struct) : sizeof(struct conv_struct)))) return (ssh_cnv)0;
 	cd->iindex = from_index;
 	cd->ifuncs = all_encodings[from_index].ifuncs;
 	cd->oindex = to_index;
@@ -251,12 +231,12 @@ ssh_cnv cnv_open(ssh_cws tocode, ssh_cws fromcode)
 
 void cnv_make(ssh_cnv icd, const ssh_b* inbuf, ssh_u inbytesleft, ssh_b* out)
 {
-	unicode_loop_convert(icd, inbuf, inbytesleft, out);
+	if(icd) unicode_loop_convert(icd, inbuf, inbytesleft, out);
 }
 
 ssh_u cnv_calc(ssh_cnv icd, const ssh_b* inbuf, ssh_u inbytesleft)
 {
-	return unicode_loop_calc(icd, inbuf, inbytesleft);
+	return (icd ? unicode_loop_calc(icd, inbuf, inbytesleft) : 0);
 }
 
 void cnv_close(ssh_cnv icd)

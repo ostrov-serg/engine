@@ -3,14 +3,13 @@
 
 #include <sshCommon\ssh_defs.h>
 
-#define WIN32_LEAN_AND_MEAN
 #define _CRT_SECURE_NO_WARNINGS
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include <winsock2.h>
 #include <windows.h>
 #include <iostream>
-#include <tchar.h>
+//#include <tchar.h>
 #include <time.h>
 // intrisincs
 #include <intrin.h>
@@ -21,11 +20,9 @@
 #include <new.h>
 // CSIDL_LOCAL_XXX
 #include <Shlobj.h>
-//#include <sys\stat.h>
-//#include <sys\types.h>
 #include <openssl\ssl.h>
 #include <openssl\md5.h>
-#include <Lmcons.h>
+//#include <Lmcons.h>
 #include <sshCommon\ssh_regx.h>
 #include <sshCommon\mysql\mysql.h>
 #include <sshCommon\ssh_cnv.h>

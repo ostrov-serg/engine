@@ -11,8 +11,7 @@ namespace ssh
 		struct Node
 		{
 			SSH_NEW_DECL(Node, 128);
-			// конструкторы
-			Node() : prev(nullptr), next(nullptr) {}
+			// конструктор
 			Node(const T& t, Node* p, Node* n) : prev(p), next(n), value(t) {}
 			// деструктор
 			~Node() { release_node<T, SSH_IS_PTR(T)>::release(value); }
@@ -30,15 +29,17 @@ namespace ssh
 		// конструктор из списка инициализации
 		List(const std::initializer_list<T>& _list) { for(auto& t : _list) insert(nlast, t); }
 		// конструктор переноса
-		List(List<T>&& src) { nroot = src.nroot; nlast = src.nlast; src.init(); }
+		List(List<T>&& src) { nroot = src.nroot; nlast = src.nlast; src.free(); }
 		// деструктор
 		~List() { reset(); }
+		// принудительное освобождение
+		void free() { nroot = nlast = nullptr; Node::reset(); }
 		// приращение
 		Node* operator += (const T& t) { return insert(nlast, t); }
-		const List& operator += (const List<T>& src) { auto n(src.root()); while(n) insert(nlast, n->value), n = n->next; return *this; }
+		const List& operator += (const List<T>& src) { auto n(src.root()); while(n) { insert(nlast, n->value); n = n->next; } return *this; }
 		// присваивание
 		const List& operator = (const List<T>& src) { reset(); return operator += (src); }
-		const List& operator = (List<T>&& src) { reset(); nroot = src.nroot; nlast = src.nlast; src.init(); return *this; }
+		const List& operator = (List<T>&& src) { reset(); nroot = src.nroot; nlast = src.nlast; src.free(); return *this; }
 		// вставка
 		Node* insert(Node* n, const T& t)
 		{
@@ -71,12 +72,10 @@ namespace ssh
 		// найти
 		Node* find(const T& value) const { auto n(root()); while(n && n->value != value) n = n->next; return n; }
 		// сброс
-		void reset() { auto n(nroot); while(nroot) { n = nroot->next; delete nroot; nroot = n; } init(); }
+		void reset() { auto n(nroot); while(nroot) { n = nroot->next; delete nroot; nroot = n; } free(); }
 		// вернуть признак пустого
 		bool is_empty() const { return nroot == nullptr; }
 	protected:
-		// очистить
-		void init() { nroot = nlast = nullptr; Node::reset(); }
 		// корень
 		Node* nroot = nullptr;
 		// последний

@@ -53,12 +53,12 @@ namespace ssh
 			return subj.substr(vec(idx, 0), len(idx));
 		}
 		// заменить с компиляцией паттерна
-		bool replace(String& subject, ssh_cws pattern, ssh_cws repl, ssh_l idx = 0)
+		bool replace(String& subject, const String& pattern, ssh_cws repl, ssh_l idx)
 		{
-			return ((re = compile(pattern)) ? replace(subject, repl, idx) : false);
+			return ((re = compile(pattern)) ? replace(subject, repl, idx, -1) : false);
 		}
 		// заменить без компиляции паттерна
-		bool replace(String& subject, ssh_cws repl, ssh_l idx, ssh_u idx_ptrn = -1)
+		bool replace(String& subject, ssh_cws repl, ssh_l idx, ssh_u idx_ptrn)
 		{
 			ssh_l nWcs(wcslen(repl));
 			while(match(subject, idx_ptrn, idx) > 0)

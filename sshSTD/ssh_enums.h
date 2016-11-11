@@ -10,11 +10,11 @@ namespace ssh
 	#define SSH_ENUM_DETAIL_SPEC_namespace extern "C"{} inline
 	#define SSH_ENUM_DETAIL_SPEC_class friend
 	#define SSH_ENUM_DETAIL_STR(x) L#x
-	#define SSH_ENUM_DETAIL_MAKE(spec, enumName, ...) enum enumName:int { __VA_ARGS__ };		\
+	#define SSH_ENUM_DETAIL_MAKE(spec, enumName, ...) enum enumName:ssh_u { __VA_ARGS__ };		\
     SSH_ENUM_DETAIL_SPEC_##spec const ::EnumReflector& _detail_reflector_(enumName)				\
     {																							\
         static const ::EnumReflector _reflector( []{											\
-            static int _detail_sval;															\
+            static ssh_u _detail_sval;															\
             _detail_sval = 0;																	\
             struct _detail_val_t																\
             {																					\
@@ -23,12 +23,12 @@ namespace ssh
                 _detail_val_t()                 : _val(_detail_sval){ _detail_sval = _val + 1; }\
 																								\
                 _detail_val_t& operator=(const _detail_val_t&) { return *this; }				\
-                _detail_val_t& operator=(int) { return *this; }									\
-                operator int() const { return _val; }											\
-                int _val;																		\
+                _detail_val_t& operator=(ssh_u) { return *this; }									\
+                operator ssh_u() const { return _val; }											\
+                ssh_u _val;																		\
             } __VA_ARGS__;																		\
-            const int _detail_vals[] = { __VA_ARGS__ };											\
-            return ::EnumReflector( _detail_vals, sizeof(_detail_vals)/sizeof(int), L#enumName, \
+            const ssh_u _detail_vals[] = { __VA_ARGS__ };											\
+            return ::EnumReflector( _detail_vals, sizeof(_detail_vals)/sizeof(ssh_u), L#enumName, \
 								SSH_ENUM_DETAIL_STR((__VA_ARGS__))  );							\
         }() );																					\
         return _reflector;																		\
@@ -42,10 +42,10 @@ namespace ssh
 		struct Enumerator
 		{
 			String name;
-			int value;
+			ssh_u value;
 		};
 		// конструктор
-		EnumReflector(const int*, int, ssh_cws, ssh_cws);
+		EnumReflector(const ssh_u*, ssh_u, ssh_cws, ssh_cws);
 		// количество элементов
 		ssh_u count() const { return values.size(); }
 		// найти по имени
@@ -56,7 +56,7 @@ namespace ssh
 			return -1;
 		}
 		// найти по значению
-		ssh_u find(int value) const
+		ssh_u find(ssh_u value) const
 		{
 			for(ssh_u i = 0; i < count(); ++i)
 				if(values[i].value == value) return i;
@@ -77,7 +77,7 @@ namespace ssh
 		return (c >= L'A' && c <= L'Z') || (c >= L'a' && c <= L'z') || (c >= L'0' && c <= L'9') || (c == L'_');
 	}
 
-	inline EnumReflector::EnumReflector(const int* vals, int count, ssh_cws name, ssh_cws body)
+	inline EnumReflector::EnumReflector(const ssh_u* vals, ssh_u count, ssh_cws name, ssh_cws body)
 	{
 		enumName = name;
 		values.resize(count);

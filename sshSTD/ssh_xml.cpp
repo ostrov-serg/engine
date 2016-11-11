@@ -1,14 +1,15 @@
 
 #include "stdafx.h"
 #include "ssh_xml.h"
+#include "ssh_file.h"
+#include "ssh_regx.h"
 
 namespace ssh
 {
-	/*
-	ssh_ws* Xml::_xml(nullptr);
+	static ssh_ws* _xml(nullptr);
 	static ssh_w vec[512];
 
-	Xml::Xml(const buf_cs& buf)
+	Xml::Xml(const Buffer& buf)
 	{
 		try
 		{
@@ -21,19 +22,17 @@ namespace ssh
 	{
 		try
 		{
-			SSH_TRACE;
 			close();
 			// 1. открываем файл
 			File f(path, File::open_read);
 			// 2. загружаем, декодируем и строим дерево
-			_make(f.read());
+			_make(f.read(0));
 		}
 		catch(const Exception& e) { e.add(L"ѕарсер XML <%s>!", path); }
 	}
 
-	String Xml::encode(const buf_cs& buf)
+	String Xml::encode(const Buffer& buf)
 	{
-		SSH_TRACE;
 		String ret, charset, caption;
 		// проверить на BOM
 		ssh_b _0(buf[0]), _1(buf[1]), _2(buf[2]);
@@ -43,26 +42,25 @@ namespace ssh
 		bool bom8(_0 == 0xef && _1 == 0xbb && _2 == 0xbf);
 		int width((bom16le || bom16be) + 1);
 		// определить границы заголовка xml
-		if((pos = (width == 1 ? (strstr(buf, "?>") - buf) : (wcsstr(buf.to<ssh_ws>(), L"?>") - buf.to<ssh_ws>()))) < 0) SSH_THROW(L"Ќе удалось найти заголовок XML!");
+		if((pos = (width == 1 ? (strstr(buf.to<ssh_ccs>(), "?>") - buf.to<ssh_ccs>()) : (wcsstr(buf.to<ssh_cws>(), L"?>") - buf.to<ssh_cws>()))) < 0) SSH_THROW(L"Ќе удалось найти заголовок XML!");
 		pos += 2;
 		ssh_cs _cs(buf[pos * width]);
 		buf[pos * width] = 0;
-		caption = (width == 1 ? ssh_cnv(L"utf-8", buf, bom8 * 3) : buf.to<ssh_ws>() + 1);
+		caption = (width == 1 ? ssh_convert(L"utf-8", buf, bom8 * 3) : buf.to<ssh_cws>() + 1);
 		buf[pos * width] = _cs;
 		regx rx;
-		if(rx.match(caption, LR"((?im)<\?xml\s+version=.+encoding=["]?(.*?)["]?\s*\?>)") > 0)
+		if(rx.match(caption, LR"((?im)<\?xml\s+version=.+encoding=["]?(.*?)["]?\s*\?>)", 0) > 0)
 		{
 			charset = rx.substr(1);
 			charset.lower();
 			if((bom16le && charset != L"utf-16le") || (bom16be && charset != L"utf-16be") || (bom8 && charset != L"utf-8")) charset.empty();
 		}
 		if(charset.is_empty()) SSH_THROW(L"Ќеизвестна€ кодирока.");
-		return ssh_cnv(charset, buf, pos * width);
+		return ssh_convert(charset, buf, pos * width);
 	}
 
-	void Xml::_make(const buf_cs& buf)
+	void Xml::_make(const Buffer& buf)
 	{
-		SSH_TRACE;
 		tree.reset();
 		String tmp(encode(buf));
 		_xml = tmp.buffer();
@@ -101,7 +99,7 @@ namespace ssh
 			if(len_vec(1) == 2)
 			{
 				_x[vec[5]] = 0;
-				if(get_name(hp) != (_x + vec[4])) SSH_THROW(L"");
+				if(get_name(hp) != (ssh_cws)(_x + vec[4])) SSH_THROW(L"");
 				return;
 			}
 			_x[vec[5]] = 0;
@@ -118,25 +116,12 @@ namespace ssh
 				{
 					_x[vec[attr * 2 + 1]] = 0;
 					_x[vec[attr * 2 + 3]] = 0;
-					set_attr(h, _x + vec[attr * 2], _x + vec[attr * 2 + 2]);
+					add_attr(h, _x + vec[attr * 2], _x + vec[attr * 2 + 2]);
 					attr += 2;
 				}
 			}
 			if(is_child) make(h, lev + 1);
 		}
-	}
-
-	void Xml::save(const String& path, ssh_cws code)
-	{
-		SSH_TRACE;
-		String txt(Sting::fmt(L"<?xml version=\"1.0\" encoding=\"%s\" ?>\r\n", code));
-		txt += _save(tree.get_root(), 0);
-		File f(path, File::create_write);
-		ssh_u bom(0);
-		if(code == L"utf-16le") bom = 0xfeff;
-		else if(code == L"utf-16be") bom = 0xfffe;
-		if(bom) f.write(&bom, 2);
-		f.write(txt, code);
 	}
 
 	String Xml::_save(HXML h, ssh_l level)
@@ -145,8 +130,8 @@ namespace ssh
 		String s(L'\t', level);
 		String str(s + L"<" + n->nm);
 		// атрибуты узла
-		auto a(n->attrs);
-		while(a) { str += L" " + a->nm + L"=\"" + a->val + L"\""; a = a->next; }
+		auto a(n->attrs.root());
+		while(a) { str += L" " + a->value->nm + L"=\"" + a->value->val + L"\""; a = a->next; }
 		// значение узла
 		auto ch(h->fchild);
 		bool is_child(ch != 0);
@@ -167,5 +152,17 @@ namespace ssh
 		}
 		return str;
 	}
-	*/
+
+	void Xml::save(const String& path, ssh_cws code)
+	{
+		String txt(String::fmt(L"<?xml version=\"1.0\" encoding=\"%s\" ?>\r\n", code));
+		txt += _save(tree.get_root(), 0);
+		File f(path, File::create_write);
+		ssh_u bom(0);
+		if(code == L"utf-16le") bom = 0xfeff;
+		else if(code == L"utf-16be") bom = 0xfffe;
+		if(bom) f.write(Buffer(&bom, 2, false), 0);
+		f.write(txt, code);
+	}
+
 }

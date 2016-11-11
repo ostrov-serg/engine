@@ -81,11 +81,16 @@ namespace ssh
 		{
 			return ssh_convert(cnv, read(size), 0);
 		}
+		// запись области памяти
+		void write(void* ptr, ssh_u size) const
+		{
+			if(_write(h, ptr, (ssh_i)size) != size) SSH_THROW(L"Ошибка записи файла %s!", path);
+		}
 		// запись буфера определенного размера
 		void write(const Buffer& buf, ssh_u size = 0) const
 		{
 			if(!size) size = buf.size();
-			if(_write(h, buf, (ssh_i)size) != size) SSH_THROW(L"Ошибка записи файла %s!", path);
+			write((ssh_b*)buf, (ssh_i)size);
 		}
 		// запись буфера определенного размера в определенную позицию
 		void write(const Buffer& buf, ssh_u size, ssh_u pos, int flags) const

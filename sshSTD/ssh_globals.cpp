@@ -3,6 +3,9 @@
 #include "ssh_globals.h"
 #include "ssh_rtti.h"
 #include "ssh_map.h"
+#include "ssh_file.h"
+#include "ssh_regx.h"
+#include "ssh_enums.h"
 
 namespace ssh
 {
@@ -94,6 +97,26 @@ namespace ssh
 		return String(out.to<ssh_cws>(), out.size() / 2);
 	}
 
+	String SSH ssh_implode2(ssh_u val, const EnumReflector* stk, ssh_cws def, bool is_enum)
+	{
+		ssh_u idx;
+		String _tmp;
+		if(is_enum) _tmp = ((idx = stk->find(val)) == -1 ? def : stk->at(idx).name);
+		else
+		{
+			for(idx = 0; idx < stk->count(); idx++)
+			{
+				if((val & stk->at(idx).value))
+				{
+					if(!_tmp.is_empty()) _tmp += L'|';
+					_tmp += stk->at(idx).name;
+				}
+			}
+			if(_tmp.is_empty()) _tmp = def;
+		}
+		return _tmp;
+	}
+
 	// добавить слеш на конец пути
 	String SSH ssh_slash_path(const String& path)
 	{
@@ -144,10 +167,23 @@ namespace ssh
 		ssh_cws txt(_text);
 		while(ln-- > 0)
 		{
-			if(!(_text = wcsstr(_text, L"\r\n"))) return text.length();
-			_text += 2;
+			if(!(_text = wcschr(_text, L'\n'))) return text.length();
+			_text++;
 		}
 		return (_text - txt);
+	}
+
+	ssh_u SSH ssh_count_lines(const String & text)
+	{
+		ssh_u count(0);
+		ssh_cws _text(text);
+		while(!ssh_is_null(_text))
+		{
+			count++;
+			if(!(_text = wcschr(_text, L'\n'))) break;
+			_text++;
+		}
+		return count;
 	}
 
 	ssh_u SSH ssh_split(ssh_ws split, ssh_cws src, ssh_u* vec, ssh_u count)
@@ -188,24 +224,38 @@ namespace ssh
 		return _guid;
 	}
 
-	void SSH ssh_make_path(ssh_cws path, bool is_file)
+	void SSH ssh_make_path(ssh_cws path)
 	{
-		ssh_ws dir[MAX_PATH];
 		ssh_ws* _path((ssh_ws*)path);
-		bool is;
-		GetCurrentDirectory(MAX_PATH, dir);
-		while(true)
+		String dir(ssh_system_paths(SystemInfo::WORK_FOLDER));
+		while((_path = wcschr(_path, L'\\')))
 		{
-			if(is = (_path = wcschr(_path, L'\\')) != 0) *_path = 0;
-			if(!SetCurrentDirectory(path))
-			{
-				if(!is) is = !is_file;
-				if(is) CreateDirectory(path, nullptr);
-			}
-			if(!_path) break;
+			*_path = 0;
+			if(!SetCurrentDirectory(path)) CreateDirectory(path, nullptr);
 			*_path++ = L'\\';
 		}
 		SetCurrentDirectory(dir);
+	}
+
+	void SSH ssh_remove_comments(String * lst, ssh_u count, bool is_simple)
+	{
+		if(lst)
+		{
+			regx rx;
+			rx.set_pattern(0, LR"((?mUs)/\*.*\*/)");
+			rx.set_pattern(1, LR"((?m)\s*//.*[\r\n]*)");
+
+			for(ssh_u i = 0; i < count; i++)
+			{
+				String path(lst[i]), npath(ssh_file_path_title(path) + L'+' + ssh_file_ext(path, true));
+				File of(path, File::open_read);
+				File nf(npath, File::create_write);
+				String text(of.read(0, cp_ansi));
+				if(is_simple) rx.replace(text, L"", 0, 1);
+				rx.replace(text, L"", 0, 0);
+				nf.write(text, cp_ansi);
+			}
+		}
 	}
 
 	bool SSH ssh_is_null(ssh_cws str)
@@ -429,7 +479,7 @@ namespace ssh
 
 	static void ssh_init_libs()
 	{
-		// инициализировать функции стандартных библиотек - sshREGX, sshCNV, sshEXT
+		// инициализировать функции стандартных библиотек - sshREGX, sshCNV
 		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");
 		ssh_cnv_close = (__cnv_close)ssh_dll_proc(L"sshCNV.dll", "cnv_close");
 		ssh_cnv_make = (__cnv_make)ssh_dll_proc(L"sshCNV.dll", "cnv_make");
@@ -547,6 +597,65 @@ namespace ssh
 			}
 		}
 		return false;
+	}
+	
+	ssh_u ssh_dlg_save_or_open(bool bOpen, ssh_cws title, ssh_cws filter, ssh_cws ext, String & folder, HWND hWnd, String * arr, ssh_u count)
+	{
+		// filter = например, C++ source|*.cpp;
+		ssh_u result(0);
+		ssh_ws flt[256];
+		ssh_u nBytesFiles(1), i(0);
+
+		int flags(OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT);
+
+		OPENFILENAME ofn;
+		SSH_MEMZERO(&ofn, sizeof(OPENFILENAME));
+
+		while((flt[i++] = *filter))
+		{
+			if(*filter++ == L'|') flt[i - 1] = 0;
+		}
+		flt[i] = 0;
+		if(arr)
+		{
+			flags |= OFN_ALLOWMULTISELECT;
+			nBytesFiles = count;
+		}
+		if(bOpen) flags |= OFN_FILEMUSTEXIST;
+		nBytesFiles *= MAX_PATH;
+
+		Buffer files(nBytesFiles); ssh_ws* _files(files.to<ssh_ws*>());
+		SSH_MEMZERO(files, nBytesFiles);
+
+		ofn.lStructSize = sizeof(OPENFILENAME);
+		ofn.hwndOwner = hWnd;
+		ofn.lpstrDefExt = ext;
+		ofn.lpstrFilter = flt;
+		ofn.lpstrInitialDir = folder;
+		ofn.lpstrTitle = title;
+		ofn.lpstrFile = _files;
+		ofn.lpstrFileTitle = nullptr;
+		ofn.nFilterIndex = 1;
+		ofn.nMaxFile = (DWORD)nBytesFiles;
+		ofn.Flags = flags;
+
+		if((bOpen ? ::GetOpenFileName(&ofn) : ::GetSaveFileNameW(&ofn)))
+		{
+			folder = (ssh_cws)_files;
+			result = 1;
+			if(arr)
+			{
+				if(!_files[folder.length() + 1]) arr[0] = folder;
+				else
+				{
+					folder = ssh_slash_path(folder);
+					result--;
+					while(result < count && *(_files += (wcslen(_files) + 1))) arr[result++] = folder + (ssh_cws)_files;
+				}
+			}
+		}
+
+		return result;
 	}
 }
 
