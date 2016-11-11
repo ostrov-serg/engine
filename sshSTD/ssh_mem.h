@@ -3,90 +3,38 @@
 
 namespace ssh
 {
-	template <typename T, ssh_u N = 128> class MemArray
-	{
-	public:
-		struct Block
-		{
-			union
-			{
-				Block* next;
-				ssh_b t[sizeof(T)];
-			};
-		};
-
-		struct BlockFix
-		{
-			BlockFix() : next(nullptr) {}
-			~BlockFix() { SSH_DEL(next); }
-			BlockFix* next;
-			Block arr[N];
-		};
-		MemArray() : free(nullptr), arrs(nullptr), count(0) {}
-		~MemArray() { Reset(); }
-		void Reset() { SSH_DEL(arrs); free = nullptr; }
-		T* Alloc()
-		{
-			if(!free)
-			{
-				BlockFix* tmp(new BlockFix);
-				memset(tmp->arr, 0, sizeof(Block) * N);
-				tmp->next = arrs; arrs = tmp;
-				for(ssh_u i = 0; i < N; i++)
-				{
-					arrs->arr[i].next = free;
-					free = &(arrs->arr[i]);
-				}
-			}
-			count++;
-			Block* b(free);
-			free = free->next;
-//			::new((T*)(b->t)) T();
-			return (T*)(b->t);
-		}
-		void Free(T* t)
-		{
-			Block* b((Block*)t);
-			t->~T();
-			b->next = free;
-			free = b;
-			count--;
-		}
-		int count;
-		Block* free;
-		BlockFix* arrs;
-	};
-
-	template <typename T> class List;
-
 	class SSH MemMgr
 	{
 	public:
-		struct Block
+		struct NodeMem
 		{
-			Block() : ptr(0), sz(0) {}
-			Block(ssh_u _ptr, ssh_u _sz) : ptr(_ptr), sz(_sz) {}
-			ssh_u ptr;
-			ssh_u sz;
+			// конструктор
+			NodeMem(int _sz, NodeMem* nn) : next(nn), prev(nullptr), sz(_sz), use(1) {}
+			// признак использованного блока
+			int use;
+			// размер блока
+			int sz;
+			// следующий
+			NodeMem* next;
+			// предыдущий
+			NodeMem* prev;
 		};
 		static MemMgr* instance() { static MemMgr mem; return &mem; }
+		// обработка внешнего исключения
+		bool fault(int type, ssh_cws fn, ssh_cws fl, int ln, EXCEPTION_POINTERS* except = nullptr, ssh_cws msg_ex = nullptr);
+		// вернуть информацию об сеансе работы менеджера
+		void output();
 		// выделение памяти
 		void* alloc(ssh_u sz);
 		// освобождение
 		void free(ssh_b* p);
-		// вернуть информацию об сеансе работы менеджера
-		void output();
 		// вернуть признак блокировки
 		bool is_started() const { return is_enabled; }
-		// запуск/останов
-		void start() { is_enabled = true; }
-		void stop() { is_enabled = false; }
+		// установить признак блокировки
+		void start() { is_enabled = false; }
+		void stop() { is_enabled = true; }
 	protected:
-		// конструктор
-//		MemMgr() {}
-		// деструктор
-		~MemMgr();
-		// вернуть массив не освобожденных узлов
+		// вернуть не освобожденные блоки
 		void leaks();
 		// максимум выделенных
 		ssh_u total_alloc = 0;
@@ -94,10 +42,10 @@ namespace ssh
 		ssh_u total_free = 0;
 		// максимум единовременно выделенной памяти
 		ssh_u use_mem = 0, use_max_mem = 0;
-		// признак активности
-		bool is_enabled = false;
-		// список блоков памяти
-		static List<Block> blocks;
+		// признак блокировки
+		bool is_enabled = true;
+		// корневой блок
+		NodeMem* root = nullptr;
 	};
 }
 

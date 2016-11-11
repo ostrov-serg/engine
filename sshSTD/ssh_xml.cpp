@@ -130,8 +130,7 @@ namespace ssh
 		String s(L'\t', level);
 		String str(s + L"<" + n->nm);
 		// атрибуты узла
-		auto a(n->attrs.root());
-		while(a) { str += L" " + a->value->nm + L"=\"" + a->value->val + L"\""; a = a->next; }
+		for(auto a : n->attrs) str += L" " + a->nm + L"=\"" + a->val + L"\"";
 		// значение узла
 		auto ch(h->fchild);
 		bool is_child(ch != 0);

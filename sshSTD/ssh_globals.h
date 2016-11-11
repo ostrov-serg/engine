@@ -220,4 +220,68 @@ namespace ssh
 		if(is_cont) bytes += L". . .";
 		return bytes;
 	}
+
+	template <typename T> class Iter
+	{
+	public:
+		// конструктор по значению
+		Iter(T* n) : val(n) {}
+		// оператор сравнения
+		bool operator != (const Iter& it) const { return (val != it.val); }
+		// оператор приращения
+		Iter operator++() const { val = val->next; return *this; }
+		// оператор извлечения
+		auto operator*() const { return val->value; }
+	protected:
+		// значение
+		mutable T* val;
+	};
+
+	template <typename T, ssh_u N = 128> class MemArray
+	{
+	public:
+		struct Block
+		{
+			union
+			{
+				Block* next;
+				ssh_b t[sizeof(T)];
+			};
+		};
+
+		struct BlockFix
+		{
+			BlockFix() : next(nullptr) {}
+			~BlockFix() { SSH_DEL(next); }
+			BlockFix* next;
+			Block arr[N];
+		};
+		void Reset() { SSH_DEL(arrs); free = nullptr; }
+		T* Alloc()
+		{
+			if(!free)
+			{
+				BlockFix* tmp(new BlockFix);
+				memset(tmp->arr, 0, sizeof(Block) * N);
+				tmp->next = arrs; arrs = tmp;
+				for(ssh_u i = 0; i < N; i++)
+				{
+					arrs->arr[i].next = free;
+					free = &(arrs->arr[i]);
+				}
+			}
+			Block* b(free);
+			free = free->next;
+			return (T*)(b->t);
+		}
+		void Free(T* t)
+		{
+			Block* b((Block*)t);
+			t->~T();
+			b->next = free;
+			free = b;
+		}
+		Block* free = nullptr;
+		BlockFix* arrs = nullptr;
+	};
 }

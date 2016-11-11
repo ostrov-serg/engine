@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "ssh_mem.h"
-
 namespace ssh
 {
 	template <typename T> class List
@@ -27,28 +25,28 @@ namespace ssh
 		// конструктор копии
 		List(const List<T>& src) { *this = src; }
 		// конструктор из списка инициализации
-		List(const std::initializer_list<T>& _list) { for(auto& t : _list) insert(nlast, t); }
+		List(const std::initializer_list<T>& _list) { for(auto& t : _list) insert(last, t); }
 		// конструктор переноса
-		List(List<T>&& src) { nroot = src.nroot; nlast = src.nlast; src.free(); }
+		List(List<T>&& src) { root = src.root; last = src.last; src.free(); }
 		// деструктор
 		~List() { reset(); }
 		// принудительное освобождение
-		void free() { nroot = nlast = nullptr; Node::reset(); }
+		void free() { root = last = nullptr; Node::reset(); }
 		// приращение
-		Node* operator += (const T& t) { return insert(nlast, t); }
-		const List& operator += (const List<T>& src) { auto n(src.root()); while(n) { insert(nlast, n->value); n = n->next; } return *this; }
+		Node* operator += (const T& t) { return insert(last, t); }
+		const List& operator += (const List<T>& src) { for(auto n : src) insert(last, n); return *this; }
 		// присваивание
 		const List& operator = (const List<T>& src) { reset(); return operator += (src); }
-		const List& operator = (List<T>&& src) { reset(); nroot = src.nroot; nlast = src.nlast; src.free(); return *this; }
+		const List& operator = (List<T>&& src) { reset(); root = src.root; last = src.last; src.free(); return *this; }
 		// вставка
 		Node* insert(Node* n, const T& t)
 		{
-			auto nn(n ? n->next : nroot);
+			auto nn(n ? n->next : root);
 			auto nd(new Node(t, n, nn));
 			if(n) n->next = nd;
 			if(nn) nn->prev = nd;
-			if(nn == nroot) nroot = nd;
-			if(n == nlast) nlast = nd;
+			if(nn == root) root = nd;
+			if(n == last) last = nd;
 			return nd;
 		}
 		// удалить
@@ -58,27 +56,24 @@ namespace ssh
 			{
 				auto n(nd->next);
 				auto p(nd->prev);
-				if(nd == nroot) nroot = n;
-				if(nd == nlast) nlast = p;
+				if(nd == root) root = n;
+				if(nd == last) last = p;
 				if(n) n->prev = p;
 				if(p) p->next = n;
 				delete nd;
 			}
 		}
-		// вернуть первый
-		Node* root() const { return nroot; }
-		// вернуть последний
-		Node* last() const { return nlast; }
-		// найти
-		Node* find(const T& value) const { auto n(root()); while(n && n->value != value) n = n->next; return n; }
+		// итерация по списку
+		Iter<Node> begin() const { return Iter<Node>(root); }
+		Iter<Node> end() const { return Iter<Node>(nullptr); }
 		// сброс
-		void reset() { auto n(nroot); while(nroot) { n = nroot->next; delete nroot; nroot = n; } free(); }
+		void reset() { auto n(root); while(root) { n = root->next; delete root; root = n; } free(); }
 		// вернуть признак пустого
-		bool is_empty() const { return nroot == nullptr; }
+		bool is_empty() const { return (root == nullptr); }
 	protected:
 		// корень
-		Node* nroot = nullptr;
+		Node* root = nullptr;
 		// последний
-		Node* nlast = nullptr;
+		Node* last = nullptr;
 	};
 }

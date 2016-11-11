@@ -103,17 +103,9 @@ SSH_ENUM_NS(serg, _1 = 1, _2 = 2, _3 = 4, _4 = 8, _5 = 16, _6 = 32, _7 = 32768, 
 
 int main() noexcept
 {
-	bs1* b;
-	new(&b, "ddd") bs1();
-	Array<int> arr;// {1, 2, 3, 4, 5};
-	int v;
-	for(auto n : arr)
-	{
-		v = n;
-//		v = n.value;
-	}
+//	List<int> lst{1,2,3};
 	Xml xml;
 	tp t;
-	t.make();
+//	t.make();
 	return 0;
 }

@@ -14,11 +14,9 @@ namespace ssh
 		XmlNode* attr(ssh_cws name) const
 		{
 			auto h(ssh_hash(name));
-			auto n(attrs.root());
-			while(n)
+			for(auto n : attrs)
 			{
-				if(n->value->nm.hash() == h) return n->value;
-				n = n->next;
+				if(n->nm.hash() == h) return n;
 			}
 			return nullptr;
 		}

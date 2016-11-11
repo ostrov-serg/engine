@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "ssh_mem.h"
-
 namespace ssh
 {
 	template <typename T> class Stack

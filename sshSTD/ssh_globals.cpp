@@ -456,8 +456,8 @@ namespace ssh
 	ssh_u SSH ssh_dll_proc(ssh_cws dll, ssh_ccs proc, ssh_cws suffix)
 	{
 		// хэндлы загруженных dll
-		HMODULE hdll;
-		static Map<HMODULE, String> dlls;
+		ssh_u hdll;
+		static Map<ssh_u, String> dlls;
 
 		String module(ssh_file_path_title(dll));
 #ifdef _DEBUG
@@ -466,27 +466,12 @@ namespace ssh
 		module += (ssh_file_ext(dll, true));
 		if(!(hdll = dlls[module]))
 		{
-			if(!(hdll = LoadLibrary(module))) return 0;
+			if(!(hdll = (ssh_u)LoadLibrary(module))) return 0;
 			dlls[module] = hdll;
 		}
-		return (ssh_u)GetProcAddress(hdll, proc);
+		return (ssh_u)GetProcAddress((HMODULE)hdll, proc);
 	}
 
-	static void ssh_init_libs()
-	{
-		// инициализировать функции стандартных библиотек - sshREGX, sshCNV
-		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");
-		ssh_cnv_close = (__cnv_close)ssh_dll_proc(L"sshCNV.dll", "cnv_close");
-		ssh_cnv_make = (__cnv_make)ssh_dll_proc(L"sshCNV.dll", "cnv_make");
-		ssh_cnv_calc = (__cnv_calc)ssh_dll_proc(L"sshCNV.dll", "cnv_calc");
-		ssh_regx_compile = (__regx_compile)ssh_dll_proc(L"sshREGX.dll", "regx_compile");
-		ssh_regx_exec = (__regx_exec)ssh_dll_proc(L"sshREGX.dll", "regx_exec");
-		ssh_regx_free = (__regx_free)ssh_dll_proc(L"sshREGX.dll", "regx_free");
-		// получить возможности процессора
-		ssh_cws avx(ssh_system_value(SystemInfo::CPU_CAPS, CpuCaps::AVX) ? L"sshAVX" : L"sshSSE");
-		// инициализировать процессорно-зависимые функции
-
-	}
 
 #define IDC_FOLDERTREE		0x3741
 #define IDC_STATUSTEXT		0x3743
@@ -651,6 +636,22 @@ namespace ssh
 		}
 
 		return result;
+	}
+
+	static void ssh_init_libs()
+	{
+		// инициализировать функции стандартных библиотек - sshREGX, sshCNV
+		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");
+		ssh_cnv_close = (__cnv_close)ssh_dll_proc(L"sshCNV.dll", "cnv_close");
+		ssh_cnv_make = (__cnv_make)ssh_dll_proc(L"sshCNV.dll", "cnv_make");
+		ssh_cnv_calc = (__cnv_calc)ssh_dll_proc(L"sshCNV.dll", "cnv_calc");
+		ssh_regx_compile = (__regx_compile)ssh_dll_proc(L"sshREGX.dll", "regx_compile");
+		ssh_regx_exec = (__regx_exec)ssh_dll_proc(L"sshREGX.dll", "regx_exec");
+		ssh_regx_free = (__regx_free)ssh_dll_proc(L"sshREGX.dll", "regx_free");
+		// получить возможности процессора
+		ssh_cws avx(ssh_system_value(SystemInfo::CPU_CAPS, CpuCaps::AVX) ? L"sshAVX" : L"sshSSE");
+		// инициализировать процессорно-зависимые функции
+
 	}
 }
 
