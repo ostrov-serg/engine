@@ -102,7 +102,7 @@ namespace ssh
 	// $DT - дата короткая день.месяц.год
 	// $
 
-	class SSH Log
+	class SSH Log final
 	{
 //		friend void socket_receive(Socket* sock, Socket::SOCK* s, const Buffer& buf);
 	public:
@@ -140,7 +140,7 @@ namespace ssh
 			{
 				if(!is_blocked)
 				{
-					if(!file.is_close()) file.write(msg, cp_utf);
+					if(!file.is_close()) file.write(msg, charset);
 					count_msgs++;
 					if(count_msgs >= max_msgs) send(Log::apply_template(cont));
 				}
@@ -164,7 +164,7 @@ namespace ssh
 			// путь до временного файла
 			String path = ssh_system_paths(SystemInfo::TEMP_FOLDER) + ssh_gen_name(L"__MAIL__LOG__");
 			// кодировка
-			String charset = cp_utf;
+			String charset = cp_utf16;
 			// признак блокировки
 			bool is_blocked = false;
 			// флаги создания
@@ -262,11 +262,11 @@ namespace ssh
 			String debug = L"[$tp] $DT-$tm\t$fn\t - \t($fl: $ln) - [$ms]\r\n";
 			// шаблон для трассировщика
 			String trace = L"$ms\r\n";
-		protected:
 			// структуры типа вывода
 			stk_file* file = nullptr;
 			stk_host* host = nullptr;
 			stk_email* email = nullptr;
+		protected:
 			// тип вывода
 			TypeOutput out = TypeOutput::file;
 		};

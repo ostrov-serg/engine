@@ -9,13 +9,23 @@
 
 namespace ssh
 {
-	__cnv_open ssh_cnv_open(nullptr);
-	__cnv_close ssh_cnv_close(nullptr);
-	__cnv_make ssh_cnv_make(nullptr);
-	__cnv_calc ssh_cnv_calc(nullptr);
-	__regx_compile ssh_regx_compile(nullptr);
-	__regx_exec ssh_regx_exec(nullptr);
-	__regx_free ssh_regx_free(nullptr);
+	using	__cnv_open	= ssh_cnv (CALLBACK*)(ssh_cws to, ssh_cws from);
+	using	__cnv_close = void (CALLBACK* )(void* h);
+	using	__cnv_make	= void (CALLBACK* )(void* cd, const ssh_b* inbuf, ssh_u inbytesleft, ssh_b* out);
+	using	__cnv_calc	= ssh_u (CALLBACK* )(void* cd, const ssh_b* inbuf, ssh_u inbytesleft);
+
+	__xin_xenable	ssh_xin_enable(nullptr);
+	__xin_xgstate	ssh_xin_gstate(nullptr);
+	__xin_xsstate	ssh_xin_sstate(nullptr);
+	__xin_xcaps		ssh_xin_caps(nullptr);
+
+	__cnv_open		ssh_cnv_open(nullptr);
+	__cnv_close		ssh_cnv_close(nullptr);
+	__cnv_make		ssh_cnv_make(nullptr);
+	__cnv_calc		ssh_cnv_calc(nullptr);
+	__regx_compile	ssh_regx_compile(nullptr);
+	__regx_exec		ssh_regx_exec(nullptr);
+	__regx_free		ssh_regx_free(nullptr);
 
 	Base* Base::root(nullptr);
 	RTTI* RTTI::rootRTTI(nullptr);
@@ -37,7 +47,7 @@ namespace ssh
 		static ssh_u _genRnd(0);
 		ssh_u tmp;
 		bool is(false);
-		if(ssh_system_value(SystemInfo::CPU_CAPS, CpuCaps::RDRAND)) is = (_rdrand64_step(&tmp) == 1);
+		if(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::RDRAND)) is = (_rdrand64_step(&tmp) == 1);
 		if(!is)
 		{
 			tmp = _genRnd;
@@ -79,7 +89,7 @@ namespace ssh
 	{
 		ssh_cnv h;
 		ssh_u in_c(wcslen(str) * 2);
-		h = ssh_cnv_open(charset, cp_utf);
+		h = ssh_cnv_open(charset, cp_utf16);
 		Buffer out(ssh_cnv_calc(h, (ssh_b*)str, in_c));
 		ssh_cnv_make(h, (ssh_b*)str, in_c, out);
 		ssh_cnv_close(h);
@@ -90,7 +100,7 @@ namespace ssh
 	{
 		ssh_cnv h;
 		ssh_u in_c(in.size() - offs), out_c(0);
-		h = ssh_cnv_open(cp_utf, charset);
+		h = ssh_cnv_open(cp_utf16, charset);
 		Buffer out(ssh_cnv_calc(h, (ssh_b*)in + offs, in_c));
 		ssh_cnv_make(h, (ssh_b*)in + offs, in_c, out);
 		ssh_cnv_close(h);
@@ -357,7 +367,7 @@ namespace ssh
 		return txt.replace(eng2, rus2);
 	}
 
-	ssh_u SSH ssh_system_value(SystemInfo type, CpuCaps value)
+	ssh_u SSH ssh_system_values(SystemInfo type, CpuCaps value)
 	{
 		// платформа
 		static WindowsTypes platform(WindowsTypes::_UNK);
@@ -638,6 +648,81 @@ namespace ssh
 		return result;
 	}
 
+	SSH float* ssh_vec3_mtx(const float* v, const float* m)
+	{
+		static __m128 ret;
+		__m128 _v[4];
+		_v[0] = _mm_set_ss(v[0]);
+		_v[1] = _mm_set_ss(v[1]);
+		_v[2] = _mm_set_ss(v[2]);
+		_v[3] = _mm_set_ss(1.0f);
+		for(ssh_u i = 0; i < 4; i++) _v[i] = _mm_mul_ps(_mm_shuffle_ps(_v[i], _v[i], 0), *(__m128*)&m[i * 4]);
+		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[1], _v[2]), _v[3]), _v[4]);
+		return ret.m128_f32;
+	}
+
+	SSH float* ssh_vec4_mtx(const float* v, const float* m)
+	{
+		static __m128 ret;
+		__m128 _v[4];
+		_v[0] = _mm_set_ss(v[0]);
+		_v[1] = _mm_set_ss(v[1]);
+		_v[2] = _mm_set_ss(v[2]);
+		_v[3] = _mm_set_ss(v[3]);
+		for(ssh_u i = 0; i < 4; i++) _v[i] = _mm_mul_ps(_mm_shuffle_ps(_v[i], _v[i], 0), *(__m128*)&m[i * 4]);
+		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[1], _v[2]), _v[3]), _v[4]);
+		return ret.m128_f32;
+	}
+
+	SSH float* ssh_mtx_vec3(const float* m, const float* v)
+	{
+		static __m128 ret;
+		__m128 _v[4];
+		_v[0] = _mm_set_ss(v[0]);
+		_v[1] = _mm_set_ss(v[1]);
+		_v[2] = _mm_set_ss(v[2]);
+		_v[3] = _mm_set_ss(1.0f);
+		for(ssh_u i = 0; i < 4; i++) _v[i] = _mm_mul_ps(*(__m128*)&m[i * 4], _mm_shuffle_ps(_v[i], _v[i], 0));
+		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[1], _v[2]), _v[3]), _v[4]);
+		return ret.m128_f32;
+	}
+
+	SSH float* ssh_mtx_vec4(const float* m, const float* v)
+	{
+		static __m128 ret;
+		__m128 _v[4];
+		_v[0] = _mm_set_ss(v[0]);
+		_v[1] = _mm_set_ss(v[1]);
+		_v[2] = _mm_set_ss(v[2]);
+		_v[3] = _mm_set_ss(v[3]);
+		for(ssh_u i = 0; i < 4; i++) _v[i] = _mm_mul_ps(*(__m128*)&m[i * 4], _mm_shuffle_ps(_v[i], _v[i], 0));
+		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[1], _v[2]), _v[3]), _v[4]);
+		return ret.m128_f32;
+	}
+
+	SSH float* ssh_mtx_mtx(const float* m1, const float* m2)
+	{
+		static float flt[16];
+
+		__m128 _m[4];
+
+		_m[0] = _mm_set_ps(m2[0], m2[4], m2[8], m2[12]);
+		_m[1] = _mm_set_ps(m2[1], m2[5], m2[9], m2[13]);
+		_m[2] = _mm_set_ps(m2[2], m2[6], m2[10], m2[14]);
+		_m[3] = _mm_set_ps(m2[3], m2[7], m2[11], m2[15]);
+
+		for(ssh_u i = 0; i < 4; i++)
+		{
+			for(ssh_u j = 0; j < 4; j++)
+			{
+				__m128 _tmp(_mm_mul_ps(*(__m128*)&m1[i * 4], _m[j]));
+				_tmp = _mm_hadd_ps(_tmp, _tmp);
+				flt[i * 4 + j] = _mm_hadd_ps(_tmp, _tmp).m128_f32[0];
+			}
+		}
+		return flt;
+	}
+
 	static void ssh_init_libs()
 	{
 		// инициализировать функции стандартных библиотек - sshREGX, sshCNV
@@ -648,8 +733,12 @@ namespace ssh
 		ssh_regx_compile = (__regx_compile)ssh_dll_proc(L"sshREGX.dll", "regx_compile");
 		ssh_regx_exec = (__regx_exec)ssh_dll_proc(L"sshREGX.dll", "regx_exec");
 		ssh_regx_free = (__regx_free)ssh_dll_proc(L"sshREGX.dll", "regx_free");
+		ssh_xin_enable = (__xin_xenable)ssh_dll_proc(L"xinput1_3.dll", "XInputEnable", 0);
+		ssh_xin_gstate = (__xin_xgstate)ssh_dll_proc(L"xinput1_3.dll", "XInputGetState", 0);
+		ssh_xin_sstate = (__xin_xsstate)ssh_dll_proc(L"xinput1_3.dll", "XInputSetState", 0);
+		ssh_xin_caps = (__xin_xcaps)ssh_dll_proc(L"xinput1_3.dll", "XInputGetCapabilities", 0);
 		// получить возможности процессора
-		ssh_cws avx(ssh_system_value(SystemInfo::CPU_CAPS, CpuCaps::AVX) ? L"sshAVX" : L"sshSSE");
+		ssh_cws avx(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::AVX) ? L"sshAVX" : L"sshSSE");
 		// инициализировать процессорно-зависимые функции
 
 	}

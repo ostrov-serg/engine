@@ -93,7 +93,7 @@ class bs1 : public Base
 public:
 	bs1() { x = 0; px = std::addressof(x);}
 	bs1(int _x, const String& _s) : x(_x), str(_s) { }
-	String get_str() { return str; }
+	void set_str(const String& s) { str = std::move(s); }
 
 	int* px;
 	String str;
@@ -103,6 +103,10 @@ public:
 
 int main() noexcept
 {
+	bs1 b;
+	b.set_str(L"ddd");
+	String str(L"fff");
+	b.set_str(str);
 	Log::instance()->init();
 	Log::stk_common _c;
 	Xml xml;

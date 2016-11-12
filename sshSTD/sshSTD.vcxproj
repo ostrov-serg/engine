@@ -104,12 +104,14 @@
     <ClInclude Include="ssh_except.h" />
     <ClInclude Include="ssh_file.h" />
     <ClInclude Include="ssh_globals.h" />
+    <ClInclude Include="ssh_io.h" />
     <ClInclude Include="ssh_list.h" />
     <ClInclude Include="ssh_log.h" />
     <ClInclude Include="ssh_map.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="ssh_math.h" />
     <ClInclude Include="ssh_mem.h" />
     <ClInclude Include="ssh_regx.h" />
     <ClInclude Include="ssh_rtti.h" />
@@ -133,8 +135,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="ssh_gamepad.cpp" />
     <ClCompile Include="ssh_globals.cpp" />
     <ClCompile Include="ssh_log.cpp" />
+    <ClCompile Include="ssh_math.cpp" />
     <ClCompile Include="ssh_mem.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>

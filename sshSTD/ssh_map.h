@@ -55,7 +55,7 @@ namespace ssh
 		const Map& operator = (const Map<T, K>& src) { reset(); return operator += (src); }
 		const Map& operator = (Map<T, K>&& src) { reset(); cells = src.cells; src.free(); return *this; }
 		// приращение
-		const Map& operator += (const Map<T, K>& src) { auto n(src.root()); while(n) { operator[](n->key) = n->value; n = n->next; } return *this; }
+		const Map& operator += (const Map<T, K>& src) { for(auto n : src) operator[](n.key) = n.val; return *this; }
 		// количество элементов
 		ssh_u count() const { ssh_u c(0); auto n(cells); while(n) n = n->next, c++; return c; }
 		// установка/возврат
@@ -86,7 +86,7 @@ namespace ssh
 		void reset() { auto n(cells); while(cells) { auto n(cells->next); delete cells; cells = n; } free(); }
 	protected:
 		// вернуть узел по ключу
-		Node* get_key(const K& key, Node** p) const { auto n(cells); while(n) {if(n->key == key) return n; if(p) *p = n; n = n->next;} return nullptr; }
+		Node* get_key(const K& key, Node** p) const { auto n(cells); while(n) {if(n->value.key == key) return n; if(p) *p = n; n = n->next;} return nullptr; }
 		// корневой элемент
 		Node* cells = nullptr;
 	};

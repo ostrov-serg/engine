@@ -4,11 +4,11 @@
 namespace ssh
 {
 	// процедуры из библиотеки sshREGX
-	/*
+
 	extern __regx_compile ssh_regx_compile;
 	extern __regx_exec ssh_regx_exec;
 	extern __regx_free ssh_regx_free;
-	*/
+
 	class SSH regx
 	{
 	public:

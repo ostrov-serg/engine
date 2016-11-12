@@ -3,7 +3,7 @@
 
 namespace ssh
 {
-	class SSH MemMgr
+	class SSH MemMgr final
 	{
 	public:
 		struct NodeMem
@@ -51,9 +51,9 @@ namespace ssh
 	};
 }
 
-/*
+
 inline void* operator new(ssh_u sz){return ssh::MemMgr::instance()->alloc(sz);}
 inline void operator delete(void* p) { ssh::MemMgr::instance()->free((ssh_b*)p); }
 inline void* operator new[](ssh_u sz) { return ssh::MemMgr::instance()->alloc(sz); }
 inline void operator delete[](void* p) { ssh::MemMgr::instance()->free((ssh_b*)p); }
-*/
+

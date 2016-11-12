@@ -15,21 +15,18 @@ extern "C"
 namespace ssh
 {
 	class EnumReflector;
-	using __cnv_open = ssh_cnv (CALLBACK*)(ssh_cws to, ssh_cws from);
-	typedef void (CALLBACK* __cnv_close)(void* h);
-	typedef void (CALLBACK* __cnv_make)(void* cd, const ssh_b* inbuf, ssh_u inbytesleft, ssh_b* out);
-	typedef ssh_u (CALLBACK* __cnv_calc)(void* cd, const ssh_b* inbuf, ssh_u inbytesleft);
-	typedef regex16* (CALLBACK* __regx_compile)(ssh_cws pattern, ssh_l options);
-	typedef ssh_l (CALLBACK* __regx_exec)(const void* re, ssh_cws subj, ssh_l len_subj, ssh_l idx, ssh_l options, ssh_l* vec, ssh_l count_vec);
-	typedef ssh_l (CALLBACK* __regx_free)(void* p);
+	using	__regx_compile	= regex16* (CALLBACK* )(ssh_cws pattern, ssh_l options);
+	using	__regx_exec		= ssh_l (CALLBACK* )(const void* re, ssh_cws subj, ssh_l len_subj, ssh_l idx, ssh_l options, ssh_l* vec, ssh_l count_vec);
+	using	__regx_free		= ssh_l (CALLBACK* )(void* p);
+
+	using	__xin_xenable	= void (CALLBACK* )(int is);
+	using	__xin_xgstate	= ssh_d (CALLBACK* )(ssh_d idx, XINPUT_STATE* state);
+	using	__xin_xsstate	= ssh_d (CALLBACK* )(ssh_d idx, XINPUT_VIBRATION* state);
+	using	__xin_xcaps		= ssh_d (CALLBACK* )(ssh_d idx, ssh_d flags, XINPUT_CAPABILITIES* caps);
 
 	int SSH ssh_ext_count_array();
 	ssh_u SSH ssh_ext_exec_hash(ssh_ccs str);
 	String SSH ssh_ext_exec(ssh_ccs str);
-
-	extern __regx_compile ssh_regx_compile;
-	extern __regx_exec ssh_regx_exec;
-	extern __regx_free ssh_regx_free;
 
 	extern ssh_u SSH singltons[32];
 
@@ -80,7 +77,13 @@ namespace ssh
 		PROG_FOLDER, WORK_FOLDER, TEMP_FOLDER, USER_FOLDER, PROG_NAME, USER_NAME, COMP_NAME, CUSTOM, CPU_CAPS, PLATFORM, TOTAL_MEMORY, PHYSICAL_MEMORY, CPU_SPEED
 	};
 
-	ssh_u SSH ssh_system_value(SystemInfo type, CpuCaps value);
+	SSH float* ssh_vec3_mtx(const float* v, const float* m);
+	SSH float* ssh_vec4_mtx(const float* v, const float* m);
+	SSH float* ssh_mtx_vec3(const float* m, const float* v);
+	SSH float* ssh_mtx_vec4(const float* m, const float* v);
+	SSH float* ssh_mtx_mtx(const float* m1, const float* m2);
+
+	ssh_u SSH ssh_system_values(SystemInfo type, CpuCaps value);
 	ssh_u SSH ssh_dll_proc(ssh_cws dll, ssh_ccs proc, ssh_cws suffix = L"d");
 	ssh_u SSH ssh_hash(ssh_cws wcs);//
 	ssh_u SSH ssh_rand(ssh_u begin, ssh_u end);

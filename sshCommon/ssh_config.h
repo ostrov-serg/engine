@@ -27,6 +27,8 @@
 #include <sshCommon\mysql\mysql.h>
 #include <sshCommon\ssh_cnv.h>
 
+#include <Xinput.h>
+
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "libeay32.lib")
 #pragma comment(lib, "ssleay32.lib")

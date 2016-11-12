@@ -38,6 +38,9 @@ typedef wchar_t*						ssh_pws;
 
 #define ssh_mem							ssh::MemMgr::instance()
 #define ssh_log							ssh::Log::instance()
+#define ssh_mse							ssh::Mouse::instance()
+#define ssh_key							ssh::Keyboard::instance()
+#define ssh_pad							ssh::Gamepad::instance()
 
 #define SSH_CLAMP(val, low, high)		(val < low ? low : (val > high ? high : val))
 #define SSH_THROW(msg, ...)				throw Exception(SSH_FFL, msg, __VA_ARGS__)
@@ -69,4 +72,5 @@ typedef wchar_t*						ssh_pws;
 #define SSH_
 
 #define cp_ansi							L"windows-1251"
-#define cp_utf							L"utf-16le"
+#define cp_utf16						L"utf-16le"
+#define cp_utf8							L"utf-8"
