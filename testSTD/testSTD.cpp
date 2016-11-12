@@ -91,21 +91,22 @@ class bs1 : public Base
 {
 	SSH_DYNCREATE(bs1);
 public:
-	bs1() { x = 0; }
+	bs1() { x = 0; px = std::addressof(x);}
 	bs1(int _x, const String& _s) : x(_x), str(_s) { }
 	String get_str() { return str; }
 
-	int x;
+	int* px;
 	String str;
+	int x;
 
 };
-SSH_ENUM_NS(serg, _1 = 1, _2 = 2, _3 = 4, _4 = 8, _5 = 16, _6 = 32, _7 = 32768, _8 = 16384)
 
 int main() noexcept
 {
-//	List<int> lst{1,2,3};
+	Log::instance()->init();
+	Log::stk_common _c;
 	Xml xml;
 	tp t;
-//	t.make();
+	t.make();
 	return 0;
 }

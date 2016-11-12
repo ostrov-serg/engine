@@ -32,13 +32,16 @@ typedef wchar_t*						ssh_pws;
 										void* operator new(size_t sz) {return (void*)get_MemArray##cls()->Alloc();} \
 										void operator delete(void* p) { get_MemArray##cls()->Free((cls*)p); } \
 										static void reset() { get_MemArray##cls()->Reset(); }
-#define SSH_IS_PTR(t)					(bool)std::is_pointer<t>()
+#define SSH_IS_PTR(t)					(bool)(std::is_pointer<t>() && !std::is_same<t, HMODULE>())
 #define SSH_CAST(v1, v2)				static_cast<v1>(v2)
 #define SSH_FFL							__FUNCTIONW__, __FILEW__, __LINE__
 
+#define ssh_mem							ssh::MemMgr::instance()
+#define ssh_log							ssh::Log::instance()
+
 #define SSH_CLAMP(val, low, high)		(val < low ? low : (val > high ? high : val))
 #define SSH_THROW(msg, ...)				throw Exception(SSH_FFL, msg, __VA_ARGS__)
-#define SSH_FAULT(code, except)			log->fault(code, SSH_FFL, except)
+#define SSH_FAULT(code, except)			ssh_mem->fault(code, SSH_FFL, except)
 
 #define SSH_PURE_TYPE1(T)				std::remove_all_extents_t<T>
 #define SSH_PURE_TYPE2(T)				std::remove_pointer_t<SSH_PURE_TYPE1(T)>

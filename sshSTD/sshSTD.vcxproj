@@ -101,6 +101,7 @@
     <ClInclude Include="ssh_array.h" />
     <ClInclude Include="ssh_buf.h" />
     <ClInclude Include="ssh_enums.h" />
+    <ClInclude Include="ssh_except.h" />
     <ClInclude Include="ssh_file.h" />
     <ClInclude Include="ssh_globals.h" />
     <ClInclude Include="ssh_list.h" />

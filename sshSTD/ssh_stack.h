@@ -12,7 +12,7 @@ namespace ssh
 			// конструктор узла
 			Node(const T& t, Node* n) : next(n), value(t) {}
 			// деструктор
-			~Node() { release_node<T, SSH_IS_PTR(T)>::release(value); }
+			~Node() { SSH_RELEASE_NODE(T, value); }
 			// следующий узел
 			Node* next;
 			// значение
@@ -41,7 +41,7 @@ namespace ssh
 		// извлечение
 		T pop()
 		{
-			if(!root) return release_node<T, SSH_IS_PTR(T)>::dummy();
+			if(!root) return SSH_DUMMY(T);
 			T t(root->value);
 			auto n(root->next);
 			delete root;

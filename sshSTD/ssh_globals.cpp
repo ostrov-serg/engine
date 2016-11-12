@@ -456,8 +456,8 @@ namespace ssh
 	ssh_u SSH ssh_dll_proc(ssh_cws dll, ssh_ccs proc, ssh_cws suffix)
 	{
 		// хэндлы загруженных dll
-		ssh_u hdll;
-		static Map<ssh_u, String> dlls;
+		HMODULE hdll;
+		static Map<HMODULE, String> dlls;
 
 		String module(ssh_file_path_title(dll));
 #ifdef _DEBUG
@@ -466,10 +466,10 @@ namespace ssh
 		module += (ssh_file_ext(dll, true));
 		if(!(hdll = dlls[module]))
 		{
-			if(!(hdll = (ssh_u)LoadLibrary(module))) return 0;
+			if(!(hdll = LoadLibrary(module))) return 0;
 			dlls[module] = hdll;
 		}
-		return (ssh_u)GetProcAddress((HMODULE)hdll, proc);
+		return (ssh_u)GetProcAddress(hdll, proc);
 	}
 
 
@@ -655,6 +655,8 @@ namespace ssh
 	}
 }
 
+#include "ssh_mem.h"
+
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
 	switch(ul_reason_for_call)
@@ -663,6 +665,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 			ssh::ssh_init_libs();
 			break;
 		case DLL_THREAD_ATTACH:
+			break;
 		case DLL_THREAD_DETACH:
 		case DLL_PROCESS_DETACH:
 			break;

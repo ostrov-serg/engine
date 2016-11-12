@@ -19,7 +19,7 @@ namespace ssh
 			// конструктор
 			Node(const K& k, const T& t, Node* n) : next(n) { value.key = k; value.val = t; }
 			// деструктор
-			~Node() { release_node<T, SSH_IS_PTR(T)>::release(value.val); release_node<K, SSH_IS_PTR(K)>::release(value.key); }
+			~Node() { SSH_RELEASE_NODE(T, value.val); SSH_RELEASE_NODE(K, value.key); }
 			// следующий узел
 			Node* next;
 			// значение
@@ -33,7 +33,7 @@ namespace ssh
 			Cursor(Map<T, K>* arr, const K& k) : node(new Node(k, T(), arr->cells)) { arr->cells = node; }
 			// возврат
 			Cursor(Node* n) : node(n){}
-			Cursor& operator = (const T& value) { release_node<T, SSH_IS_PTR(T)>::release(node->value.val); node->value.val = value; return *this; }
+			Cursor& operator = (const T& value) { SSH_RELEASE_NODE(T, node->value.val); node->value.val = value; return *this; }
 			operator T() const { return node->value.val; }
 			T operator->() const { return node->value.val; }
 		protected:
@@ -63,7 +63,7 @@ namespace ssh
 		// вернуть все ключи
 		Map<K, ssh_u> keys() const { auto n(cells); Map<K, ssh_u> keys; ssh_u i(0); while(n) { keys[i++] = n->value.key; n = n->next; } return keys; }
 		// вернуть ключь по значению
-		K get_key(const T& value) const { for(auto n : this) if(n.val == value) return n.key; return release_node<K, SSH_IS_PTR(K)>::dummy(); }
+		K get_key(const T& value) const { for(auto n : this) if(n.val == value) return n.key; return SSH_DUMMY(K); }
 		// проверка - такой ключ существует?
 		bool is_key(const K& key) const { for(auto n : this) if(n.key == key) return true; return false; }
 		// удаление элемента
@@ -83,7 +83,7 @@ namespace ssh
 		// вернуть корень
 		bool is_empty() const { return (cells == nullptr); }
 		// удаление всего
-		void reset() { auto n(cells); while(n) { auto nn(n->next); delete n; n = nn; } free(); }
+		void reset() { auto n(cells); while(cells) { auto n(cells->next); delete cells; cells = n; } free(); }
 	protected:
 		// вернуть узел по ключу
 		Node* get_key(const K& key, Node** p) const { auto n(cells); while(n) {if(n->key == key) return n; if(p) *p = n; n = n->next;} return nullptr; }

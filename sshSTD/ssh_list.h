@@ -12,7 +12,7 @@ namespace ssh
 			// конструктор
 			Node(const T& t, Node* p, Node* n) : prev(p), next(n), value(t) {}
 			// деструктор
-			~Node() { release_node<T, SSH_IS_PTR(T)>::release(value); }
+			~Node() { SSH_RELEASE_NODE(T, value); }
 			// следующий
 			Node* next;
 			// предыдущий
@@ -67,7 +67,7 @@ namespace ssh
 		Iter<Node> begin() const { return Iter<Node>(root); }
 		Iter<Node> end() const { return Iter<Node>(nullptr); }
 		// сброс
-		void reset() { auto n(root); while(root) { n = root->next; delete root; root = n; } free(); }
+		void reset() { while(root) { auto n(root->next); delete root; root = n; } free(); }
 		// вернуть признак пустого
 		bool is_empty() const { return (root == nullptr); }
 	protected:

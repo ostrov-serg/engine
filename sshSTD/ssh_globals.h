@@ -256,7 +256,7 @@ namespace ssh
 			BlockFix* next;
 			Block arr[N];
 		};
-		void Reset() { SSH_DEL(arrs); free = nullptr; }
+		void Reset() { if(!count) { SSH_DEL(arrs); free = nullptr; } }
 		T* Alloc()
 		{
 			if(!free)
@@ -272,16 +272,18 @@ namespace ssh
 			}
 			Block* b(free);
 			free = free->next;
+			count++;
 			return (T*)(b->t);
 		}
 		void Free(T* t)
 		{
 			Block* b((Block*)t);
-			t->~T();
 			b->next = free;
 			free = b;
+			count--;
 		}
 		Block* free = nullptr;
 		BlockFix* arrs = nullptr;
+		int count = 0;
 	};
 }

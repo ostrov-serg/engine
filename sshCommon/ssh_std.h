@@ -10,6 +10,7 @@
 #include <sshSTD\ssh_str.h>
 #include <sshSTD\ssh_enums.h>
 #include <sshSTD\ssh_rtti.h>
+#include <sshSTD\ssh_except.h>
 #include <sshSTD\ssh_log.h>
 #include <sshSTD\ssh_time.h>
 #include <sshSTD\ssh_buf.h>

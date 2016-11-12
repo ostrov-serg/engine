@@ -33,6 +33,8 @@ namespace ssh
 		// установить признак блокировки
 		void start() { is_enabled = false; }
 		void stop() { is_enabled = true; }
+		// обработчики нестандартных исключительных ситуаций
+		void set_exceptionHandlers();
 	protected:
 		// вернуть не освобожденные блоки
 		void leaks();
@@ -43,13 +45,15 @@ namespace ssh
 		// максимум единовременно выделенной памяти
 		ssh_u use_mem = 0, use_max_mem = 0;
 		// признак блокировки
-		bool is_enabled = true;
+		bool is_enabled = false;
 		// корневой блок
 		NodeMem* root = nullptr;
 	};
 }
 
+/*
 inline void* operator new(ssh_u sz){return ssh::MemMgr::instance()->alloc(sz);}
 inline void operator delete(void* p) { ssh::MemMgr::instance()->free((ssh_b*)p); }
 inline void* operator new[](ssh_u sz) { return ssh::MemMgr::instance()->alloc(sz); }
 inline void operator delete[](void* p) { ssh::MemMgr::instance()->free((ssh_b*)p); }
+*/

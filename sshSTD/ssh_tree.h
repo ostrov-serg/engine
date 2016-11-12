@@ -12,7 +12,7 @@ namespace ssh
 			// конструктор узла
 			Node(const T& t, Node* p) : fchild(nullptr), lchild(nullptr), next(nullptr), prev(nullptr), parent(p), count(0), value(t) {}
 			// деструктор
-			~Node() { release_node<T, SSH_IS_PTR(T)>::release(value); }
+			~Node() { SSH_RELEASE_NODE(T, value); }
 			// значение
 			T value;
 			// первый дочерний
@@ -48,7 +48,7 @@ namespace ssh
 		// удаление узла
 		void remove(Node* n) { remove(n, true); }
 		// установить значение узла
-		void set(Node* n, const T& t) { release_node<T, SSH_IS_PTR(T)>::release(n->value); n->value = t; }
+		void set(Node* n, const T& t) { SSH_RELEASE_NODE(T, n->value); n->value = t; }
 		// возможно ли перемещение узла? в первом случае p = перемещаемый узел->fchild
 		bool is_move(Node* p, Node* n) const
 		{
@@ -114,7 +114,8 @@ namespace ssh
 			while(n)
 			{
 				if(n->fchild) reset(n->fchild);
-				auto nn(n->next); delete n;
+				auto nn(n->next);
+				delete n;
 				n = nn;
 			}
 		}

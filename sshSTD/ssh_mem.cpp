@@ -19,6 +19,76 @@
 
 namespace ssh
 {
+	static void __cdecl ssh_signal_handler(int numSignal)
+	{
+		SSH_FAULT(numSignal, (EXCEPTION_POINTERS*)_pxcptinfoptrs);
+		exit(1);
+	}
+
+	static void __cdecl ssh_terminate_handler()
+	{
+		SSH_FAULT(TERMINATE_CALL, nullptr);
+		exit(2);
+	}
+
+	static void __cdecl ssh_unexp_handler()
+	{
+		SSH_FAULT(UNEXPECTED_CALL, nullptr);
+		exit(3);
+	}
+
+	static void __cdecl ssh_purecall_handler()
+	{
+		SSH_FAULT(PURE_CALL, nullptr);
+		exit(4);
+	}
+
+	static void __cdecl ssh_security_handler(int code, void *x)
+	{
+		SSH_FAULT(SECURITY_ERROR, nullptr);
+		exit(5);
+	}
+
+	static void __cdecl ssh_invalid_parameter_handler(ssh_cws expression, ssh_cws function, ssh_cws file, ssh_i line, uintptr_t pReserved)
+	{
+		MemMgr::instance()->fault(INVALID_PARAMETER_ERROR, function, file, line, nullptr, expression);
+		exit(6);
+	}
+
+	static int __cdecl ssh_new_handler(ssh_u size)
+	{
+		SSH_FAULT(NEW_OPERATOR_ERROR, nullptr);
+		exit(7);
+	}
+
+	static LONG WINAPI Win32UnhandledExceptionFilter(EXCEPTION_POINTERS* except)
+	{
+		SSH_FAULT(UNHANDLED_EXCEPTION, except);
+		exit(8);
+	}
+
+	void MemMgr::set_exceptionHandlers()
+	{
+		// установить фильтр исключений
+		SetUnhandledExceptionFilter(Win32UnhandledExceptionFilter);
+		// установить режимы отчета библиотеки времени выполнения
+		//_CrtSetReportMode(_CRT_ERROR, 0);
+		_CrtSetReportMode(_CRT_ASSERT, 0);
+
+		set_terminate(ssh_terminate_handler);
+		set_unexpected(ssh_unexp_handler);
+		_set_purecall_handler(ssh_purecall_handler);
+		_set_invalid_parameter_handler(ssh_invalid_parameter_handler);
+		_set_new_handler(ssh_new_handler);
+//		_set_security_error_handler(ssh_security_handler);
+		signal(SIGABRT, ssh_signal_handler);
+		signal(SIGINT, ssh_signal_handler);
+		signal(SIGTERM, ssh_signal_handler);
+		signal(SIGFPE, ssh_signal_handler);
+		signal(SIGILL, ssh_signal_handler);
+		signal(SIGSEGV, ssh_signal_handler);
+	}
+
 	bool MemMgr::fault(int type, ssh_cws fn, ssh_cws fl, int ln, EXCEPTION_POINTERS* except, ssh_cws msg_ex)
 	{
 		//if(!except)
@@ -87,7 +157,7 @@ namespace ssh
 					except->ContextRecord->Xmm14.Low, except->ContextRecord->Xmm14.High,
 					except->ContextRecord->Xmm15.Low, except->ContextRecord->Xmm15.High);
 		}
-//		log->add(Log::mException, fn, fl, ln, caption + msg);
+		ssh_log->add(Log::exception, fn, fl, ln, caption + msg);
 		return true;
 	}
 
@@ -97,13 +167,13 @@ namespace ssh
 		{
 			Section cs;
 			String txt;
-			//log->add(String::fmt(L"Обнаружено %I64i потерянных блоков памяти...\r\n", total_alloc));
+			ssh_log->add_msg(String::fmt(L"Обнаружено %I64i потерянных блоков памяти...\r\n", total_alloc));
 			auto n(root);
 			while(n)
 			{
 				ssh_b* ptr((ssh_b*)(n + sizeof(NodeMem)));
 				String bytes(ssh_make_hex_string(ptr, n->sz > 48 ? 48 : n->sz, txt, true, n->sz > 48));
-				//log->add(String::fmt(L"node <0x%I64X, %i, %s\t%s>", ptr, n->sz, bytes, txt));
+				ssh_log->add_msg(String::fmt(L"node <0x%I64X, %i, %s\t%s>", ptr, n->sz, bytes, txt));
 				n = n->next;
 			}
 		}
@@ -112,7 +182,7 @@ namespace ssh
 	void MemMgr::output()
 	{
 		leaks();
-//		log->add_msg(String::fmt(L"\r\nЗа данный сеанс было выделено %i(~%s) байт памяти ..., освобождено %i(~%s) ...:%c, максимум - %i блоков\r\n", use_max_mem, ssh_num_volume(use_max_mem), total_free, ssh_num_volume(total_free), (use_mem != total_free ? L'(' : L')'), total_alloc));
+		ssh_log->add_msg(String::fmt(L"\r\nЗа данный сеанс было выделено %i(~%s) байт памяти ..., освобождено %i(~%s) ...:%c, максимум - %i блоков\r\n", use_max_mem, ssh_num_volume(use_max_mem), total_free, ssh_num_volume(total_free), (use_mem != total_free ? L'(' : L')'), total_alloc));
 	}
 
 	void* MemMgr::alloc(ssh_u sz)
@@ -120,6 +190,7 @@ namespace ssh
 		Section cs;
 
 		ssh_b* p((ssh_b*)::malloc(sz + sizeof(NodeMem) + 4));
+		// создать узел
 		NodeMem* nd(::new((NodeMem*)(p)) NodeMem((int)sz, root));
 		if(is_enabled)
 		{

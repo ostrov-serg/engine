@@ -158,8 +158,8 @@ namespace ssh
 		txt += _save(tree.get_root(), 0);
 		File f(path, File::create_write);
 		ssh_u bom(0);
-		if(code == L"utf-16le") bom = 0xfeff;
-		else if(code == L"utf-16be") bom = 0xfffe;
+		if(!wcscmp(code, L"utf-16le")) bom = 0xfeff;
+		else if(!wcscmp(code, L"utf-16be")) bom = 0xfffe;
 		if(bom) f.write(&bom, 2);
 		f.write(txt, code);
 	}

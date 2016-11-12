@@ -9,18 +9,22 @@ namespace ssh
 
 	template <typename T, bool> struct release_node { static void release(const T& t) { static_assert(false, "release_node invalid!"); } };
 	template <typename T> struct release_node < T, false > { static void release(const T& t) { t.~T(); } static T dummy() { return T(); } };
-	template <typename T> struct release_node < T, true > { static void release(const T& t) { ::delete t; } static T dummy() { return nullptr; } };
+	template <typename T> struct release_node < T, true > { static void release(const T& t) { delete t; } static T dummy() { return nullptr; } };
+
+	#define SSH_RELEASE_NODE(T, V)	release_node<T, SSH_IS_PTR(T)>::release(V)
+	#define SSH_DUMMY(T)			release_node<T, SSH_IS_PTR(T)>::dummy()
 
 	class SSH Section
 	{
 	public:
-		Section() { EnterCriticalSection(section()); }
-		~Section() { LeaveCriticalSection(section(false)); }
+		Section() { EnterCriticalSection(get_section()); }
+		~Section() { LeaveCriticalSection(get_section()); }
 	protected:
-		static CRITICAL_SECTION* section(bool is_init = true)
+		static CRITICAL_SECTION* get_section()
 		{
 			static CRITICAL_SECTION section;
-			if(is_init) InitializeCriticalSection(&section);
+			static bool init(false);
+			if(!init) { InitializeCriticalSection(&section); init = true; }
 			return &section;
 		}
 	};

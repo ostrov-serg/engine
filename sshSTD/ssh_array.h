@@ -37,7 +37,7 @@ namespace ssh
 		{
 			if(idx < count)
 			{
-				release_node<T, SSH_IS_PTR(T)>::release(data[idx]);
+				SSH_RELEASE_NODE(T, data[idx]);
 				data[idx] = elem;
 			}
 			return *this;
@@ -59,7 +59,7 @@ namespace ssh
 			if(idx < count)
 			{
 				if((idx + _count) > count) _count = (count - idx);
-				for(ssh_u i = 0; i < _count; i++) release_node<T, SSH_IS_PTR(T)>::release(data[i + idx]);
+				for(ssh_u i = 0; i < _count; i++) SSH_RELEASE_NODE(T, data[i + idx]);
 				ssh_u ll(idx + _count);
 				memcpy(data + idx, data + ll, (count - ll) * sizeof(T));
 				count -= _count;
