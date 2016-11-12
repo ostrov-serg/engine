@@ -9,7 +9,7 @@ namespace ssh
 	struct XmlNode
 	{
 		// конструктор
-		XmlNode(ssh_cws name, const String& v) : nm(name), val(std::move(v)) { }
+		XmlNode(ssh_cws name, String v) : nm(name), val(std::move(v)) { }
 		// вернуть атрибут по имени
 		XmlNode* attr(ssh_cws name) const
 		{
@@ -49,7 +49,7 @@ namespace ssh
 		// закрыть
 		void close() { tree.reset(); }
 		// сохранить
-		void save(const String& path, ssh_cws code = L"utf-8");
+		void save(const String& path, ssh_cws code = cp_utf8);
 		// вернуть количество дочерних
 		ssh_u count(HXML h) const { return h->count; }
 		// установить имя узла

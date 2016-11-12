@@ -23,6 +23,7 @@ namespace ssh
 	__cnv_close		ssh_cnv_close(nullptr);
 	__cnv_make		ssh_cnv_make(nullptr);
 	__cnv_calc		ssh_cnv_calc(nullptr);
+
 	__regx_compile	ssh_regx_compile(nullptr);
 	__regx_exec		ssh_regx_exec(nullptr);
 	__regx_free		ssh_regx_free(nullptr);

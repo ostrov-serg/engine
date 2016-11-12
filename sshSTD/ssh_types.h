@@ -34,7 +34,7 @@ namespace ssh
 		void* operator new(ssh_u sz);
 	public:
 		// оператор выделения памяти под объект
-		void* Base::operator new(ssh_u sz, Base** obj, const String& name, const String& type)
+		void* Base::operator new(ssh_u sz, Base** obj, String name, String type)
 		{
 			// 1. определяем объект уже существует?
 			Base* n(root);
@@ -53,10 +53,8 @@ namespace ssh
 			*obj = (Base*)::operator new(sz);
 			(*obj)->ref = 1;
 			(*obj)->next = root;
-			(*obj)->nm.init();
-			(*obj)->nm = name;
-			(*obj)->tp.init();
-			(*obj)->tp = type;
+			(*obj)->nm.init(); (*obj)->nm = std::move(name);
+			(*obj)->tp.init(); (*obj)->tp = std::move(type);
 			root = *obj;
 			return (void*)*obj;
 		}

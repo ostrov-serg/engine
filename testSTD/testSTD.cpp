@@ -93,7 +93,7 @@ class bs1 : public Base
 public:
 	bs1() { x = 0; px = std::addressof(x);}
 	bs1(int _x, const String& _s) : x(_x), str(_s) { }
-	void set_str(const String& s) { str = std::move(s); }
+	void set_str(String s) { str = std::move(s); }
 
 	int* px;
 	String str;

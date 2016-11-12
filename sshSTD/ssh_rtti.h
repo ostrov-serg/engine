@@ -10,7 +10,7 @@ namespace ssh
 		// создать объект
 		virtual RTTI* createRTTI() = 0;
 		// вернуть имя класса
-		const String& className() const { return name; }
+		String className() const { return name; }
 		// создать
 		static RTTI* createClass(const String& nm)
 		{
