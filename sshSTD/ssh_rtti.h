@@ -6,7 +6,7 @@ namespace ssh
 	class SSH RTTI
 	{
 	public:
-		RTTI() : next(rootRTTI) { rootRTTI = this; }
+		RTTI() : next(root) { root = this; }
 		// создать объект
 		virtual RTTI* createRTTI() = 0;
 		// вернуть имя класса
@@ -14,7 +14,7 @@ namespace ssh
 		// создать
 		static RTTI* createClass(const String& nm)
 		{
-			RTTI* rtti(rootRTTI);
+			RTTI* rtti(root);
 			while(rtti && rtti->className() != nm) rtti = rtti->next;
 			return (rtti ? rtti->createRTTI() : nullptr);
 		}
@@ -24,7 +24,7 @@ namespace ssh
 		// следующий в списке
 		RTTI* next;
 		// корень списка
-		static RTTI* rootRTTI;
+		static RTTI* root;
 	};
 
 	#define SSH_RTTI_DECL(cls)			class RTTI_##cls : public RTTI \

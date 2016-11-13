@@ -23,11 +23,11 @@ namespace ssh
                 _detail_val_t()                 : _val(_detail_sval){ _detail_sval = _val + 1; }\
 																								\
                 _detail_val_t& operator=(const _detail_val_t&) { return *this; }				\
-                _detail_val_t& operator=(ssh_u) { return *this; }									\
+                _detail_val_t& operator=(ssh_u) { return *this; }								\
                 operator ssh_u() const { return _val; }											\
                 ssh_u _val;																		\
             } __VA_ARGS__;																		\
-            const ssh_u _detail_vals[] = { __VA_ARGS__ };											\
+            const ssh_u _detail_vals[] = { __VA_ARGS__ };										\
             return ::EnumReflector( _detail_vals, sizeof(_detail_vals)/sizeof(ssh_u), L#enumName, \
 								SSH_ENUM_DETAIL_STR((__VA_ARGS__))  );							\
         }() );																					\

@@ -62,6 +62,10 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;SSH_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <AdditionalOptions> /Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -84,6 +88,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions> /Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -105,6 +110,7 @@
     <ClInclude Include="ssh_file.h" />
     <ClInclude Include="ssh_globals.h" />
     <ClInclude Include="ssh_io.h" />
+    <ClInclude Include="ssh_jpg.h" />
     <ClInclude Include="ssh_list.h" />
     <ClInclude Include="ssh_log.h" />
     <ClInclude Include="ssh_map.h">
@@ -122,6 +128,7 @@
     </ClInclude>
     <ClInclude Include="ssh_str.h" />
     <ClInclude Include="ssh_time.h" />
+    <ClInclude Include="ssh_tracer.h" />
     <ClInclude Include="ssh_tree.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
@@ -137,6 +144,7 @@
     </ClCompile>
     <ClCompile Include="ssh_gamepad.cpp" />
     <ClCompile Include="ssh_globals.cpp" />
+    <ClCompile Include="ssh_jpg.cpp" />
     <ClCompile Include="ssh_log.cpp" />
     <ClCompile Include="ssh_math.cpp" />
     <ClCompile Include="ssh_mem.cpp">
@@ -159,6 +167,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ssh_def.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="NatvisFile.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

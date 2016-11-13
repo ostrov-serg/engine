@@ -1,69 +1,54 @@
 
 #include "stdafx.h"
 #include "ssh_mem.h"
-#include <signal.h>
-
-#define SIGNAL_INTERRUPT		SIGINT
-#define SIGNAL_INSTRUCTION		SIGILL
-#define SIGNAL_FLOATING			SIGFPE
-#define SIGNAL_FAULT			SIGSEGV
-#define SIGNAL_TERMINATE		SIGTERM
-#define SIGNAL_ABORT			SIGABRT
-#define	UNHANDLED_EXCEPTION		0x8000
-#define	TERMINATE_CALL			0x4000
-#define	UNEXPECTED_CALL			0x2000
-#define	PURE_CALL				0x1000
-#define	SECURITY_ERROR			0x0800
-#define	NEW_OPERATOR_ERROR		0x0400
-#define	INVALID_PARAMETER_ERROR 0x0200
 
 namespace ssh
 {
 	static void __cdecl ssh_signal_handler(int numSignal)
 	{
-		SSH_FAULT(numSignal, (EXCEPTION_POINTERS*)_pxcptinfoptrs);
+		SSH_FAULT((MemMgr::ExceptTypes)numSignal, (EXCEPTION_POINTERS*)_pxcptinfoptrs);
 		exit(1);
 	}
 
 	static void __cdecl ssh_terminate_handler()
 	{
-		SSH_FAULT(TERMINATE_CALL, nullptr);
+		SSH_FAULT(MemMgr::ExceptTypes::TERMINATE_CALL, nullptr);
 		exit(2);
 	}
 
 	static void __cdecl ssh_unexp_handler()
 	{
-		SSH_FAULT(UNEXPECTED_CALL, nullptr);
+		SSH_FAULT(MemMgr::ExceptTypes::UNEXPECTED_CALL, nullptr);
 		exit(3);
 	}
 
 	static void __cdecl ssh_purecall_handler()
 	{
-		SSH_FAULT(PURE_CALL, nullptr);
+		SSH_FAULT(MemMgr::ExceptTypes::PURE_CALL, nullptr);
 		exit(4);
 	}
 
 	static void __cdecl ssh_security_handler(int code, void *x)
 	{
-		SSH_FAULT(SECURITY_ERROR, nullptr);
+		SSH_FAULT(MemMgr::ExceptTypes::SECURITY_ERROR, nullptr);
 		exit(5);
 	}
 
 	static void __cdecl ssh_invalid_parameter_handler(ssh_cws expression, ssh_cws function, ssh_cws file, ssh_i line, uintptr_t pReserved)
 	{
-		MemMgr::instance()->fault(INVALID_PARAMETER_ERROR, function, file, line, nullptr, expression);
+		ssh_mem->fault(MemMgr::ExceptTypes::INVALID_PARAMETER_ERROR, function, file, line, nullptr, expression);
 		exit(6);
 	}
 
 	static int __cdecl ssh_new_handler(ssh_u size)
 	{
-		SSH_FAULT(NEW_OPERATOR_ERROR, nullptr);
+		SSH_FAULT(MemMgr::ExceptTypes::NEW_OPERATOR_ERROR, nullptr);
 		exit(7);
 	}
 
 	static LONG WINAPI Win32UnhandledExceptionFilter(EXCEPTION_POINTERS* except)
 	{
-		SSH_FAULT(UNHANDLED_EXCEPTION, except);
+		SSH_FAULT(MemMgr::ExceptTypes::UNHANDLED_EXCEPTION, except);
 		exit(8);
 	}
 
@@ -89,7 +74,7 @@ namespace ssh
 		signal(SIGSEGV, ssh_signal_handler);
 	}
 
-	bool MemMgr::fault(int type, ssh_cws fn, ssh_cws fl, int ln, EXCEPTION_POINTERS* except, ssh_cws msg_ex)
+	bool MemMgr::fault(ExceptTypes type, ssh_cws fn, ssh_cws fl, int ln, EXCEPTION_POINTERS* except, ssh_cws msg_ex)
 	{
 		//if(!except)
 		{
@@ -114,19 +99,19 @@ namespace ssh
 		String caption;
 		switch(type)
 		{
-			case SIGNAL_INTERRUPT: caption = L"Прерывание. "; break;
-			case SIGNAL_INSTRUCTION: caption = L"Недопустимая инструкция. "; break;
-			case SIGNAL_FLOATING: caption = L"Недопустимая операция с вещественными числами. "; break;
-			case SIGNAL_FAULT: caption = L"Недопустимый указатель. "; break;
-			case SIGNAL_TERMINATE: caption = L"SIGNAL TERMINATE. "; break;
-			case SIGNAL_ABORT: caption = L"SIGNAL ABORT. "; break;
-			case UNHANDLED_EXCEPTION: caption = L"Необработанное исключение. "; break;
-			case TERMINATE_CALL: caption = L"Вызов функции terminate(). "; break;
-			case UNEXPECTED_CALL: caption = L"Неожиданное исключение. "; break;
-			case PURE_CALL: caption = L"Вызов чистой виртуальной функции. "; break;
-			case SECURITY_ERROR: caption = L"Переполнение буфера. "; break;
-			case NEW_OPERATOR_ERROR: caption = L"Не удалось выделить память оператором new. "; break;
-			case INVALID_PARAMETER_ERROR: caption = L"Недопустимый параметр CRT функции, при выполнении операции "; caption += msg_ex; caption += L". "; break;
+			case ExceptTypes::SIGNAL_INTERRUPT: caption = L"Прерывание. "; break;
+			case ExceptTypes::SIGNAL_INSTRUCTION: caption = L"Недопустимая инструкция. "; break;
+			case ExceptTypes::SIGNAL_FLOATING: caption = L"Недопустимая операция с вещественными числами. "; break;
+			case ExceptTypes::SIGNAL_FAULT: caption = L"Недопустимый указатель. "; break;
+			case ExceptTypes::SIGNAL_TERMINATE: caption = L"SIGNAL TERMINATE. "; break;
+			case ExceptTypes::SIGNAL_ABORT: caption = L"SIGNAL ABORT. "; break;
+			case ExceptTypes::UNHANDLED_EXCEPTION: caption = L"Необработанное исключение. "; break;
+			case ExceptTypes::TERMINATE_CALL: caption = L"Вызов функции terminate(). "; break;
+			case ExceptTypes::UNEXPECTED_CALL: caption = L"Неожиданное исключение. "; break;
+			case ExceptTypes::PURE_CALL: caption = L"Вызов чистой виртуальной функции. "; break;
+			case ExceptTypes::SECURITY_ERROR: caption = L"Переполнение буфера. "; break;
+			case ExceptTypes::NEW_OPERATOR_ERROR: caption = L"Не удалось выделить память оператором new. "; break;
+			case ExceptTypes::INVALID_PARAMETER_ERROR: caption = L"Недопустимый параметр CRT функции, при выполнении операции "; caption += msg_ex; caption += L". "; break;
 		}
 		if(except)
 		{
@@ -189,6 +174,7 @@ namespace ssh
 	{
 		Section cs;
 
+		// _alligned_malloc
 		ssh_b* p((ssh_b*)::malloc(sz + sizeof(NodeMem) + 4));
 		// создать узел
 		NodeMem* nd(::new((NodeMem*)(p)) NodeMem((int)sz, root));

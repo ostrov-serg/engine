@@ -42,7 +42,10 @@ namespace ssh
 		bool bom8(_0 == 0xef && _1 == 0xbb && _2 == 0xbf);
 		int width((bom16le || bom16be) + 1);
 		// определить границы заголовка xml
-		if((pos = (width == 1 ? (strstr(buf.to<ssh_ccs>(), "?>") - buf.to<ssh_ccs>()) : (wcsstr(buf.to<ssh_cws>(), L"?>") - buf.to<ssh_cws>()))) < 0) SSH_THROW(L"Ќе удалось найти заголовок XML!");
+		if((pos = (width == 1 ? (strstr(buf.to<ssh_ccs>(), "?>") - buf.to<ssh_ccs>()) : (wcsstr(buf.to<ssh_cws>(), L"?>") - buf.to<ssh_cws>()))) < 0)
+		{
+			SSH_THROW(L"Ќе удалось найти заголовок XML!");
+		}
 		pos += 2;
 		ssh_cs _cs(buf[pos * width]);
 		buf[pos * width] = 0;
@@ -62,8 +65,7 @@ namespace ssh
 	void Xml::_make(const Buffer& buf)
 	{
 		tree.reset();
-		String tmp(encode(buf));
-		_xml = tmp.buffer();
+		_xml = encode(buf).buffer();
 		// формирование
 		make(root(), 0);
 	}
@@ -124,7 +126,7 @@ namespace ssh
 		}
 	}
 
-	String Xml::_save(HXML h, ssh_l level)
+	static String _save(HXML h, ssh_l level)
 	{
 		auto n(h->value);
 		String s(L'\t', level);

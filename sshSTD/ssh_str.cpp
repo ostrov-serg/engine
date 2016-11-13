@@ -71,9 +71,9 @@ namespace ssh
 			ssh_l nsz(sz + 1);
 			if(nsz > buffer->len_buf)
 			{
-				if(nsz < 8192) { nsz = ssh_pow2(nsz, true) * 2; if(nsz < 64) nsz = 64; }
+				if(nsz < 8192) { nsz = ssh_pow2(nsz * sizeof(ssh_ws) + sizeof(STRING_BUFFER), false) * 2; if(nsz < 64) nsz = 64; }
 				// выделим память под новый буфер
-				buffer = (STRING_BUFFER*)new ssh_b[sizeof(STRING_BUFFER) + nsz * sizeof(ssh_ws)];
+				buffer = (STRING_BUFFER*)new ssh_b[nsz];
 				// скопировать старый, если необходимо
 				if(is_copy && !is_empty()) memcpy(buffer->data(), buf, length() * 2);
 				// очистить старый
@@ -110,7 +110,7 @@ namespace ssh
 		return ret;
 	}
 
-	const String& String::replace(ssh_cws _old, ssh_cws _new)
+	void String::_replace(ssh_cws _old, ssh_cws _new)
 	{
 		ssh_l nOld(wcslen(_old)), nNew(wcslen(_new)), nLen(length()), nCount(0);
 		ssh_l nDstOffs(0), nSrcOffs(0), nDiff, l;
@@ -120,22 +120,29 @@ namespace ssh
 		nDiff = nNew - nOld;
 		if(nNew > nOld) nDstOffs = nDiff; else nSrcOffs = -nDiff;
 		l = nDiff * nCount;
+		// запомнить значение buf[sz]
+		ssh_ws _ws(buf[nLen + l]);
 		// проверка на вместительность буфера
 		if(alloc(nLen + l, true))
 		{
+			buf[nLen + l] = _ws;
 			ssh_ws* _buf(buf);
 			// непосредственно замена
 			while((f = wcsstr(_buf, _old)))
 			{
-				l = (nLen - ((f + nSrcOffs) - buf));
+				l = (nLen - ((f + nSrcOffs) - buf)) + 1;
 				memmove(f + nDstOffs, f + nSrcOffs, l * 2);
 				memcpy(f, _new, nNew * 2);
 				_buf = f + nNew;
 				nLen += nDiff;
 			}
-			//buf[nLen] = 0;
-			data()->update();
 		}
+	}
+
+	const String& String::replace(ssh_cws _old, ssh_cws _new)
+	{
+		_replace(_old, _new);
+		data()->update();
 		return *this;
 	}
 
@@ -226,7 +233,8 @@ namespace ssh
 	const String& String::replace(ssh_cws* _old, ssh_cws _new)
 	{
 		ssh_l idx(0);
-		while(_old[idx]) replace(_old[idx++], _new), _new += (wcslen(_new) + 1);
+		while(_old[idx]) { _replace(_old[idx++], _new); _new += (wcslen(_new) + 1); }
+		data()->update();
 		return *this;
 	}
 

@@ -8,7 +8,7 @@ namespace ssh
 	public:
 		struct Node
 		{
-			SSH_NEW_DECL(Node, 128);
+			SSH_NEW_DECL(Node, 32);
 			// конструктор узла
 			Node(const T& t, Node* n) : next(n), value(t) {}
 			// деструктор

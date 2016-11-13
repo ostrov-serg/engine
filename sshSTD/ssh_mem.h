@@ -1,19 +1,44 @@
 
 #pragma once
 
+#include <signal.h>
+
 namespace ssh
 {
 	class SSH MemMgr final
 	{
 	public:
+		enum class ExceptTypes : int
+		{
+			SIGNAL_INTERRUPT		= SIGINT,
+			SIGNAL_INSTRUCTION		= SIGILL,
+			SIGNAL_FLOATING			= SIGFPE,
+			SIGNAL_FAULT			= SIGSEGV,
+			SIGNAL_TERMINATE		= SIGTERM,
+			SIGNAL_ABORT			= SIGABRT,
+			UNHANDLED_EXCEPTION		= 0x8000,
+			TERMINATE_CALL			= 0x4000,
+			UNEXPECTED_CALL			= 0x2000,
+			PURE_CALL				= 0x1000,
+			SECURITY_ERROR			= 0x0800,
+			NEW_OPERATOR_ERROR		= 0x0400,
+			INVALID_PARAMETER_ERROR = 0x0200
+		};
 		struct NodeMem
 		{
-			// конструктор
-			NodeMem(int _sz, NodeMem* nn) : next(nn), prev(nullptr), sz(_sz), use(1) {}
 			// признак использованного блока
-			int use;
+			int	use;
 			// размер блока
 			int sz;
+#ifdef _DEBUG
+			// конструктор
+			NodeMem(int _sz, NodeMem* nn) : ptr((ssh_b*)this + sizeof(NodeMem)), next(nn), prev(nullptr), sz(_sz), use(1) {}
+			// указатель на данные (только для отладки
+			ssh_b* ptr;
+#else
+			// конструктор
+			NodeMem(int _sz, NodeMem* nn) : next(nn), prev(nullptr), sz(_sz), use(1) {}
+#endif // DEBUG
 			// следующий
 			NodeMem* next;
 			// предыдущий
@@ -21,7 +46,7 @@ namespace ssh
 		};
 		static MemMgr* instance() { static MemMgr mem; return &mem; }
 		// обработка внешнего исключения
-		bool fault(int type, ssh_cws fn, ssh_cws fl, int ln, EXCEPTION_POINTERS* except = nullptr, ssh_cws msg_ex = nullptr);
+		bool fault(ExceptTypes type, ssh_cws fn, ssh_cws fl, int ln, EXCEPTION_POINTERS* except = nullptr, ssh_cws msg_ex = nullptr);
 		// вернуть информацию об сеансе работы менеджера
 		void output();
 		// выделение памяти
@@ -45,7 +70,7 @@ namespace ssh
 		// максимум единовременно выделенной памяти
 		ssh_u use_mem = 0, use_max_mem = 0;
 		// признак блокировки
-		bool is_enabled = false;
+		bool is_enabled = true;
 		// корневой блок
 		NodeMem* root = nullptr;
 	};

@@ -84,8 +84,6 @@ namespace ssh
 		// формирование дерева узлов
 		void make(HXML hp, ssh_u lev);
 		void _make(const Buffer& buf);
-		// сохранение
-		String _save(HXML h, ssh_l level);
 		// дерево узлов
 		Tree<XmlNode*> tree;
 	};

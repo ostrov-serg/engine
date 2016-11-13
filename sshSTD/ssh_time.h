@@ -5,11 +5,11 @@ namespace ssh
 {
 	class SSH Time
 	{
-		__time64_t time;
+		__time64_t time = 0;
 	public:
-		Time() : time(0) {}
-		Time(const time_t& t) { *this = t; }
-		Time(const Time& t) { *this = t; }
+		Time() {}
+		Time(const time_t& t) : time(t) { }
+		Time(const Time& t) : time(t.time) { }
 		Time(int nYear, int nMonth, int nDay, int nHour, int nMin, int nSec, int nDST = -1);
 		Time(const SYSTEMTIME& sysTime, int nDST = -1);
 		Time(const FILETIME& fileTime, int nDST = -1);
@@ -39,4 +39,9 @@ namespace ssh
 		String fmt(ssh_cws str) const;
 		static Time current() { return Time(::time(nullptr)); }
 	};
+
+	inline String operator ""_t(ssh_cws _wcs, ssh_u sz)
+	{
+		return Time::current().fmt(_wcs);
+	}
 }

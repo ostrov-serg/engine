@@ -4,9 +4,10 @@
 extern "C"
 {
 	ssh_u	asm_ssh_capability();
-	ssh_b*	asm_ssh_to_base64(ssh_b* ptr, ssh_u count);
+	ssh_cws	asm_ssh_to_base64(ssh_b* ptr, ssh_u count);
 	ssh_b*	asm_ssh_from_base64(ssh_ws* str, ssh_u count, ssh_u* len_buf);
 	ssh_l	asm_ssh_parse_xml(ssh_ws* src, ssh_w* vec);
+	ssh_cws	asm_ssh_parse_spec(void* val, ssh_cws ptr, ssh_cws* end);
 };
 
 #include "ssh_str.h"
@@ -111,9 +112,11 @@ namespace ssh
 	GUID   SSH ssh_make_guid(ssh_cws src);
 	Buffer SSH ssh_base64(const String& str);
 	Buffer SSH ssh_convert(ssh_cws charset, ssh_cws str);
+	void SSH _ssh_printf(String& ret, ssh_cws s);
 	void SSH ssh_make_path(ssh_cws path);
 	void SSH ssh_remove_comments(String* lst, ssh_u count, bool is_simple);//
 	inline bool ssh_is_null(ssh_cws str) { return (!str || !str[0]); }
+	inline bool ssh_is_digit(ssh_cws str) { return (*str >= L'0' && *str <= L'9'); }
 	bool SSH ssh_is_wrong_lex(const String& str, ssh_cws errLexs = nullptr);
 	bool SSH ssh_dlg_sel_folder(ssh_cws title, String& folder, HWND hWnd);
 	bool SSH ssh_make_wnd(const DESC_WND& desc, bool is_show_wnd);//
@@ -130,11 +133,14 @@ namespace ssh
 	template <typename T> bool ssh_is_pow2(const T& value)
 	{
 		return (value == ssh_pow2<T>(value, true));
+
 	}
 	// обменять значения
 	template <typename T> void ssh_swap(T& val1, T& val2)
 	{
-		T tmp(val1); val1 = val2; val2 = tmp;
+		T tmp(std::move(val1));
+		val1 = std::move(val2);
+		val2 = std::move(tmp);
 	}
 	// минимум
 	template <typename T> T ssh_min(const T& val1, const T& val2)
@@ -289,4 +295,28 @@ namespace ssh
 		BlockFix* arrs = nullptr;
 		int count = 0;
 	};
+
+	template<typename T, typename... Args> void _ssh_printf(String& ret, ssh_cws s, T value, Args... args)
+	{
+		while(*s)
+		{
+			if(*s == L'%' && *(++s) != L'%')
+			{
+				ssh_u tmp(0);
+				*(T*)&tmp = value;
+				ret += asm_ssh_parse_spec(&tmp, s, &s);
+				_ssh_printf(ret, s, args...);
+				return;
+			}
+			ret += *s++;
+		}
+//		SSH_THROW(L"Несоответствие параметров в ssh_printf()!");
+	};
+
+	template<typename T, typename... Args> String ssh_printf(ssh_cws s, T value, Args... args)
+	{
+		String _ret;
+		_ssh_printf(_ret, s, value, args...);
+		return _ret;
+	}
 }

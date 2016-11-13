@@ -92,21 +92,45 @@ class bs1 : public Base
 	SSH_DYNCREATE(bs1);
 public:
 	bs1() { x = 0; px = std::addressof(x);}
+	bs1(const bs1& b)
+	{
+		x = b.x;
+	}
 	bs1(int _x, const String& _s) : x(_x), str(_s) { }
-	void set_str(String s) { str = std::move(s); }
+	void set_str(String s)
+	{
+		str = std::move(s);
+		str1 = s;
+		ssh_cws _1 = __FUNCTIONW__;
+		ssh_ccs _2 = __FUNCDNAME__;
+		ssh_ccs _3 = __FUNCSIG__;
+		ssh_ccs _4 = __func__;
+	}
 
 	int* px;
-	String str;
+	String str, str1;
 	int x;
 
 };
 
+ssh_u operator "" _suffix(ssh_u minutes)
+{
+	return minutes * 60;
+}
+
+String operator ""_r(ssh_ccs _ccs)
+{
+	return String(_ccs);
+}
+
+using namespace std;
+
 int main() noexcept
 {
-	bs1 b;
-	b.set_str(L"ddd");
-	String str(L"fff");
-	b.set_str(str);
+	String ss11;
+	ss11 = ssh_printf(L"%1.5f %05I64x,%s %c %C %S", 1.1f, 0x102030, L"11", L'!', 'r', "12345");
+	wprintf(L"%1.5a %05x,%s %02c %C %S", 1.1f, 0x102030, L"11", L'!', 'r', "12345");
+	ss11 += L"1";
 	Log::instance()->init();
 	Log::stk_common _c;
 	Xml xml;

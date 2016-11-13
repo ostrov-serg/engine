@@ -29,7 +29,7 @@ namespace ssh
 	__regx_free		ssh_regx_free(nullptr);
 
 	Base* Base::root(nullptr);
-	RTTI* RTTI::rootRTTI(nullptr);
+	RTTI* RTTI::root(nullptr);
 
 	ssh_u SSH ssh_hash(ssh_cws wcs)
 	{
@@ -68,7 +68,7 @@ namespace ssh
 
 	String SSH ssh_base64(const Buffer& buf)
 	{
-		return String((ssh_cws)asm_ssh_to_base64(buf, buf.size()));
+		return String(asm_ssh_to_base64(buf, buf.size()));
 	}
 
 	String SSH ssh_base64(ssh_cws charset, const String& str)
@@ -484,12 +484,9 @@ namespace ssh
 	}
 
 
-#define IDC_FOLDERTREE		0x3741
-#define IDC_STATUSTEXT		0x3743
-#define IDC_NEW_EDIT_PATH	0x3744
-
 	static int CALLBACK SelectFolderCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM pData)
 	{
+		enum{ IDC_FOLDERTREE = 0x3741, IDC_STATUSTEXT = 0x3743, IDC_NEW_EDIT_PATH = 0x3744 };
 		String* folder((String*)pData);
 
 		switch(uMsg)
@@ -658,7 +655,7 @@ namespace ssh
 		_v[2] = _mm_set_ss(v[2]);
 		_v[3] = _mm_set_ss(1.0f);
 		for(ssh_u i = 0; i < 4; i++) _v[i] = _mm_mul_ps(_mm_shuffle_ps(_v[i], _v[i], 0), *(__m128*)&m[i * 4]);
-		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[1], _v[2]), _v[3]), _v[4]);
+		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[0], _v[1]), _v[2]), _v[3]);
 		return ret.m128_f32;
 	}
 
@@ -671,7 +668,7 @@ namespace ssh
 		_v[2] = _mm_set_ss(v[2]);
 		_v[3] = _mm_set_ss(v[3]);
 		for(ssh_u i = 0; i < 4; i++) _v[i] = _mm_mul_ps(_mm_shuffle_ps(_v[i], _v[i], 0), *(__m128*)&m[i * 4]);
-		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[1], _v[2]), _v[3]), _v[4]);
+		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[0], _v[1]), _v[2]), _v[3]);
 		return ret.m128_f32;
 	}
 
@@ -684,7 +681,7 @@ namespace ssh
 		_v[2] = _mm_set_ss(v[2]);
 		_v[3] = _mm_set_ss(1.0f);
 		for(ssh_u i = 0; i < 4; i++) _v[i] = _mm_mul_ps(*(__m128*)&m[i * 4], _mm_shuffle_ps(_v[i], _v[i], 0));
-		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[1], _v[2]), _v[3]), _v[4]);
+		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[0], _v[1]), _v[2]), _v[3]);
 		return ret.m128_f32;
 	}
 
@@ -697,7 +694,7 @@ namespace ssh
 		_v[2] = _mm_set_ss(v[2]);
 		_v[3] = _mm_set_ss(v[3]);
 		for(ssh_u i = 0; i < 4; i++) _v[i] = _mm_mul_ps(*(__m128*)&m[i * 4], _mm_shuffle_ps(_v[i], _v[i], 0));
-		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[1], _v[2]), _v[3]), _v[4]);
+		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[0], _v[1]), _v[2]), _v[3]);
 		return ret.m128_f32;
 	}
 
@@ -722,6 +719,15 @@ namespace ssh
 			}
 		}
 		return flt;
+	}
+
+	void SSH _ssh_printf(String& ret, ssh_cws s)
+	{
+		while(*s)
+		{
+			if(*s == L'%' && *(++s) != L'%') break;// SSH_THROW(L"Несоответствие параметров в ssh_printf()!");
+			ret += *s++;
+		}
 	}
 
 	static void ssh_init_libs()

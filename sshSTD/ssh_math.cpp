@@ -4,32 +4,35 @@
 
 namespace ssh
 {
-	ssh_w Half::compress(float value)
+	Half::Half(float value)
 	{
 		if(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::HALF))
-			return _mm_cvtps_ph(_mm_set_ss(value), 0b00000000).m128i_u16[0];
-		Bits v, s;
-		v.f = value;
-		unsigned long sign = v.si & signN;
-		v.si ^= sign;
-		sign >>= shiftSign; // logical shift
-		s.si = mulN;
-		s.si = (long)(s.f * v.f); // correct subnormals
-		v.si ^= (s.si ^ v.si) & -(minN > v.si);
-		v.si ^= (infN ^ v.si) & -((infN > v.si) & (v.si > maxN));
-		v.si ^= (nanN ^ v.si) & -((nanN > v.si) & (v.si > infN));
-		v.ui >>= shift; // logical shift
-		v.si ^= ((v.si - maxD) ^ v.si) & -(v.si > maxC);
-		v.si ^= ((v.si - minD) ^ v.si) & -(v.si > subC);
-		return (ssh_w)(v.ui | sign);
+			val = _mm_cvtps_ph(_mm_set_ss(value), 0).m128i_u16[0];
+		else
+		{
+			Bits v, s;
+			v.f = value;
+			unsigned long sign = v.si & signN;
+			v.si ^= sign;
+			sign >>= shiftSign; // logical shift
+			s.si = mulN;
+			s.si = (long)(s.f * v.f); // correct subnormals
+			v.si ^= (s.si ^ v.si) & -(minN > v.si);
+			v.si ^= (infN ^ v.si) & -((infN > v.si) & (v.si > maxN));
+			v.si ^= (nanN ^ v.si) & -((nanN > v.si) & (v.si > infN));
+			v.ui >>= shift; // logical shift
+			v.si ^= ((v.si - maxD) ^ v.si) & -(v.si > maxC);
+			v.si ^= ((v.si - minD) ^ v.si) & -(v.si > subC);
+			val = (ssh_w)(v.ui | sign);
+		}
 	}
 
-	float Half::decompress(ssh_w value)
+	Half::operator float() const
 	{
 		if(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::HALF))
-			return _mm_cvtph_ps(_mm_set1_epi16(value)).m128_f32[0];
+			return _mm_cvtph_ps(_mm_set1_epi16(val)).m128_f32[0];
 		Bits v;
-		v.ui = value;
+		v.ui = val;
 		long sign = v.si & signC;
 		v.si ^= sign;
 		sign <<= shiftSign;

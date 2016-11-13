@@ -4,25 +4,42 @@
 
 namespace ssh
 {
-	static ssh_cws m_day_of_week_big[] = {L"Понедельник", L"Вторник", L"Среда", L"Четверг", L"Пятница", L"Суббота", L"Воскресенье"};
-	static ssh_cws m_day_of_week_small[] = {L"Пн", L"Вт", L"Ср", L"Чт", L"Пт", L"Сб", L"Вс"};
-	static ssh_cws m_month_big[] = {L"Январь", L"Февраль", L"Март", L"Апрель", L"Май", L"Июнь", L"Июль", L"Август", L"Сентябрь", L"Октябрь", L"Ноябрь", L"Декабрь"};
-	static ssh_cws m_month_big_[] = {L"Января", L"Февраля", L"Марта", L"Апреля", L"Мая", L"Июня", L"Июля", L"Августа", L"Сентября", L"Октября", L"Ноября", L"Декабря"};
-	static ssh_cws m_month_big_smail[] = {L"Пьянварь", L"Фигвраль", L"Кошмарт", L"Сопрель", L"Сымай", L"Теплюнь", L"Жарюль", L"Авгрусть", L"Свистябрь", L"Моктябрь", L"Гноябрь", L"Дубабрь"};
-	static ssh_cws m_month_big_smail_[] = {L"Пьянваря", L"Фигвраля", L"Кошмарта", L"Сопреля", L"Сымая", L"Теплюня", L"Жарюля", L"Авгрустя", L"Свистября", L"Моктября", L"Гноября", L"Дубабря"};
-	static ssh_cws m_month_small[] = {L"Янв", L"Фев", L"Мар", L"Апр", L"Май", L"Июн", L"Июл", L"Авг", L"Сен", L"Окт", L"Ноя", L"Дек"};
+	static ssh_cws ДниНеделиД[] = {L"Понедельник", L"Вторник", L"Среда", L"Четверг", L"Пятница", L"Суббота", L"Воскресенье"};
+	static ssh_cws ДниНеделиК[] = {L"Пн", L"Вт", L"Ср", L"Чт", L"Пт", L"Сб", L"Вс"};
+	static ssh_cws МесяцыД[] = {L"Января", L"Февраля", L"Марта", L"Апреля", L"Мая", L"Июня", L"Июля", L"Августа", L"Сентября", L"Октября", L"Ноября", L"Декабря"};
+	static ssh_cws МесяцыК[] = {L"Янв", L"Фев", L"Мар", L"Апр", L"Май", L"Июн", L"Июл", L"Авг", L"Сен", L"Окт", L"Ноя", L"Дек"};
+	static ssh_cws СмешныеМесяцы[] = {L"Пьянваря", L"Фигвраля", L"Кошмарта", L"Сопреля", L"Сымая", L"Теплюня", L"Жарюля", L"Авгрустя", L"Свистября", L"Моктября", L"Гноября", L"Дубабря"};
 
 	String Time::fmt(ssh_cws str) const
 	{
-		static ssh_cws to[] = {L"$MN)+", L"$MN)", L"$MN+", L"$MN", L"$Mn", L"$m", L"$Y", L"$y", L"$dw", L"$dW", L"$dy", L"$d", L"$h", L"$H", L"$s", L"$nw", L"$nm", nullptr};
+		static ssh_cws to[] = {L"%ДАТА_", L"%ДАТА", L"%ВРЕМЯ", L"%дата_", L"%дата", L"%М_)", L"%М_", L"%м_", L"%м", L"%М", L"%Г", L"%г", L"%ДН_", L"%дн_", L"%ДГ", L"%Д", L"%Ч", L"%ч_", L"%ч", L"%С", L"%Н", nullptr};
 		int _month(month() - 1), _year(year()), _dw(dayOfWeek()), _hour(hour());
 
 		String result(str);
-		String tmp(String::fmt(L"%s\1%s\1%s\1%s\1%s\1%02i\1%02i\1%02i\1%s\1%s\1%02i\1%02i\1%02i\1%02i%s\1%02i\1%02i\1%02i\1\1",
-								m_month_big_smail_[_month], m_month_big_smail[_month], m_month_big_[_month], m_month_big[_month], m_month_small[_month],
-								_month + 1, _year, _year % 100, m_day_of_week_small[_dw], m_day_of_week_big[_dw], dayOfYear(), day(), _hour,
-								(_hour < 12 ? _hour : _hour - 12), (_hour < 12 ? L"pm" : L"am"), second(), weekOfYear(), minute()));
-		tmp.replace(L'\1', L'\0');
+		String tmp(String::fmt(L"%02i %s %02i;%02i.%02i.%02i;%02i:%02i:%02i;%02i %s %02i;%02i.%02i.%02i;%s;%s;%s;%02i;%02i;%02i;%02i;%s;%s;%02i;%02i;%02i;%s;%02i;%02i;%02i;;",
+							   day(), МесяцыД[_month], _year,
+							   day(), _month + 1, _year,
+							   _hour, minute(), second(),
+							   day(), МесяцыК[_month], _year,
+							   day(), _month + 1, _year % 100,
+
+								СмешныеМесяцы[_month],
+								МесяцыД[_month],
+								МесяцыК[_month],
+								minute(),
+								_month + 1,
+								_year,
+								_year % 100,
+								ДниНеделиД[_dw],
+								ДниНеделиК[_dw],
+								dayOfYear(),
+								day(),
+								_hour,
+								(_hour < 12 ? L"pm" : L"am"),
+								(_hour < 12 ? _hour : _hour - 12),
+								second(),
+								weekOfYear()));
+		tmp.replace(L';', L'\0');
 		return result.replace(to, tmp);
 	}
 
@@ -34,15 +51,7 @@ namespace ssh
 
 	Time::Time(int nYear, int nMonth, int nDay, int nHour, int nMin, int nSec, int nDST)
 	{
-		struct tm atm;
-
-		atm.tm_sec = nSec;
-		atm.tm_min = nMin;
-		atm.tm_hour = nHour;
-		atm.tm_mday = nDay;
-		atm.tm_mon = nMonth - 1;
-		atm.tm_year = nYear - 1900;
-		atm.tm_isdst = nDST;
+		struct tm atm { nSec, nMin, nHour, nDay, nMonth - 1, nYear - 1900, 0, 0, nDST };
 		time = _mktime64(&atm);
 	}
 
@@ -96,6 +105,6 @@ namespace ssh
 		// вычисляем разницу между текущей датой и началом года
 		time_t wd(bt.getTime() - (bt.dayOfWeek() * 24 * 60 * 60));
 		// вычисляем номер недели
-		return (int)(((time - wd) / (7 * 24 * 60 * 60)) + 1);
+		return (int)((time - wd) / (7 * 24 * 60 * 60));
 	}
 }

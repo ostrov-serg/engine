@@ -11,6 +11,7 @@
 #include <sshSTD\ssh_enums.h>
 #include <sshSTD\ssh_rtti.h>
 #include <sshSTD\ssh_except.h>
+#include <sshSTD\ssh_tracer.h>
 #include <sshSTD\ssh_log.h>
 #include <sshSTD\ssh_time.h>
 #include <sshSTD\ssh_buf.h>
@@ -24,5 +25,8 @@
 
 #include <sshSTD\ssh_xml.h>
 #include <sshSTD\ssh_srlz.h>
+
+#include <sshSTD\ssh_io.h>
+#include <sshSTD\ssh_math.h>
 
 using namespace ssh;

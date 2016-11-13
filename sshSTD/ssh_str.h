@@ -4,7 +4,7 @@
 extern "C"
 {
 	void*	asm_ssh_wton(ssh_cws str, ssh_u radix, ssh_ws* end);
-	ssh_cws	asm_ssh_ntow(const void* num, ssh_u radix);
+	ssh_cws	asm_ssh_ntow(const void* num, ssh_u radix, ssh_ws* end = nullptr);
 };
 
 namespace ssh
@@ -113,6 +113,7 @@ namespace ssh
 			void update() { hash = ssh_hash(data()); }
 		};
 		static String add(ssh_cws wcs1, ssh_l len1, ssh_cws wcs2, ssh_l len2);
+		void _replace(ssh_cws _old, ssh_cws _new);
 		void init() { buf = (ssh_ws*)((ssh_cs*)_empty + sizeof(STRING_BUFFER)); }
 		bool alloc(ssh_l size, bool is_copy);
 		const String& add(ssh_cws wcs, ssh_l len);

@@ -185,33 +185,3 @@ namespace ssh
 		}
 	}
 }
-
-/*
-
-	void StackTrace::add(bool is, ssh_wcs func, ssh_wcs file, int line)
-	{
-		is_disabled = true;
-		String tmp;
-		if(!is) indent--;
-		if(cdepth >= depth) remove_node();
-		cdepth++;
-		if(indent < 0) indent = 0;
-		String _indent(L' ', indent * 2);
-		add_node(file ? tmp.fmt(L"%s%c%s()  -  (%s:%i)", _indent, (is ? L'+' : L'-'), func, file, line) : tmp.fmt(L"%s%c%s()", _indent, (is ? L'+' : L'-'), func));
-		if(is) indent++;
-		is_disabled = false;
-	}
-
-	void StackTrace::output()
-	{
-#ifdef _DEBUG
-		String tmp;
-		log->add(tmp.fmt(L"\r\n\r\n-------------------------------------------------- Трассировка стека (%i вызовов) --------------------------------------------------\r\n\r\n", cdepth));
-		auto n(root);
-		while(n) { log->add(n->value); n = n->next; }
-		log->add(L"\r\n\r\n--------------------------------------------------------- Трассировка стека -------------------------------------------------------\r\n\r\n");
-		clear();
-#endif
-	}
-}
-*/

@@ -8,7 +8,7 @@ namespace ssh
 	public:
 		struct Node
 		{
-			SSH_NEW_DECL(Node, 128);
+			SSH_NEW_DECL(Node, 64);
 			// конструктор
 			Node(const T& t, Node* p, Node* n) : prev(p), next(n), value(t) {}
 			// деструктор
@@ -25,28 +25,38 @@ namespace ssh
 		// конструктор копии
 		List(const List<T>& src) { *this = src; }
 		// конструктор из списка инициализации
-		List(const std::initializer_list<T>& _list) { for(auto& t : _list) insert(last, t); }
+		List(const std::initializer_list<T>& _list) { for(auto& t : _list) add(t); }
 		// конструктор переноса
-		List(List<T>&& src) { root = src.root; last = src.last; src.free(); }
+		List(List<T>&& src) { nroot = src.nroot; nlast = src.nlast; src.free(); }
 		// деструктор
 		~List() { reset(); }
 		// принудительное освобождение
-		void free() { root = last = nullptr; Node::reset(); }
+		void free() { count = 0; nroot = nlast = nullptr; Node::reset(); }
+		// количество узлов
+		int size() const { return count; }
 		// приращение
-		Node* operator += (const T& t) { return insert(last, t); }
-		const List& operator += (const List<T>& src) { for(auto n : src) insert(last, n); return *this; }
+		Node* operator += (const T& t) { return add(t); }
+		const List& operator += (const List<T>& src) { for(auto n : src) add(n); return *this; }
 		// присваивание
 		const List& operator = (const List<T>& src) { reset(); return operator += (src); }
-		const List& operator = (List<T>&& src) { reset(); root = src.root; last = src.last; src.free(); return *this; }
-		// вставка
+		const List& operator = (List<T>&& src) { reset(); nroot = src.nroot; nlast = src.nlast; src.free(); return *this; }
+		// добавить
+		Node* add(const T& t)
+		{
+			auto n(new Node(t, nlast, nullptr));
+			if(nroot) nlast->next = n; else nroot = n;
+			return (nlast = n);
+		}
+		// вставка(перед n)
 		Node* insert(Node* n, const T& t)
 		{
-			auto nn(n ? n->next : root);
-			auto nd(new Node(t, n, nn));
-			if(n) n->next = nd;
-			if(nn) nn->prev = nd;
-			if(nn == root) root = nd;
-			if(n == last) last = nd;
+			if(!n) n = nroot;
+			auto np(n ? n->prev : nullptr);
+			auto nd(new Node(t, np, n));
+			if(np) np->next = nd;
+			if(n) n->prev = nd;
+			if(n == nroot) nroot = nd;
+			if(!nlast) nlast = nd;
 			return nd;
 		}
 		// удалить
@@ -56,24 +66,29 @@ namespace ssh
 			{
 				auto n(nd->next);
 				auto p(nd->prev);
-				if(nd == root) root = n;
-				if(nd == last) last = p;
+				if(nd == nroot) nroot = n;
+				if(nd == nlast) nlast = p;
 				if(n) n->prev = p;
 				if(p) p->next = n;
 				delete nd;
+				count--;
 			}
 		}
 		// итерация по списку
-		Iter<Node> begin() const { return Iter<Node>(root); }
+		Iter<Node> begin() const { return Iter<Node>(nroot); }
 		Iter<Node> end() const { return Iter<Node>(nullptr); }
+		auto root() const { return nroot; }
+		auto last() const { return nlast; }
 		// сброс
-		void reset() { while(root) { auto n(root->next); delete root; root = n; } free(); }
+		void reset() { while(nroot) { auto n(nroot->next); delete nroot; nroot = n; } free(); }
 		// вернуть признак пустого
-		bool is_empty() const { return (root == nullptr); }
+		bool is_empty() const { return (nroot == nullptr); }
 	protected:
+		// количество узлов
+		int count = 0;
 		// корень
-		Node* root = nullptr;
+		Node* nroot = nullptr;
 		// последний
-		Node* last = nullptr;
+		Node* nlast = nullptr;
 	};
 }

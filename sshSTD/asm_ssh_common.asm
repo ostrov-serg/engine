@@ -1,10 +1,12 @@
 
 extern malloc:near
+extern MultiByteToWideChar:near
 
 .data?
 
 result		dw 128 dup(?)
 temp_print	dw 512 dup(?)
+end_ptr		dq ?
 
 .data
 
@@ -33,18 +35,21 @@ base64_chars	dw 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 
 
 .code
 
-
-; преобразовать число в строку, в зависимости от системы счисления 0-decimal, (1-bin, 2-oct, 3-hex, 4-float,5-double,6-bool)
-; rcx - число
-; rdx - система счисления
-; ret - result of whar_t*
+; преобразовать число в строку, в зависимости от системы счисления 0-decimal, (1-bin, 2-oct, 3-hex, 4-double,5-float,6-bool)
+; rcx - указатель на число
+; rdx - radix
+; r8 - ptr end
+; rax - result of whar_t*
 asm_ssh_ntow proc public
 		push r10
 		push r11
-		mov r9, offset result + 126
-		add r9, 2
+		push r12
+		push r13
+		mov r9, offset result + 128
 		mov word ptr [r9], 0
 		jrcxz @f
+		mov r13, r9
+		mov r12, r8
 		mov rax, [rcx]
 		imul rdx, 24
 		mov r10, offset tbl_radix
@@ -53,7 +58,12 @@ asm_ssh_ntow proc public
 		mov r10, [rdx + 8]
 		mov rcx, [rdx + 16]
 		call qword ptr [rdx]
+		test r12, r12
+		jz @f
+		mov [r12], r13
 @@:		mov rax, r9
+		pop r13
+		pop r12
 		pop r11
 		pop r10
 		ret
@@ -66,6 +76,7 @@ nto_bool:
 		mov eax, [rax + r10 + 8]
 		mov [r9], rdx
 		mov [r9 + 8], eax
+		lea r13, [r9 + 12]
 		ret
 nto_ohb:sub r9, 2
 		mov rdx, rax
@@ -104,7 +115,7 @@ nto_dbl:; read double from rax
 		mov r11, 8
 		movd xmm0, rax
 		; отбросим дробную часть
-@@:		roundsd xmm1, xmm0, 0
+@@:		roundsd xmm1, xmm0, 3
 		cvttsd2si rax, xmm1
 		; преобразуем целую часть в строку
 		call nto_dec
@@ -118,7 +129,7 @@ nto_dbl:; read double from rax
 @@:		; дробная часть
 		subsd xmm0, xmm1
 		mulsd xmm0, qword ptr [r8]
-		roundsd xmm1, xmm0, 0
+		roundsd xmm1, xmm0, 3
 		cvttsd2si rax, xmm1
 		test rax, rax
 		cmovnz r10, rdx
@@ -126,10 +137,160 @@ nto_dbl:; read double from rax
 		mov [rdx], ax
 		add rdx, 2
 		loop @b
-		mov [r10 + 2], cx
+		lea r13, [r10 + 2]
+		mov [r13], cx
 		ret
 asm_ssh_ntow endp
 
+; распарсить спецификатор wprintf
+; rcx - указатель на val
+; rdx - ptr
+; r8 - ptr of end
+; ret - result of whar_t*
+asm_ssh_parse_spec proc public
+		push rdi
+		push r10
+		push r11
+		push r12
+		mov r11, r8
+		mov r10, rcx
+		mov rcx, rdx
+		mov rdx, 5			; double
+		lea r8, end_ptr
+		call asm_ssh_wton
+		movsd xmm0, qword ptr [rax]
+		mov r12, end_ptr
+		mov ax, [r12]
+		mov rcx, 12
+		call f_spec
+		jz @f
+		add r12, 2
+		call qword ptr [rax + rcx + 8]
+@@:		mov [r11], r12
+		test rax, rax
+		jnz @f
+		mov rax, offset result
+		mov word ptr [rax], 0
+@@:		pop r12
+		pop r11
+		pop r10
+		pop rdi
+		ret
+sp_ii:	cmp dword ptr [r12], 00340036h	; I64
+		jz @f
+		cmp dword ptr [r12], 00320033h	; I32
+		jnz sp_err
+@@:		mov ax, [r12 + 4]
+		mov rcx, 6
+		call f_spec
+		jz sp_err
+		add r12, 6
+sp_x:
+sp_o:
+sp_i:	mov rcx, r10
+		xor r8, r8
+		call asm_ssh_ntow
+		mov rdi, rax
+		mov r9, rax
+		mov rcx, offset result + 126
+		sub rax, rcx
+		neg rax
+		shr rax, 1				; length number
+		cvttsd2si rcx, xmm0		; length spec number
+		sub rcx, rax
+		jle @f
+		sub rdi, rcx
+		sub rdi, rcx
+		mov r9, rdi
+		mov ax, '0'
+		rep stosw
+@@:		mov rax, r9
+		ret
+sp_err:	xor rax, rax
+		ret
+sp_f:	mov rcx, 10
+@@:		roundsd xmm1, xmm0, 3
+		subsd xmm0, xmm1
+		mulsd xmm0, qword ptr [dbl_znak + 24]
+		cvttsd2si rax, xmm0
+		test rax, rax
+		loopz @b
+		mov rcx, r10
+		mov r10, rax
+		lea r8, end_ptr
+		call asm_ssh_ntow
+		mov r9, rax
+		mov rax, offset result + 130
+		mov rdi, [end_ptr]
+		sub rax, rdi
+		neg rax
+		shr rax, 1				; length number
+		mov rcx, r10			; length spec number
+		sub rcx, rax
+		jle @f
+		mov ax, '0'
+		rep stosw
+@@:		mov [rdi], rcx
+		mov rax, r9
+		ret
+sp_cc:	sub rsp, 48
+		mov r8, r10
+		mov r9, 1
+		xor rcx, rcx
+		xor rdx, rdx
+		mov rax, offset result
+		mov qword ptr [rsp + 32], rax
+		mov qword ptr [rsp + 40], r9
+		call MultiByteToWideChar
+		add rsp, 48
+		mov rax, offset result
+		ret
+sp_c:	mov rax, offset result + 128
+		movzx rcx, word ptr [r10]
+		mov [rax], rcx
+		ret
+strlen:	xor rax, rax
+@@:		inc rax
+		cmp byte ptr [rcx + rax], 0
+		jnz @b
+		ret
+sp_ss:	mov r8, [r10]
+		mov rcx, r8
+		call strlen
+		sub rsp, 48
+		mov r9, rax
+		xor rcx, rcx
+		xor rdx, rdx
+		mov rax, offset result
+		mov qword ptr [rsp + 32], rax
+		mov qword ptr [rsp + 40], r9
+		call MultiByteToWideChar
+		add rsp, 48
+		mov rax, offset result
+		ret
+sp_s:	mov rax, [r10]
+		ret
+f_spec:	mov rdx, offset _spec - 1
+		lea rdi, [rdx + 1]
+@@:		inc rdx
+		cmp al, [rdx]
+		loopnz @b
+		jrcxz @f
+		sub rdx, rdi
+		mov rcx, rdx
+		mov rax, offset _spec_tbl
+		shl rcx, 4
+		mov rdx, [rax + rcx]
+@@:		test rcx, rcx
+		ret
+_spec	db 'o', 'O', 'i', 'X', 'x', 'f', 'I', 'c', 'C', 's', 'S', 0
+_spec_tbl dq 2, sp_o, 2, sp_o, 0, sp_i, 3, sp_x, 3, sp_x, 5, sp_f, 0, sp_ii, 0, sp_c, 0, sp_cc, 0, sp_s, 0, sp_ss, 0, 0
+asm_ssh_parse_spec endp
+
+; преобразовать строку в число в зависимости от системы счисления
+; rcx - ptr
+; rdx - radix
+; r8 -  &ptr end
 asm_ssh_wton proc public
 		push rbx
 		push r10
@@ -143,7 +304,7 @@ asm_ssh_wton proc public
 		mov r10, rcx
 		xor r13, r13
 		mov r9, offset radix
-		imul rdx,24
+		imul rdx, 24
 		add rdx, r9
 		mov r9, [rdx + 8]; множитель порядка
 		mov r8, [rdx + 16]; маска
@@ -164,6 +325,8 @@ _BIN	= 1
 _OCT	= 2
 _HEX	= 4
 _DEC	= 8
+;hex_sym		dw 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70
+;is_valid	dw 0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 tbl_hex dw 0, _HEX, _HEX, _HEX, _HEX, _HEX, _HEX, 0, 0, 0, 0, 0, 0, 0, 0, 0, _DEC + _BIN + _OCT + _HEX, _DEC + _BIN + _OCT + _HEX, _DEC + _OCT + _HEX, _DEC + _OCT + _HEX, _DEC + _OCT + _HEX
 		dw _DEC + _OCT + _HEX, _DEC + _OCT + _HEX, _DEC + _OCT + _HEX, _DEC + _HEX, _DEC + _HEX
 radix	dq wto_dec, 10, _DEC, wto_obh, 2, _BIN, wto_obh, 8, _OCT, wto_obh, 16, _HEX, wto_dbl, 10, _DEC, wto_flt, 10, _DEC, wto_bool, 0, 0
@@ -180,9 +343,14 @@ wto_obh:sub rcx, 2
 		mov rdx, offset tbl_hex
 @@:		add rcx, 2
 		movzx rax, word ptr [rcx]
-		and rax, -97
-		cmp rax, 25
+		and rax, -33
+		cmp rax, 'F'
 		ja @f
+		cmp rax, 16
+		jb @f
+		and rax, 10011111b
+;		cmp rax, 25
+;		ja @f
 		movzx rax, word ptr [rax * 2 + rdx]
 		and rax, r8
 		jnz @b

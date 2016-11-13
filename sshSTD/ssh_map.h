@@ -8,7 +8,7 @@ namespace ssh
 	public:
 		struct Node
 		{
-			SSH_NEW_DECL(Node, 128);
+			SSH_NEW_DECL(Node, 64);
 			struct Value
 			{
 				// ключь
