@@ -313,10 +313,10 @@ namespace ssh
 //		SSH_THROW(L"Несоответствие параметров в ssh_printf()!");
 	};
 
-	template<typename T, typename... Args> String ssh_printf(ssh_cws s, T value, Args... args)
+	template<typename T, typename... Args> String ssh_printf(ssh_cws s, Args... args)
 	{
 		String _ret;
-		_ssh_printf(_ret, s, value, args...);
+		_ssh_printf(_ret, s, args...);
 		return _ret;
 	}
 }

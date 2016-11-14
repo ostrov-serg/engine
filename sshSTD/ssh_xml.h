@@ -73,9 +73,9 @@ namespace ssh
 		// добавить узел
 		template <typename T> HXML add_node(HXML h, ssh_cws name, const T& val) { return tree.add(h, new XmlNode(name, val)); }
 		// вернуть/добавить узел
-		HXML node(HXML h, ssh_cws name, ssh_l index = -1) const
+		HXML node(HXML h, ssh_cws name, ssh_l index = 0) const
 		{
-			if(name) return tree.get_node_name(h, name);
+			if(!index) return tree.get_node_name(h, name);
 			return tree.get_node_index(h->fchild, index);
 		}
 	protected:

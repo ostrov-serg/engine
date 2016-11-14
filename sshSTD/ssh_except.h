@@ -7,13 +7,13 @@ namespace ssh
 	{
 	public:
 		Exception() : line(0), func(nullptr), file(nullptr) {}
-		Exception(ssh_cws fn, ssh_cws fl, int ln, ssh_cws msg) : func(fn), file(fl), line(ln)
-//		Exception(ssh_cws fn, ssh_cws fl, int ln, ssh_cws msg, ...) : func(fn), file(fl), line(ln)
+//		Exception(ssh_cws fn, ssh_cws fl, int ln, ssh_cws msg) : func(fn), file(fl), line(ln)
+		Exception(ssh_cws fn, ssh_cws fl, int ln, ssh_cws msg, ...) : func(fn), file(fl), line(ln)
 		{
-			//va_list argList;
-			//va_start(argList, msg);
-			message = msg;// String::fmt(msg, argList);
-			//va_end(argList);
+			va_list argList;
+			va_start(argList, msg);
+			message = String::fmt(msg, argList);
+			va_end(argList);
 		}
 		virtual void add(ssh_cws msg, ...) const
 		{
@@ -24,7 +24,7 @@ namespace ssh
 			va_end(arglist);
 			if(!msgArgs.is_empty()) msgArgs += L", ";
 			// добавляем в лог
-			//		log->add(Log::mException, func, file, line, msgArgs + message);
+//			ssh_log->add(Log::exception, func, file, line, msgArgs + message);
 		}
 		virtual ~Exception() {}
 	protected:

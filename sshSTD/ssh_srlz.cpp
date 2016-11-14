@@ -38,80 +38,95 @@ namespace ssh
 
 	void ssh::Serialize::readXml(HXML hp, Xml* xml, ssh_l p_offs, ssh_l idx)
 	{
-		/*
-		SCHEME* sc;
 		HXML h;
 		String sval;
 		// получить узел
-		if(!(h = _xml->node(hp, (idx ? nullptr : _sc->name), idx)))
+		if(!(h = xml->node(hp, _sc->name, idx))) SSH_THROW(L"Не найден узел <%s, индекс: %i> xml!", _sc->name, idx);
+		_sc++;
+		while(_sc->name)
 		{
-			SSH_LOG(L"Не найден узел <%s, индекс: %i> xml!", _sc->name, idx);
-			return;
-		}
-		ssh_u _ID(_sc++->ID);
-		ssh_l i;
-		while((sc = _sc++))
-		{
-			if(!sc->name) break;
-			ssh_u flg(sc->flags);
-			ssh_l offs(sc->offs + p_offs);
-			ssh_l count(sc->count);
-			ssh_u val, pos(0);
+			SCHEME* sc(_sc);
+			ssh_u offs(sc->offs + p_offs);
+			ssh_u opt(sc->opt);
+			ssh_u count(sc->count);
+			ssh_u width(sc->width / count);
+			String val;
 			ssh_ws* _ws;
-			if((flg & SC_VAR))
+			if(!(opt & SC_NODE | SC_CV | SC_OBJ | SC_PTR))
 			{
-				sval = _xml->attr<String>(h, sc->name, sc->def);
-				if((flg & SC_BASE64)) sval = ssh_base64(sval, true).to<ssh_ws>();
-				_ws = sval.buffer();
+				val = (xml->get_attr<String>(h, sc->name, sc->def));
+				if(opt & SC_BASE64) val = ssh_base64(val).to<String>();
+				_ws = val.buffer();
 			}
-			for(i = 0; i < count; i++)
+			for(ssh_u _idx = 0; _idx < count; _idx++)
 			{
-				if(_ID)
+				if(opt & SC_NODE)
 				{
-					if(!(flg & SC_OBJ) || sc->ID == -1) { if(sc->ID != -1) _sc--; return; }
-					if(sc->ID != _ID) { _sc--; readXml(h, offs, i); if((i + 1) < count) _sc = sc + 1; }
-				}
-				else if((flg & SC_OBJ)) { _sc--; readXml(h, offs, i); if((i + 1) < count) _sc = sc + 1; }
-				else if((flg & SC_NODE)) { Serialize* srlz((Serialize*)((ssh_b*)(this) + offs)); _sc = srlz->get_scheme(); srlz->readXml(h, 0, i); _sc = sc + 1; }
-				if((flg & SC_VAR))
-				{
-					ssh_ws* _nws(nullptr);
-					ssh_b* obj((ssh_b*)(this) + offs);
-					if(*_ws && count > 1)
+					if(opt & SC_OBJ)
 					{
-						pos = (_ws - sval.buffer());
+						Serialize* srlz((Serialize*)((ssh_b*)(this) + offs));
+						_sc = srlz->get_scheme();
+						srlz->readXml(h, xml, 0, _idx);
+						if((_idx + 1)) _sc = sc - 1; else _sc = sc + 1;
+					}
+					else
+					{
+						readXml(h, xml, offs, _idx);
+						if((_idx + 1)) _sc = sc;
+					}
+				}
+				else if(!(opt & (SC_CV | SC_PTR)))
+				{
+					ssh_b* obj((ssh_b*)(this) + offs);
+					ssh_ws* _nws(nullptr);
+					if(count > 1)
+					{
 						if((_nws = wcschr(_ws, L','))) *_nws = 0;
 					}
-					switch(sc->hash)
+					if(opt & SC_FLT)
 					{
-						case _hash_wcs:
-						case _hash_ccs: break;
-						case _hash_string: *(String*)obj = _ws; break;
-						case _hash_char: *(ssh_cs*)obj = *ssh_cnv(cp_ansi, _ws, false).to<ssh_cs>(); break;
-						case _hash_wchar: *(ssh_ws*)obj = *_ws; break;
-						case _hash_float: *(float*)obj = sval.toNum<float>(pos, String::_flt); break;
-						case _hash_double: *(double*)obj = sval.toNum<double>(pos, String::_dbl); break;
-						default:
-							if(sc->width <= 8)
-							{
-								switch(flg & 15)
-								{
-									case SC_ENUM:
-									case SC_FLAGS: val = ssh_cnv_value(_ws, sc->stk, String(sc->def)); break;
-									case SC_BOOL: val = (wcscmp(_ws, L"true") == 0); break;
-									default: val = sval.toNum<ssh_u>(pos, (String::Radix)(flg & 3)); break;
-								}
-								memcpy(obj, &val, sc->width);
-							}
-							break;
+						ssh_u pos(_ws - val.buffer());
+						if(width == 4)  *(float*)obj = val.to_num<float>(pos, Radix::_flt);
+						else if(width == 8) *(double*)obj = val.to_num<double>(pos, Radix::_dbl);
 					}
-					if(_nws) _ws = _nws + 1;
-					else if(*_ws) pos = sval.length(), _ws = (sval.buffer() + pos);
+					else if(opt & SC_BOOL) *(bool*)obj = String(_ws);
+					else if(opt & SC_STR) *(String*)obj = _ws;
+					else if(opt & SC_LIT)
+					{
+						if(width == 2) *(ssh_ws*)obj = _ws[_idx];
+						else if(width == 1)
+						{
+							static Buffer buf;
+							if(_idx == 0) buf = ssh_convert(cp_ansi, val);
+							*(ssh_cs*)obj = buf.to<ssh_cs*>()[_idx];
+						}
+					}
+					else
+					{
+						ssh_u ret(0);
+						if(sc->stk)
+						{
+							ssh_ws* tmp(_ws);
+							while(tmp)
+							{
+								if((tmp = (ssh_ws*)wcschr(_ws, L'|'))) *tmp = 0;
+								ssh_u idx(sc->stk->find(_ws));
+								if(idx == -1) { ret = (ssh_u)String(sc->def); break; }
+								ret |= sc->stk->at(idx).value;
+								if(!tmp) break;
+								_ws = ++tmp;
+							}
+						}
+						else ret = (ssh_u)String(_ws, (Radix)(opt & 3));
+						memcpy(obj, &ret, width);
+					}
+					if(_nws) _ws = ++_nws;
+//					else if(*_ws) pos = val.length(), _ws = val.buffer(pos);
 				}
-				offs += sc->width;
+				offs += width;
 			}
+			_sc++;
 		}
-		*/
 	}
 
 	void ssh::Serialize::writeXml(HXML hp, Xml* xml, ssh_l p_offs)
@@ -144,28 +159,25 @@ namespace ssh
 						if(count) _sc = sc;
 					}
 				}
-				else
+				else if(!(opt & (SC_CV | SC_PTR)))
 				{
-					if(!(opt & (SC_CV | SC_PTR)))
-					{
-						if(!val.is_empty() && !(opt & SC_LIT)) val += L',';
-						ssh_b* obj((ssh_b*)(this) + offs);
+					if(!val.is_empty() && !(opt & SC_LIT)) val += L',';
+					ssh_b* obj((ssh_b*)(this) + offs);
 
-						if(opt & SC_FLT) val += String(*(ssh_u*)obj, (sc->width == 4 ? Radix::_flt : Radix::_dbl));
-						else if(opt & SC_BOOL) val += String(*(ssh_u*)obj, Radix::_bool);
-						else if(opt & SC_STR) val += *(String*)obj;
-						else if(opt & SC_LIT) { if(*obj) val += (width == 2 ? *(ssh_ws*)obj : *(ssh_cs*)obj); }
-						else
-						{
-							ssh_u lval(0);
-							memcpy(&lval, obj, width);
-							val += (sc->stk ? ssh_implode2(lval, sc->stk, sc->def, !(opt & SC_FLGS)) : String(lval, (Radix)(opt & 3)));
-						}
+					if(opt & SC_FLT) val += String(*(ssh_u*)obj, (sc->width == 4 ? Radix::_flt : Radix::_dbl));
+					else if(opt & SC_BOOL) val += String(*(bool*)obj, Radix::_bool);
+					else if(opt & SC_STR) val += *(String*)obj;
+					else if(opt & SC_LIT) { if(*obj) val += (width == 2 ? *(ssh_ws*)obj : *(ssh_cs*)obj); }
+					else
+					{
+						ssh_u lval(0);
+						memcpy(&lval, obj, width);
+						val += (sc->stk ? ssh_implode2(lval, sc->stk, sc->def, !(opt & SC_FLGS)) : String(lval, (Radix)(opt & 3)));
 					}
 				}
 				offs += width;
 			}
-			if(!(opt & (SC_CV | SC_PTR | SC_NODE))) xml->add_attr(h, sc->name, (opt & SC_BASE64) ? ssh_base64(L"utf-16le", val) : val);
+			if(!(opt & (SC_CV | SC_PTR | SC_NODE))) xml->add_attr(h, sc->name, (opt & SC_BASE64) ? ssh_base64(cp_utf16, val) : val);
 			_sc++;
 		}
 	}

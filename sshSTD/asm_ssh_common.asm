@@ -163,7 +163,7 @@ asm_ssh_parse_spec proc public
 		mov ax, [r12]
 		mov rcx, 12
 		call f_spec
-		jz @f
+		jnc @f
 		add r12, 2
 		call qword ptr [rax + rcx + 8]
 @@:		mov [r11], r12
@@ -183,7 +183,7 @@ sp_ii:	cmp dword ptr [r12], 00340036h	; I64
 @@:		mov ax, [r12 + 4]
 		mov rcx, 6
 		call f_spec
-		jz sp_err
+		jnc sp_err
 		add r12, 6
 sp_x:
 sp_o:
@@ -251,11 +251,10 @@ sp_c:	mov rax, offset result + 128
 		ret
 strlen:	xor rax, rax
 @@:		inc rax
-		cmp byte ptr [rcx + rax], 0
+		cmp byte ptr [r8 + rax], 0
 		jnz @b
 		ret
 sp_ss:	mov r8, [r10]
-		mov rcx, r8
 		call strlen
 		sub rsp, 48
 		mov r9, rax
@@ -270,21 +269,17 @@ sp_ss:	mov r8, [r10]
 		ret
 sp_s:	mov rax, [r10]
 		ret
-f_spec:	mov rdx, offset _spec - 1
-		lea rdi, [rdx + 1]
-@@:		inc rdx
-		cmp al, [rdx]
-		loopnz @b
-		jrcxz @f
-		sub rdx, rdi
-		mov rcx, rdx
+f_spec:	movd xmm1, rax
+		pcmpistri xmm1, xmmword ptr [_spec], 0
+		jnc @f
 		mov rax, offset _spec_tbl
 		shl rcx, 4
 		mov rdx, [rax + rcx]
-@@:		test rcx, rcx
-		ret
-_spec	db 'o', 'O', 'i', 'X', 'x', 'f', 'I', 'c', 'C', 's', 'S', 0
-_spec_tbl dq 2, sp_o, 2, sp_o, 0, sp_i, 3, sp_x, 3, sp_x, 5, sp_f, 0, sp_ii, 0, sp_c, 0, sp_cc, 0, sp_s, 0, sp_ss, 0, 0
+		stc
+@@:		ret
+align 16
+_spec	db 'OoIiXxCcSsf', 0, 0, 0, 0, 0
+_spec_tbl dq 2, sp_o, 2, sp_o, 0, sp_ii, 0, sp_i, 3, sp_x, 3, sp_x, 0, sp_cc, 0, sp_c, 0, sp_ss, 0, sp_s, 5, sp_f, 0, 0
 asm_ssh_parse_spec endp
 
 ; преобразовать строку в число в зависимости от системы счисления

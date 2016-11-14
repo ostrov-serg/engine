@@ -125,11 +125,24 @@ String operator ""_r(ssh_ccs _ccs)
 
 using namespace std;
 
+extern "C"
+{
+	ssh_u asm_wcslen(ssh_cws _1);
+	ssh_u asm_find_substring(ssh_cws _1, ssh_cws _2);
+	ssh_u asm_find_char(ssh_ws _1, ssh_cws _2);
+	ssh_u asm_compare_string(ssh_cws _1, ssh_cws _2);
+}
 int main() noexcept
 {
+	ssh_cws _1 = L"оро";
+	ssh_cws _2 = L"Шаталов0123 Сергей Викторович 2";
+	ssh_u ret = asm_find_substring(_1, _2);
+	ret = asm_wcslen(_2);
 	String ss11;
-	ss11 = ssh_printf(L"%1.5f %05I64x,%s %c %C %S", 1.1f, 0x102030, L"11", L'!', 'r', "12345");
-	wprintf(L"%1.5a %05x,%s %02c %C %S", 1.1f, 0x102030, L"11", L'!', 'r', "12345");
+	ss11 = ssh_printf<float>(L"%1.5f %015I64x,%s %c %C %S", 1.1f, 0x102030, L"11", L'!', 'А', "Шаталов");
+	ret = wcslen(ss11);
+	//ret = asm_find_char(L'и', _2);
+	wprintf(L"%1.5a %015I64x,%s %02c %C %S", 1.1f, ret, L"11", L'!', 'r', "12345");
 	ss11 += L"1";
 	Log::instance()->init();
 	Log::stk_common _c;

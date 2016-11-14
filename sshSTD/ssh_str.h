@@ -63,7 +63,7 @@ namespace ssh
 		friend String operator + (const String& str, ssh_ws ws) { return String::add(str, str.length(), (ssh_cws)&ws, 1); }
 		friend String operator + (const String& str, ssh_cws wcs) { return String::add(str, str.length(), wcs, wcs ? wcslen(wcs) : 0); }
 		// методы
-		ssh_ws* buffer() const { return buf; }
+		ssh_ws* buffer(ssh_u offs = 0) const { return buf + offs; }
 		ssh_l length() const { return data()->len; }
 		ssh_ws get(ssh_u idx) const { return (idx < (ssh_u)length() ? buf[idx] : L'0'); }
 		void set(ssh_u idx, ssh_ws ws) { if(idx < (ssh_u)length()) buf[idx] = ws; }
