@@ -77,21 +77,11 @@ public:
 	}
 };
 
-class bs
-{
-public:
-	bs() = delete;
-protected:
-	virtual ~bs() {}
-private:
-	String nm;
-};
-
 class bs1 : public Base
 {
 	SSH_DYNCREATE(bs1);
 public:
-	bs1() { x = 0; px = std::addressof(x);}
+	bs1() { x = 0; }
 	bs1(const bs1& b)
 	{
 		x = b.x;
@@ -107,7 +97,6 @@ public:
 		ssh_ccs _4 = __func__;
 	}
 
-	int* px;
 	String str, str1;
 	int x;
 
@@ -127,19 +116,99 @@ using namespace std;
 
 extern "C"
 {
-	ssh_u asm_wcslen(ssh_cws _1);
-	ssh_u asm_find_substring(ssh_cws _1, ssh_cws _2);
-	ssh_u asm_find_char(ssh_ws _1, ssh_cws _2);
-	ssh_u asm_compare_string(ssh_cws _1, ssh_cws _2);
+	ssh_u	asm_ssh_wcslen1(ssh_cws _1);
 }
+
+inline int ssh_wcslen1(ssh_cws _wcs)
+{
+	int res(0), ret(0);
+	do
+	{
+		__m128i _1(_mm_lddqu_si128((__m128i*)(_wcs)));
+		res = _mm_cmpistri(_1, _1, 0b00010001);
+		ret += res;
+		_wcs += res;
+	} while(res == 8);
+	return ret;
+}
+
+int calc_crc(ssh_cws _cws)
+{
+	int ret(0);
+	while(*_cws)
+	{
+		ret = _mm_crc32_u16(ret, *_cws++);
+	}
+	return ret;
+}
+
+class Str
+{
+public:
+	Str() { init(); }
+	Str(ssh_cws p)
+	{
+		init();
+		wcscpy(alloc(wcslen(p)), p);
+	}
+	operator ssh_cws() const { return str(); }
+	ssh_cws str() const { return (_str.sz_len > 16 ? _str.ptr : _str.str); }
+protected:
+	struct STR
+	{
+		union
+		{
+			ssh_ws str[16];
+			ssh_ws* ptr;
+		};
+		int sz_len;
+		int sz_buf;
+		int hash;
+	};
+	STR _str;
+	void init() { _str.ptr = nullptr; _str.sz_len = 0; _str.sz_buf = 0; _str.hash = 0; }
+	ssh_ws* alloc(ssh_u s)
+	{
+		ssh_ws* p(_str.str);
+		ssh_u sz(s + 1);
+		if(sz > 16)
+		{
+			sz *= 2;
+			_str.ptr = p = new ssh_ws[sz];
+		}
+		_str.sz_len = (int)s;
+		_str.sz_buf = (int)sz;
+		p[s] = 0;
+		return p;
+	}
+};
+
 int main() noexcept
 {
-	ssh_cws _1 = L"оро";
-	ssh_cws _2 = L"Шаталов0123 Сергей Викторович 2";
-	ssh_u ret = asm_find_substring(_1, _2);
-	ret = asm_wcslen(_2);
+	String _1 = L"Шаталов0123 Сергей 2";
+	ssh_u ret(123);
+	int _ret11(1);
+	Str _s(L"12341");
+	_1 = ssh_printf(L"%% %i % I64i, %.9f, %s, %S, %c, %C", 1L, ret, 3.0, _s.str(), "qwert", L'!', '@');
+
+	std::string _s_str = "123456";
+	ret = sizeof(_s_str);
+	//ssh_printf<Str>(L"%s", _s_str.c_str());
+	ret = ssh_rand(10, 20);
+	int crc = calc_crc(_1);
+	int _xor = -1 ^ 8;
+	String _2 = L"Шаталов0123 Сергей 2";
+	ssh_ws* _ret;
+	ret = wcslen(_2);
+	ret = ssh_wcslen(_2);
+	ret = asm_ssh_wcslen(_2);
+	_ret = wcschr(_2.buffer(), L'\0');
+	_ret = asm_ssh_wcschr(_2, L'\0');
+	ret = wcscmp(_1, _2);
+	ret = asm_ssh_wcscmp(_1, _2);
+	ssh_ws* _ws = asm_ssh_wcsstr(_1, _2);
 	String ss11;
-	ss11 = ssh_printf<float>(L"%1.5f %015I64x,%s %c %C %S", 1.1f, 0x102030, L"11", L'!', 'А', "Шаталов");
+//	ss11 = ssh_printf<float>(L"%1.5f %015I64x,%s %c %C %S", 1.1f, 0x102030, L"11", L'!', 'А', "Шаталов");
 	ret = wcslen(ss11);
 	//ret = asm_find_char(L'и', _2);
 	wprintf(L"%1.5a %015I64x,%s %02c %C %S", 1.1f, ret, L"11", L'!', 'r', "12345");

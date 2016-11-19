@@ -18,7 +18,7 @@ namespace ssh
 	public:
 		// конструкторы
 		String() { init(); }
-		String(std::nullptr_t) { }
+		String(std::nullptr_t) { } //-V730
 		String(String&& str) { buf = str.buf; str.init(); }
 		String(ssh_cws cws, ssh_l len = -1);
 		String(ssh_ws* ws, ssh_l len = -1) : String((ssh_cws)ws, len) {}
@@ -39,7 +39,7 @@ namespace ssh
 		template <typename T> T to_num(ssh_l idx, Radix R = Radix::_dec) const { return *(T*)asm_ssh_wton(buf + idx, (ssh_u)R, nullptr); }
 		template <typename T> void num(const T& v, Radix R = Radix::_dec) { ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, (ssh_u)R); }
 		// вернуть по индексу
-		ssh_ws operator[](ssh_u idx) const { return get(idx); }
+		ssh_ws operator[](ssh_u idx) const { return at(idx); }
 		// операторы сравнения
 		friend bool operator == (const String& str1, const String& str2) { return (str1.hash() == str2.hash()); }
 		friend bool operator == (const String& str, ssh_cws wcs) { return (wcs ? (wcscmp(str, wcs) == 0) : false); }
@@ -65,7 +65,7 @@ namespace ssh
 		// методы
 		ssh_ws* buffer(ssh_u offs = 0) const { return buf + offs; }
 		ssh_l length() const { return data()->len; }
-		ssh_ws get(ssh_u idx) const { return (idx < (ssh_u)length() ? buf[idx] : L'0'); }
+		ssh_ws at(ssh_u idx) const { return (idx < (ssh_u)length() ? buf[idx] : L'0'); }
 		void set(ssh_u idx, ssh_ws ws) { if(idx < (ssh_u)length()) buf[idx] = ws; }
 		void empty() { if(!is_empty()) { delete data(); init(); } }
 		bool is_empty() const { return (buf == (ssh_ws*)((ssh_cs*)_empty + sizeof(STRING_BUFFER))); }
@@ -88,9 +88,6 @@ namespace ssh
 		const String& trim(ssh_cws wcs) { trim_left(wcs); return trim_right(wcs); }
 		const String& trim_left(ssh_cws wcs);
 		const String& trim_right(ssh_cws wcs);
-		// форматирование
-		static String fmt(ssh_cws pattern, ...);
-		static String fmt(ssh_cws pattern, va_list argList);
 		// поиск
 		ssh_l find(ssh_cws wcs, ssh_l idx = 0) const { return (idx < length() ? (wcsstr(buf + idx, wcs) - buf) : -1); }
 		ssh_l find(ssh_ws ws, ssh_l idx = 0) const { return (idx < length() ? (wcschr(buf + idx, ws) - buf) : -1); }

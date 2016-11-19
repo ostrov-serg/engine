@@ -12,11 +12,11 @@ namespace ssh
 
 	String Time::fmt(ssh_cws str) const
 	{
-		static ssh_cws to[] = {L"%ДАТА_", L"%ДАТА", L"%ВРЕМЯ", L"%дата_", L"%дата", L"%М_)", L"%М_", L"%м_", L"%м", L"%М", L"%Г", L"%г", L"%ДН_", L"%дн_", L"%ДГ", L"%Д", L"%Ч", L"%ч_", L"%ч", L"%С", L"%Н", nullptr};
+		static ssh_cws to[] = {L"%ДАТА_", L"%ДАТА", L"%ВРЕМЯ", L"%дата_", L"%дата", L"%М_)", L"%М_", L"%м_", L"%мн", L"%М", L"%Г", L"%г", L"%ДН_", L"%дн_", L"%ДГ", L"%Д", L"%Ч", L"%ч_", L"%ч", L"%С", L"%Н", nullptr};
 		int _month(month() - 1), _year(year()), _dw(dayOfWeek()), _hour(hour());
 
 		String result(str);
-		String tmp(String::fmt(L"%02i %s %02i;%02i.%02i.%02i;%02i:%02i:%02i;%02i %s %02i;%02i.%02i.%02i;%s;%s;%s;%02i;%02i;%02i;%02i;%s;%s;%02i;%02i;%02i;%s;%02i;%02i;%02i;;",
+		String tmp(ssh_printf(L"%02i %s %02i;%02i.%02i.%02i;%02i:%02i:%02i;%02i %s %02i;%02i.%02i.%02i;%s;%s;%s;%02i;%02i;%02i;%02i;%s;%s;%02i;%02i;%02i;%s;%02i;%02i;%02i;;",
 							   day(), МесяцыД[_month], _year,
 							   day(), _month + 1, _year,
 							   _hour, minute(), second(),

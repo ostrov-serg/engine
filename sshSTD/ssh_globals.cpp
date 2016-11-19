@@ -28,6 +28,8 @@ namespace ssh
 	__regx_exec		ssh_regx_exec(nullptr);
 	__regx_free		ssh_regx_free(nullptr);
 
+	__ssh_rand		SSH ssh_rand(nullptr);
+
 	Base* Base::root(nullptr);
 	RTTI* RTTI::root(nullptr);
 
@@ -43,21 +45,22 @@ namespace ssh
 		return _val;
 	};
 
-	ssh_u SSH ssh_rand(ssh_u begin, ssh_u end)
+	static ssh_u ssh_SSE_rand(ssh_u begin, ssh_u end)
 	{
-		static ssh_u _genRnd(0);
 		ssh_u tmp;
-		bool is(false);
-		if(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::RDRAND)) is = (_rdrand64_step(&tmp) == 1);
-		if(!is)
+		for(int i = 0; i < 10; i++)
 		{
-			tmp = _genRnd;
-			if(!tmp) tmp = _time64((__time64_t*)tmp);
-			tmp *= 1103515245;
-			_genRnd = tmp;
-			tmp = ((tmp >> 16) & 0x7fff);
+			if(_rdrand64_step(&tmp)) return begin + (tmp % ((end - begin) + 1));
 		}
-		return begin + (tmp % ((end - begin) + 1));
+		return 0;
+	}
+	
+	static ssh_u ssh_AVX_rand(ssh_u begin, ssh_u end)
+	{
+		static ssh_u _genRnd(_time64(nullptr));
+		_genRnd *= 1103515245;
+		_genRnd = ((_genRnd >> 16) & 0x7fff);
+		return begin + (_genRnd % ((end - begin) + 1));
 	}
 
 	Buffer SSH ssh_base64(const String& str)
@@ -83,6 +86,22 @@ namespace ssh
 		ssh_ws* _ret(ret.buffer());
 		MD5(ssh_convert(cp_ansi, str), str.length(), md);
 		for(ssh_u i = 0; i < 16; i++) wsprintf(_ret + i * 2, L"%02x", md[i]);
+		return ret;
+	}
+
+	String ssh_printf(ssh_cws s, ...)
+	{
+		String ret;
+		va_list argList;
+		va_start(argList, s);
+		while(*s)
+		{
+			if(*s == L'%' && *(++s) != L'%')
+				ret += asm_ssh_parse_spec(&argList, &s);
+			else
+				ret += *s++;
+		}
+		va_end(argList);
 		return ret;
 	}
 
@@ -131,7 +150,7 @@ namespace ssh
 	// добавить слеш на конец пути
 	String SSH ssh_slash_path(const String& path)
 	{
-		return ((path.get(path.length() - 1) != L'\\') ? path + L'\\' : path);
+		return ((path.at(path.length() - 1) != L'\\') ? path + L'\\' : path);
 	}
 	// извлечь только имя файла
 	String SSH ssh_file_title(const String& path)
@@ -169,7 +188,7 @@ namespace ssh
 	{
 		static ssh_u gen_count(0);
 		gen_count++;
-		return (is_long ? String::fmt(L"%s%I64X%016I64X", nm, gen_count, __rdtsc()) : String::fmt(L"%s%I64X", nm, __rdtsc()));
+		return (is_long ? ssh_printf(L"%s%I64X%016I64X", nm, gen_count, __rdtsc()) : ssh_printf(L"%s%I64X", nm, __rdtsc()));
 	}
 
 	ssh_u SSH ssh_offset_line(const String& text, ssh_l ln)
@@ -305,7 +324,7 @@ namespace ssh
 		{
 			suffix = L"Б";
 		}
-		return String::fmt(L"%.4f %s", fNum, suffix);
+		return ssh_printf(L"%.4f %s", fNum, suffix);
 	}
 
 	String SSH ssh_path_in_range(const String& path, ssh_u range)
@@ -747,7 +766,7 @@ namespace ssh
 		// получить возможности процессора
 		ssh_cws avx(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::AVX) ? L"sshAVX" : L"sshSSE");
 		// инициализировать процессорно-зависимые функции
-
+		ssh_rand = (__ssh_rand)(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::RDRAND) ? ssh_AVX_rand : ssh_SSE_rand);
 	}
 }
 

@@ -252,7 +252,7 @@ namespace jpeg
 		bits = value & 15;
 		if(!bits) return 0;
 		value = _GetBits(bits);
-		if(value < (1 << (bits - 1))) value += ((-1) << bits) + 1;
+		if(value < (1 << (bits - 1))) value += ((-1) << bits) + 1; //-V610
 		return value;
 	}
 

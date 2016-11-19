@@ -128,6 +128,9 @@
     <ClCompile Include="ssh_jpg.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
+    <ClCompile Include="ssh_except.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="asm_ssh_common.asm">

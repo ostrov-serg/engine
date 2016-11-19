@@ -12,7 +12,7 @@ namespace ssh
 	{
 		out = _out;
 		header = Log::apply_template(header);
-		switch(out)
+		switch(out) //-V719
 		{
 			case TypeOutput::file:
 				file = new stk_file();
@@ -32,7 +32,7 @@ namespace ssh
 	void Log::stk_common::shutdown()
 	{
 		Log::footer = Log::apply_template(Log::footer);
-		switch(out)
+		switch(out) //-V719
 		{
 			case TypeOutput::net:
 				host->shutdown();
@@ -86,7 +86,7 @@ namespace ssh
 			// установить обработчики исключений
 			ssh_mem->set_exceptionHandlers();
 			// старт трассировщика
-//			tracer.start();
+			ssh_trc->start();
 			// старт менеджера памяти
 			ssh_mem->start();
 		}
@@ -96,22 +96,17 @@ namespace ssh
 		}
 	}
 
-	void Log::add(TypeMessage type, ssh_cws fn, ssh_cws fl, int ln, ssh_cws msg, ...)
+	void Log::add(TypeMessage type, ssh_cws fn, ssh_cws fl, int ln, ssh_cws msg)
 	{
-//		if(!tracer.is_disabled)
+		if(ssh_trc->is_started())
 		{
-//			tracer.stop();
-			String _msg;
-			// формируем сообщение
-			va_list	arglist;
-			va_start(arglist, msg);
-			String msgArgs(String::fmt(msg, arglist));
-			va_end(arglist);
+			ssh_trc->stop();
+			String msgArgs(msg);
 			msgArgs.replace(L'\r', L'.');
 			msgArgs.replace(L'\n', L'.');
 			// формируем сообщение на основании шаблона
 			common.message(msgArgs, type, fn, fl, ln);
-//			tracer.start();
+			ssh_trc->start();
 		}
 	}
 
@@ -119,9 +114,10 @@ namespace ssh
 	{
 		static ssh_cws m_types[] = {L"INFO", L"ASSERT", L"EXCEPTION", L"TRACE"};
 		static ssh_cws rpl[] = {L"$DT", L"$fn", L"$ln", L"$fl", L"$ms", L"$tm", L"$dt", L"$us", L"$cm", L"$nm", L"$tp", nullptr};
-		String tmp(String::fmt(L"%s\1%s\1%i\1%s\1%s\1%s\1%s\1%s\1%s\1%s\1%s\1\1",
-							   Time::current().fmt(L"$d.$m.$y"), fn, ln, fl, msg, Time::current().fmt(L"$h:$nm:$s"),
-							   Time::current().fmt(L"$d $MN)+ $Y ($dW)"), ssh_system_paths(SystemInfo::USER_NAME),
+		Time tm(Time::current());
+		String tmp(ssh_printf(L"%s\1%s\1%i\1%s\1%s\1%s\1%s\1%s\1%s\1%s\1%s\1\1", //-V510
+							   tm.fmt(L"%ДАТА"), fn, ln, fl, msg, tm.fmt(L"%ВРЕМЯ"),
+							   tm.fmt(L"%Д %М_) %Г (%ДН_)"), ssh_system_paths(SystemInfo::USER_NAME),
 							   ssh_system_paths(SystemInfo::COMP_NAME), ssh_system_paths(SystemInfo::PROG_NAME), m_types[tp]));
 		tmp.replace(L'\1', L'\0');
 		return tpl.replace(rpl, tmp);
@@ -129,16 +125,16 @@ namespace ssh
 
 	void Log::close()
 	{
-//		tracer.stop();
+		ssh_trc->stop();
 		ssh_mem->stop();
-//		tracer.output();
+		ssh_trc->output();
 		ssh_mem->output();
 		common.shutdown();
 	}
 
 	void Log::shutdown()
 	{
-//		tracer.stop();
+		ssh_trc->stop();
 		ssh_mem->stop();
 		common.shutdown();
 	}
@@ -178,8 +174,8 @@ namespace ssh
 	{
 //		if(!sock.is_closed())
 		{
-//			sock.send(0, msg);
-			if(WaitForSingleObject(hEventSocket, 30000) != WAIT_OBJECT_0)
+			//			sock.send(0, msg);
+			if(WaitForSingleObject(hEventSocket, 30000) != WAIT_OBJECT_0) {}
 //				sock.close();
 			ResetEvent(hEventSocket);
 		}

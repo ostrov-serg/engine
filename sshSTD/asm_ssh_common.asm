@@ -1,11 +1,12 @@
 
 extern malloc:near
+extern wcslen:near
 extern MultiByteToWideChar:near
 
 .data?
 
 result		dw 128 dup(?)
-temp_print	dw 512 dup(?)
+temp_print	dw 32 dup(?)
 end_ptr		dq ?
 
 .data
@@ -35,6 +36,68 @@ base64_chars	dw 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 
 
 .code
 
+; подсчитать длину строки - SSE4.2
+; rcx - string
+; ret - rax
+asm_ssh_wcslen proc
+		mov rdx, rcx
+		xor rax, rax
+@@:		lddqu xmm0, xmmword ptr [rdx + rax * 2]
+		pcmpistri xmm0, xmm0, 00010001b
+		lea rax, [rax + rcx]
+		jnz @b
+		ret
+asm_ssh_wcslen endp
+
+; поиск подстроки - SSE4.2
+; rcx - wstring
+; rdx - wsubstring
+; ret - rax = index
+asm_ssh_wcsstr proc public
+		mov rax, rdx
+		lddqu xmm0, xmmword ptr [rcx]
+@@:		pcmpistri xmm0, xmmword ptr [rdx + rax * 2], 00001101b
+		lea rax, [rax + rcx]
+		jnc @b
+		ret
+asm_ssh_wcsstr endp
+
+; поиск символа SSE4.2
+; rcx - wstring
+; rdx - wchar
+; ret - rax = index
+asm_ssh_wcschr proc
+		test rdx, rdx
+		jz _zero
+		movd xmm0, rdx
+		mov rax, rcx
+@@:		pcmpistri xmm0, xmmword ptr [rax], 00000001b
+		lea rax, [rax + rcx * 2]
+		jnc @b
+		ret
+_zero:	mov r8, rcx
+		call asm_ssh_wcslen
+		lea rax, [r8 + rax * 2]
+		ret
+asm_ssh_wcschr endp
+
+; сравнение строк  - SSE4.2
+; rcx - wstring1
+; rdx - wstring2
+; ret - rax 
+asm_ssh_wcscmp proc
+		xor r10, r10
+		mov r8, rcx
+@@:		lddqu xmm0, xmmword ptr [r8 + r10 * 2]
+		lddqu xmm1, xmmword ptr [rdx + r10 * 2]
+		pcmpistri xmm0, xmm1, 01011001b
+		lea r10, [r10 + rcx]
+		jnz @b
+		movzx rcx, word ptr [r8 + r10 * 2]
+		movzx rdx, word ptr [rdx + r10 * 2]
+		xor rax, rax
+		ret
+asm_ssh_wcscmp endp
 ; преобразовать число в строку, в зависимости от системы счисления 0-decimal, (1-bin, 2-oct, 3-hex, 4-double,5-float,6-bool)
 ; rcx - указатель на число
 ; rdx - radix
@@ -143,19 +206,18 @@ nto_dbl:; read double from rax
 asm_ssh_ntow endp
 
 ; распарсить спецификатор wprintf
-; rcx - указатель на val
-; rdx - ptr
-; r8 - ptr of end
+; rcx - val
+; rdx - указатель на ptr
 ; ret - result of whar_t*
 asm_ssh_parse_spec proc public
 		push rdi
 		push r10
 		push r11
 		push r12
-		mov r11, r8
 		mov r10, rcx
-		mov rcx, rdx
-		mov rdx, 5			; double
+		mov r11, rdx
+		mov rcx, [rdx]
+		mov rdx, 4
 		lea r8, end_ptr
 		call asm_ssh_wton
 		movsd xmm0, qword ptr [rax]
@@ -171,23 +233,22 @@ asm_ssh_parse_spec proc public
 		jnz @f
 		mov rax, offset result
 		mov word ptr [rax], 0
-@@:		pop r12
+@@:		add qword ptr [r10], 8
+		pop r12
 		pop r11
 		pop r10
 		pop rdi
 		ret
 sp_ii:	cmp dword ptr [r12], 00340036h	; I64
-		jz @f
-		cmp dword ptr [r12], 00320033h	; I32
 		jnz sp_err
-@@:		mov ax, [r12 + 4]
+		mov ax, [r12 + 4]
 		mov rcx, 6
 		call f_spec
 		jnc sp_err
 		add r12, 6
 sp_x:
 sp_o:
-sp_i:	mov rcx, r10
+sp_i:	mov rcx, [r10]
 		xor r8, r8
 		call asm_ssh_ntow
 		mov rdi, rax
@@ -206,8 +267,7 @@ sp_i:	mov rcx, r10
 		rep stosw
 @@:		mov rax, r9
 		ret
-sp_err:	xor rax, rax
-		ret
+sp_err:	ret
 sp_f:	mov rcx, 10
 @@:		roundsd xmm1, xmm0, 3
 		subsd xmm0, xmm1
@@ -215,8 +275,8 @@ sp_f:	mov rcx, 10
 		cvttsd2si rax, xmm0
 		test rax, rax
 		loopz @b
-		mov rcx, r10
-		mov r10, rax
+		push rax
+		mov rcx, [r10]
 		lea r8, end_ptr
 		call asm_ssh_ntow
 		mov r9, rax
@@ -225,16 +285,16 @@ sp_f:	mov rcx, 10
 		sub rax, rdi
 		neg rax
 		shr rax, 1				; length number
-		mov rcx, r10			; length spec number
+		pop rcx					; length spec number
 		sub rcx, rax
 		jle @f
 		mov ax, '0'
 		rep stosw
-@@:		mov [rdi], rcx
+@@:		mov [rdi], ah
 		mov rax, r9
 		ret
 sp_cc:	sub rsp, 48
-		mov r8, r10
+		mov r8, [r10]
 		mov r9, 1
 		xor rcx, rcx
 		xor rdx, rdx
@@ -246,7 +306,8 @@ sp_cc:	sub rsp, 48
 		mov rax, offset result
 		ret
 sp_c:	mov rax, offset result + 128
-		movzx rcx, word ptr [r10]
+		mov rcx, [r10]
+		movzx rcx, word ptr [rcx]
 		mov [rax], rcx
 		ret
 strlen:	xor rax, rax
@@ -255,6 +316,7 @@ strlen:	xor rax, rax
 		jnz @b
 		ret
 sp_ss:	mov r8, [r10]
+		mov r8, [r8]
 		call strlen
 		sub rsp, 48
 		mov r9, rax
@@ -268,8 +330,10 @@ sp_ss:	mov r8, [r10]
 		mov rax, offset result
 		ret
 sp_s:	mov rax, [r10]
+		mov rax, [rax]
 		ret
 f_spec:	movd xmm1, rax
+		xor rax, rax
 		pcmpistri xmm1, xmmword ptr [_spec], 0
 		jnc @f
 		mov rax, offset _spec_tbl
@@ -279,7 +343,7 @@ f_spec:	movd xmm1, rax
 @@:		ret
 align 16
 _spec	db 'OoIiXxCcSsf', 0, 0, 0, 0, 0
-_spec_tbl dq 2, sp_o, 2, sp_o, 0, sp_ii, 0, sp_i, 3, sp_x, 3, sp_x, 0, sp_cc, 0, sp_c, 0, sp_ss, 0, sp_s, 5, sp_f, 0, 0
+_spec_tbl dq 2, sp_o, 2, sp_o, 0, sp_ii, 0, sp_i, 3, sp_x, 3, sp_x, 0, sp_cc, 0, sp_c, 0, sp_ss, 0, sp_s, 4, sp_f, 0, 0
 asm_ssh_parse_spec endp
 
 ; преобразовать строку в число в зависимости от системы счисления
@@ -343,9 +407,7 @@ wto_obh:sub rcx, 2
 		ja @f
 		cmp rax, 16
 		jb @f
-		and rax, 10011111b
-;		cmp rax, 25
-;		ja @f
+		and rax, 00011111b
 		movzx rax, word ptr [rax * 2 + rdx]
 		and rax, r8
 		jnz @b
@@ -381,6 +443,7 @@ wto_dbl:call wto_dec
 		xorps xmm1, xmm1
 		cmp word ptr [r11], '.'
 		jnz @f
+		mov r8, 8
 		lea rcx, [r11 + 2]
 		mov r10, rcx
 		call wto_obh

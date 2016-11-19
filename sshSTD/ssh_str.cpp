@@ -213,23 +213,6 @@ namespace ssh
 		return *this;
 	}
 
-	String String::fmt(ssh_cws pattern, ...)
-	{
-		va_list argList;
-		va_start(argList, pattern);
-		String result(fmt(pattern, argList));
-		va_end(argList);
-		return result;
-	}
-
-	String String::fmt(ssh_cws pattern, va_list argList)
-	{
-		String result(L'\0', _vscwprintf(pattern, argList));
-		vswprintf(result.buf, result.length() + 1, pattern, argList);
-		result.data()->update();
-		return result;
-	}
-
 	const String& String::replace(ssh_cws* _old, ssh_cws _new)
 	{
 		ssh_l idx(0);

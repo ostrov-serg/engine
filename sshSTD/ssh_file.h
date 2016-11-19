@@ -45,8 +45,7 @@ namespace ssh
 		void open(ssh_cws name, int flags)
 		{
 			static MODE_FILE_OPEN opens[] = { {_O_APPEND | _O_RDONLY, 0}, {_O_APPEND | _O_RDWR, 0}, {_O_CREAT | _O_TRUNC | _O_WRONLY, _S_IWRITE}, {_O_CREAT | _O_TRUNC | _O_RDWR, _S_IWRITE | _S_IREAD}, {_O_RDONLY, 0}, {_O_WRONLY, 0}, {_O_RDWR, 0} };
-			if((h = _wopen(name, opens[flags & 7].flag | (flags & (~7) | _O_BINARY), opens[flags & 7].mode)) == -1)
-				SSH_THROW(L"Не удалось открыть файл %s!", name);
+			if((h = _wopen(name, opens[flags & 7].flag | (flags & (~7) | _O_BINARY), opens[flags & 7].mode)) == -1) SSH_THROW(ssh_printf(L"Не удалось открыть файл %s!", name));
 			path = name;
 		}
 		// закрыть
@@ -54,8 +53,8 @@ namespace ssh
 		// чтение в предоставленный буфер определенного размера
 		Buffer read(const Buffer& buf, ssh_u size) const
 		{
-			if(size > buf.size())  SSH_THROW(L"Размер буфера %i слишком мал для чтения файла %s!", buf.size(), path);
-			if(_read(h, buf, (ssh_i)size) != size) SSH_THROW(L"Ошибка чтения файла %s!", path);
+			if(size > buf.size())  SSH_THROW(ssh_printf(L"Размер буфера %i слишком мал для чтения файла %s!", buf.size(), path));
+			if(_read(h, buf, (ssh_i)size) != size) SSH_THROW(ssh_printf(L"Ошибка чтения файла %s!", path));
 			return buf;
 		}
 		// чтение определенного размера
@@ -84,7 +83,7 @@ namespace ssh
 		// запись области памяти
 		void write(void* ptr, ssh_u size) const
 		{
-			if(_write(h, ptr, (ssh_i)size) != size) SSH_THROW(L"Ошибка записи файла %s!", path);
+			if(_write(h, ptr, (ssh_i)size) != size) SSH_THROW(ssh_printf(L"Ошибка записи файла %s!", path));
 		}
 		// запись буфера определенного размера
 		void write(const Buffer& buf, ssh_u size = 0) const
@@ -107,7 +106,7 @@ namespace ssh
 		void get_time(Time* create, Time* access, Time* write) const
 		{
 			struct _stat64 stat;
-			if(_wstat64(path, &stat)) SSH_THROW(L"Не удалось получить время файла %s!", path);
+			if(_wstat64(path, &stat)) SSH_THROW(ssh_printf(L"Не удалось получить время файла %s!", path));
 			if(access) *access = stat.st_atime;
 			if(create) *create = stat.st_ctime;
 			if(write) *write = stat.st_mtime;

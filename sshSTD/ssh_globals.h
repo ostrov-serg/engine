@@ -7,7 +7,11 @@ extern "C"
 	ssh_cws	asm_ssh_to_base64(ssh_b* ptr, ssh_u count);
 	ssh_b*	asm_ssh_from_base64(ssh_ws* str, ssh_u count, ssh_u* len_buf);
 	ssh_l	asm_ssh_parse_xml(ssh_ws* src, ssh_w* vec);
-	ssh_cws	asm_ssh_parse_spec(void* val, ssh_cws ptr, ssh_cws* end);
+	ssh_ws*	asm_ssh_parse_spec(void* val, ssh_cws* ptr);
+	ssh_u	asm_ssh_wcslen(ssh_cws _1);
+	ssh_ws*	asm_ssh_wcsstr(ssh_cws _1, ssh_cws _2);
+	ssh_ws*	asm_ssh_wcschr(ssh_cws _cws, ssh_ws _ws);
+	ssh_u	asm_ssh_wcscmp(ssh_cws _1, ssh_cws _2);
 };
 
 #include "ssh_str.h"
@@ -25,11 +29,11 @@ namespace ssh
 	using	__xin_xsstate	= ssh_d (CALLBACK* )(ssh_d idx, XINPUT_VIBRATION* state);
 	using	__xin_xcaps		= ssh_d (CALLBACK* )(ssh_d idx, ssh_d flags, XINPUT_CAPABILITIES* caps);
 
-	int SSH ssh_ext_count_array();
-	ssh_u SSH ssh_ext_exec_hash(ssh_ccs str);
-	String SSH ssh_ext_exec(ssh_ccs str);
+	// определения для процессорно - зависимых функций
+	using	__ssh_rand		= ssh_u(*)(ssh_u begin, ssh_u end);
 
-	extern ssh_u SSH singltons[32];
+	// указатели на процессорно - зависимые функции
+	extern __ssh_rand		SSH ssh_rand;
 
 	struct DESC_WND
 	{
@@ -84,14 +88,17 @@ namespace ssh
 	SSH float* ssh_mtx_vec4(const float* m, const float* v);
 	SSH float* ssh_mtx_mtx(const float* m1, const float* m2);
 
+	int SSH ssh_ext_count_array();
+	ssh_u SSH ssh_ext_exec_hash(ssh_ccs str);
+	String SSH ssh_ext_exec(ssh_ccs str);
+
 	ssh_u SSH ssh_system_values(SystemInfo type, CpuCaps value);
 	ssh_u SSH ssh_dll_proc(ssh_cws dll, ssh_ccs proc, ssh_cws suffix = L"d");
 	ssh_u SSH ssh_hash(ssh_cws wcs);//
-	ssh_u SSH ssh_rand(ssh_u begin, ssh_u end);
 	ssh_u SSH ssh_offset_line(const String& text, ssh_l ln);
 	ssh_u SSH ssh_count_lines(const String& text);
 	ssh_u SSH ssh_split(ssh_ws split, ssh_cws src, ssh_u* vec, ssh_u count_vec);
-	ssh_u SSH ssh_rand(ssh_u begin, ssh_u end);
+	String SSH ssh_printf(ssh_cws s, ...);
 	String SSH ssh_system_paths(SystemInfo type, int csidl = CSIDL_LOCAL_APPDATA);
 	String SSH ssh_slash_path(const String& path);
 	String SSH ssh_file_ext(const String& path, bool is_pt = false);
@@ -164,8 +171,8 @@ namespace ssh
 			if(stk)
 			{
 				ssh_u val(0);
-				ssh_ws* tt(_wcs);
-				while(tt)
+				ssh_ws* tt;
+				while(true)
 				{
 					if((tt = (ssh_ws*)wcschr(_wcs, L'|'))) *tt = 0;
 					ssh_u idx(stk->find(_wcs));
@@ -209,7 +216,7 @@ namespace ssh
 	{
 		String bytes(L'\0', count * (sizeof(T) * 2 + 1)), _spc(L" ");
 		ssh_ws* _ws(bytes.buffer());
-		String gran(String::fmt(L"%%0%iI64x ", sizeof(T) * 2));
+		String gran(ssh_printf(L"%%0%iI64x ", sizeof(T) * 2));
 		for(ssh_u i = 0; i < count; i++)
 		{
 			swprintf(_ws, gran, p[i]);
@@ -296,27 +303,38 @@ namespace ssh
 		int count = 0;
 	};
 
-	template<typename T, typename... Args> void _ssh_printf(String& ret, ssh_cws s, T value, Args... args)
+	inline ssh_u ssh_wcslen(ssh_cws _wcs)
 	{
-		while(*s)
+		if(!ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::SSE4_2)) return wcslen(_wcs);
+		int res(0), ret(0);
+		do
 		{
-			if(*s == L'%' && *(++s) != L'%')
-			{
-				ssh_u tmp(0);
-				*(T*)&tmp = value;
-				ret += asm_ssh_parse_spec(&tmp, s, &s);
-				_ssh_printf(ret, s, args...);
-				return;
-			}
-			ret += *s++;
-		}
-//		SSH_THROW(L"Несоответствие параметров в ssh_printf()!");
-	};
+			__m128i _1(_mm_lddqu_si128((__m128i*)(_wcs)));
+			res = _mm_cmpistri(_1, _1, 0b00010001);
+			ret += res;
+			_wcs += res;
+		} while(res == 8);
+		return ret;
+	}
 
-	template<typename T, typename... Args> String ssh_printf(ssh_cws s, Args... args)
+	inline ssh_ws* ssh_wcschr(ssh_cws _wcs, ssh_ws _ws)
 	{
-		String _ret;
-		_ssh_printf(_ret, s, args...);
-		return _ret;
+		return nullptr;
+//		if(!ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::SSE4_2)) return wcschr(_wcs, _ws);
+
+		/*
+		test rdx, rdx
+		jz _zero
+		movd xmm0, rdx
+		mov rax, rcx
+		@@:		pcmpistri xmm0, xmmword ptr [rax], 00000001b
+		lea rax, [rax + rcx * 2]
+		jnc @b
+		ret
+		_zero:	mov r8, rcx
+		call asm_ssh_wcslen
+		lea rax, [r8 + rax * 2]
+		ret
+		*/
 	}
 }

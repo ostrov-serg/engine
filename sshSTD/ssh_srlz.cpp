@@ -41,7 +41,7 @@ namespace ssh
 		HXML h;
 		String sval;
 		// получить узел
-		if(!(h = xml->node(hp, _sc->name, idx))) SSH_THROW(L"Ќе найден узел <%s, индекс: %i> xml!", _sc->name, idx);
+		if(!(h = xml->node(hp, _sc->name, idx))) SSH_THROW(ssh_printf(L"Ќе найден узел <%s, индекс: %i> xml!", _sc->name, idx));
 		_sc++;
 		while(_sc->name)
 		{
@@ -50,13 +50,12 @@ namespace ssh
 			ssh_u opt(sc->opt);
 			ssh_u count(sc->count);
 			ssh_u width(sc->width / count);
-			String val;
-			ssh_ws* _ws;
+			String val, _val;
+			ssh_l pos(0);
 			if(!(opt & SC_NODE | SC_CV | SC_OBJ | SC_PTR))
 			{
 				val = (xml->get_attr<String>(h, sc->name, sc->def));
 				if(opt & SC_BASE64) val = ssh_base64(val).to<String>();
-				_ws = val.buffer();
 			}
 			for(ssh_u _idx = 0; _idx < count; _idx++)
 			{
@@ -67,37 +66,40 @@ namespace ssh
 						Serialize* srlz((Serialize*)((ssh_b*)(this) + offs));
 						_sc = srlz->get_scheme();
 						srlz->readXml(h, xml, 0, _idx);
-						if((_idx + 1)) _sc = sc - 1; else _sc = sc + 1;
+						// если последний индекс
+						if((_idx + 1) < count) _sc = --sc; else _sc = ++sc;
 					}
 					else
 					{
 						readXml(h, xml, offs, _idx);
-						if((_idx + 1)) _sc = sc;
+						if((_idx + 1) < count) _sc = sc;
 					}
 				}
 				else if(!(opt & (SC_CV | SC_PTR)))
 				{
 					ssh_b* obj((ssh_b*)(this) + offs);
-					ssh_ws* _nws(nullptr);
 					if(count > 1)
 					{
-						if((_nws = wcschr(_ws, L','))) *_nws = 0;
+						ssh_l npos(val.find(L',', pos));
+						if(npos == -1) npos = val.length();
+						_val = val.substr(pos, npos - pos);
+						pos = ++npos;
 					}
+					else _val = std::move(val);
 					if(opt & SC_FLT)
 					{
-						ssh_u pos(_ws - val.buffer());
-						if(width == 4)  *(float*)obj = val.to_num<float>(pos, Radix::_flt);
-						else if(width == 8) *(double*)obj = val.to_num<double>(pos, Radix::_dbl);
+						if(width == 4)  *(float*)obj = (float)_val;
+						else if(width == 8) *(double*)obj = (double)_val;
 					}
-					else if(opt & SC_BOOL) *(bool*)obj = String(_ws);
-					else if(opt & SC_STR) *(String*)obj = _ws;
+					else if(opt & SC_BOOL) *(bool*)obj = (bool)_val;
+					else if(opt & SC_STR) *(String*)obj = _val;
 					else if(opt & SC_LIT)
 					{
-						if(width == 2) *(ssh_ws*)obj = _ws[_idx];
+						if(width == 2) *(ssh_ws*)obj = _val.at(_idx);
 						else if(width == 1)
 						{
 							static Buffer buf;
-							if(_idx == 0) buf = ssh_convert(cp_ansi, val);
+							if(!_idx) buf = ssh_convert(cp_ansi, val);
 							*(ssh_cs*)obj = buf.to<ssh_cs*>()[_idx];
 						}
 					}
@@ -106,22 +108,19 @@ namespace ssh
 						ssh_u ret(0);
 						if(sc->stk)
 						{
-							ssh_ws* tmp(_ws);
+							ssh_ws* tmp(_val), *_ws(_val);
 							while(tmp)
 							{
 								if((tmp = (ssh_ws*)wcschr(_ws, L'|'))) *tmp = 0;
 								ssh_u idx(sc->stk->find(_ws));
 								if(idx == -1) { ret = (ssh_u)String(sc->def); break; }
 								ret |= sc->stk->at(idx).value;
-								if(!tmp) break;
 								_ws = ++tmp;
 							}
 						}
-						else ret = (ssh_u)String(_ws, (Radix)(opt & 3));
+						else ret = (ssh_u)String(_val, (Radix)(opt & 3));
 						memcpy(obj, &ret, width);
 					}
-					if(_nws) _ws = ++_nws;
-//					else if(*_ws) pos = val.length(), _ws = val.buffer(pos);
 				}
 				offs += width;
 			}

@@ -22,7 +22,8 @@ namespace ssh
 			if(elems.size() >= depth) elems.remove(elems.last());
 			if(indent < 0) indent = 0;
 			String _indent(L' ', indent * 2);
-			elems += (file ? String::fmt(L"%s%c%s()  -  (%s:%i)", _indent, (is ? L'+' : L'-'), func, file, line) : String::fmt(L"%s%c%s()", _indent, (is ? L'+' : L'-'), func));
+			ssh_ws _is(is ? L'+' : L'-');
+			elems += (file ? ssh_printf(L"%s%c%s()  -  (%s:%i)", _indent, _is, func, file, line) : ssh_printf(L"%s%c%s()", _indent, _is, func)); //-V510
 			if(is) indent++;
 			start();
 		}

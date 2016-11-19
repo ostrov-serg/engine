@@ -7,8 +7,6 @@
 
 namespace ssh
 {
-	/*
-	*/
 	// формат шаблонов:
 	// $fn - файл
 	// $ln - строка
@@ -193,7 +191,7 @@ namespace ssh
 		};
 		static Log* instance() { static Log log; return &log; }
 		// добавить шаблонное сообщение
-		void add(TypeMessage type, ssh_cws func, ssh_cws file, int line, ssh_cws msg, ...);
+		void add(TypeMessage type, ssh_cws func, ssh_cws file, int line, ssh_cws msg);
 		// добавить простое сообщение
 		void add_msg(ssh_cws msg) { common.message(apply_template(common.trace, msg)); }
 		// инициализация

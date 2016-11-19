@@ -15,7 +15,7 @@ namespace ssh
 		{
 			_make(buf);
 		}
-		catch(const Exception& e) { e.add(L"Парсер XML!"); }
+		catch(const Exception& e) { e.out_log(L"Парсер XML!"); }
 	}
 
 	void Xml::open(const String& path)
@@ -28,7 +28,7 @@ namespace ssh
 			// 2. загружаем, декодируем и строим дерево
 			_make(f.read(0));
 		}
-		catch(const Exception& e) { e.add(L"Парсер XML <%s>!", path); }
+		catch(const Exception& e) { e.out_log(ssh_printf(L"Парсер XML <%s>!", path)); }
 	}
 
 	String Xml::encode(const Buffer& buf)
@@ -91,10 +91,10 @@ namespace ssh
 			if(ret == -1) SSH_THROW(L"Ошибка парсинга!");
 			if(ret == 0)
 			{
-				if(lev) SSH_THROW(L"Неожиданный конец XML!");
+				if(lev) SSH_THROW(L"Неожиданный конец!");
 				return;
 			}
-			if((len_vec(3) == 2 && len_vec(4) > 0) || (len_vec(1) == 2 && (len_vec(4) > 0 || ret > 5 || len_vec(3) == 2))) SSH_THROW(L"Некорректный xml!");
+			if((len_vec(3) == 2 && len_vec(4) > 0) || (len_vec(1) == 2 && (len_vec(4) > 0 || ret > 5 || len_vec(3) == 2))) SSH_THROW(L"Некорректно!");
 			ssh_ws* _x(_xml);
 			_xml += vec[1];
 			// это завершающий тег?
@@ -156,7 +156,7 @@ namespace ssh
 
 	void Xml::save(const String& path, ssh_cws code)
 	{
-		String txt(String::fmt(L"<?xml version=\"1.0\" encoding=\"%s\" ?>\r\n", code));
+		String txt(ssh_printf(L"<?xml version=\"1.0\" encoding=\"%s\" ?>\r\n", code));
 		txt += _save(tree.get_root(), 0);
 		File f(path, File::create_write);
 		ssh_u bom(0);

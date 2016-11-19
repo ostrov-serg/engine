@@ -24,23 +24,23 @@ namespace ssh
 				pad->is_inserted = true;
 				if(ssh_xin_caps) ssh_xin_caps(idx, XINPUT_DEVTYPE_GAMEPAD, &pad->caps);
 			}
-			memcpy(pad, &state.Gamepad, sizeof(XINPUT_GAMEPAD));
+			//memcpy(pad, &state.Gamepad, sizeof(XINPUT_GAMEPAD));
 			// проверка на deadzone
-			if((pad->sThumbLX < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE && pad->sThumbLX > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE) && (pad->sThumbLY < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE && pad->sThumbLY > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE))
-			{
-				pad->sThumbLX = 0;
-				pad->sThumbLY = 0;
-			}
-			if((pad->sThumbRX < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE && pad->sThumbRX > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE) && (pad->sThumbRY < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE && pad->sThumbRY > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE))
-			{
-				pad->sThumbRX = 0;
-				pad->sThumbRY = 0;
-			}
-			pad->fThumbLX = pad->sThumbLX / 32767.0f;
-			pad->fThumbLY = pad->sThumbLY / 32767.0f;
-			pad->fThumbRX = pad->sThumbRX / 32767.0f;
-			pad->fThumbRY = pad->sThumbRY / 32767.0f;
-
+			short lx(state.Gamepad.sThumbLX);
+			short ly(state.Gamepad.sThumbLY);
+			if((lx < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE && lx > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE) && (ly < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE && ly > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE)) lx = ly = 0;
+			pad->sThumbLX = lx; pad->fThumbLX = lx / 32767.0f;
+			pad->sThumbLY = ly; pad->fThumbLY = ly / 32767.0f;
+			short rx(state.Gamepad.sThumbRX);
+			short ry(state.Gamepad.sThumbRY);
+			if((pad->sThumbRX < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE && pad->sThumbRX > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE) && (pad->sThumbRY < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE && pad->sThumbRY > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE)) rx = ry = 0;
+			pad->sThumbRX = rx; pad->fThumbRX = rx / 32767.0f;
+			pad->sThumbRY = ry; pad->fThumbRY = ry / 32767.0f;
+			// остальные
+			pad->wButtons = state.Gamepad.wButtons;
+			pad->bLeftTrigger = state.Gamepad.bLeftTrigger;
+			pad->bRightTrigger = state.Gamepad.bRightTrigger;
+			// какие кнопки были нажаты
 			pad->wPressedButtons = (pad->wLastButtons ^ pad->wButtons) & pad->wButtons;
 			pad->wLastButtons = pad->wButtons;
 			// признак левый триггер был нажат или отпущен

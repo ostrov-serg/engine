@@ -41,7 +41,7 @@ namespace ssh
 		Bits s;
 		s.si = mulC;
 		s.f *= v.si;
-		long mask = -(norC > v.si);
+		long mask = -(long)(norC > v.si);
 		v.si <<= shift;
 		v.si ^= (s.si ^ v.si) & mask;
 		v.si |= sign;
@@ -411,7 +411,7 @@ namespace ssh
 		if(fabs(fSin) >= SSH_EPSILON)
 		{
 			float fCoeff(fSin / fAngle);
-			x = fCoeff * x; y = fCoeff * y; z = fCoeff * z; w = cos(fAngle);
+			x = fCoeff * x; y = fCoeff * y; z = fCoeff * z;
 		}
 		w = cos(fAngle);
 		return *this;
