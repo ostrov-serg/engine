@@ -140,7 +140,7 @@ int main() noexcept
 	ssh_ws* _ws1 = _1.str();
 	ssh_ws* _ws2 = _2.str();
 	ssh_u ret(123);
-	_1 = ssh_printf(L"%% %i % I64i, %.9f, %s, %S, %c, %C", 1L, ret, 3.0, _1.str(), "qwert", L'!', '@');
+	_1 = ssh_printf(L"%% %z % I64i, %.9f, %s, %S, %c, %C", 1L, ret, 3.0, _1.str(), "qwert", L'!', '@');
 	Log::instance()->init();
 	Log::stk_common _c;
 	Xml xml;

@@ -1,39 +1,44 @@
 
 #pragma once
 
-extern "C"
-{
-	ssh_u	asm_ssh_capability();
-	ssh_cws	asm_ssh_to_base64(ssh_b* ptr, ssh_u count);
-	ssh_b*	asm_ssh_from_base64(ssh_ws* str, ssh_u count, ssh_u* len_buf);
-	ssh_l	asm_ssh_parse_xml(ssh_ws* src, ssh_w* vec);
-	ssh_ws*	asm_ssh_parse_spec(void* val, ssh_cws* ptr);
-	ssh_u	asm_ssh_wcslen(ssh_cws _1);
-	ssh_ws*	asm_ssh_wcsstr(ssh_cws _1, ssh_cws _2);
-	ssh_ws*	asm_ssh_wcschr(ssh_cws _cws, ssh_ws _ws);
-	ssh_u	asm_ssh_wcscmp(ssh_cws _1, ssh_cws _2);
-};
-
 #include "ssh_str.h"
 #include "ssh_buf.h"
 
 namespace ssh
 {
 	class EnumReflector;
-	using	__regx_compile	= regex16* (CALLBACK* )(ssh_cws pattern, ssh_l options);
-	using	__regx_exec		= ssh_l (CALLBACK* )(const void* re, ssh_cws subj, ssh_l len_subj, ssh_l idx, ssh_l options, ssh_l* vec, ssh_l count_vec);
-	using	__regx_free		= ssh_l (CALLBACK* )(void* p);
+	using	__regx_compile			= regex16* (CALLBACK* )(ssh_cws pattern, ssh_l options);
+	using	__regx_exec				= ssh_l (CALLBACK* )(const void* re, ssh_cws subj, ssh_l len_subj, ssh_l idx, ssh_l options, ssh_l* vec, ssh_l count_vec);
+	using	__regx_free				= ssh_l (CALLBACK* )(void* p);
 
-	using	__xin_xenable	= void (CALLBACK* )(int is);
-	using	__xin_xgstate	= ssh_d (CALLBACK* )(ssh_d idx, XINPUT_STATE* state);
-	using	__xin_xsstate	= ssh_d (CALLBACK* )(ssh_d idx, XINPUT_VIBRATION* state);
-	using	__xin_xcaps		= ssh_d (CALLBACK* )(ssh_d idx, ssh_d flags, XINPUT_CAPABILITIES* caps);
+	using	__xin_xenable			= void (CALLBACK* )(int is);
+	using	__xin_xgstate			= ssh_d (CALLBACK* )(ssh_d idx, XINPUT_STATE* state);
+	using	__xin_xsstate			= ssh_d (CALLBACK* )(ssh_d idx, XINPUT_VIBRATION* state);
+	using	__xin_xcaps				= ssh_d (CALLBACK* )(ssh_d idx, ssh_d flags, XINPUT_CAPABILITIES* caps);
 
 	// определения для процессорно - зависимых функций
-	using	__ssh_rand = ssh_u (*)(ssh_u begin, ssh_u end);
+	using	__asm_ssh_capability	= ssh_u(*)();
+	using	__asm_ssh_to_base64		= ssh_cws(*)(ssh_b* ptr, ssh_u count);
+	using	__asm_ssh_from_base64	= ssh_b*(*)(ssh_ws* str, ssh_u count, ssh_u* len_buf);
+	using	__asm_ssh_parse_xml		= ssh_l(*)(ssh_ws* src, ssh_w* vec);
+	using	__asm_ssh_parse_spec	= ssh_ws*(*)(void* val, ssh_cws* ptr);
+	using	__asm_ssh_wcslen		= ssh_u(*)(ssh_cws _1);
+	using	__asm_ssh_wcsstr		= ssh_ws*(*)(ssh_cws _1, ssh_cws _2);
+	using	__asm_ssh_wcschr		= ssh_ws*(*)(ssh_cws _cws, ssh_ws _ws);
+	using	__asm_ssh_wcscmp		= ssh_u(*)(ssh_cws _1, ssh_cws _2);
+	using	__ssh_rand				= ssh_u (*)(ssh_u begin, ssh_u end);
 
 	// указатели на процессорно - зависимые функции
-	extern __ssh_rand		SSH ssh_rand;
+	extern __ssh_rand				SSH ssh_rand;
+	extern __asm_ssh_capability		SSH asm_ssh_capability;
+	extern __asm_ssh_to_base64		SSH asm_ssh_to_base64;
+	extern __asm_ssh_from_base64	SSH asm_ssh_from_base64;
+	extern __asm_ssh_parse_xml		SSH asm_ssh_parse_xml;
+	extern __asm_ssh_parse_spec		SSH asm_ssh_parse_spec;
+	extern __asm_ssh_wcslen			SSH asm_ssh_wcslen;
+	extern __asm_ssh_wcsstr			SSH asm_ssh_wcsstr;
+	extern __asm_ssh_wcschr			SSH asm_ssh_wcschr;
+	extern __asm_ssh_wcscmp			SSH asm_ssh_wcscmp;
 
 	struct DESC_WND
 	{

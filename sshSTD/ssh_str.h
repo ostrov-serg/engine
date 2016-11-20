@@ -3,16 +3,19 @@
 
 extern "C"
 {
-	void*	asm_ssh_wton(ssh_cws str, ssh_u radix, ssh_ws* end);
-	ssh_cws	asm_ssh_ntow(const void* num, ssh_u radix, ssh_ws* end = nullptr);
 };
 
 namespace ssh
 {
 	#define SSH_BUFFER_LENGTH			32
 
-	using	__ssh_hash = int(*)(ssh_cws _cws);
-	extern __ssh_hash		SSH ssh_hash;
+	using	__ssh_hash		= int(*)(ssh_cws _cws);
+	using	__asm_ssh_wton	= void*(*)(ssh_cws str, ssh_u radix, ssh_ws* end);
+	using	__asm_ssh_ntow	= ssh_cws(*)(const void* num, ssh_u radix, ssh_ws* end);
+
+	extern	__ssh_hash		SSH ssh_hash;
+	extern	__asm_ssh_wton	SSH asm_ssh_wton;
+	extern	__asm_ssh_ntow	SSH asm_ssh_ntow;
 
 	enum class Radix { _dec, _bin, _oct, _hex, _dbl, _flt, _bool };
 
@@ -41,7 +44,7 @@ namespace ssh
 		operator bool() const { return to_num<bool>(0, Radix::_bool); }
 		template<typename T> operator T() const { return to_num<T>(0, Radix::_dec); }
 		template <typename T> T to_num(ssh_l idx, Radix R = Radix::_dec) const { return *(T*)asm_ssh_wton(str() + idx, (ssh_u)R, nullptr); }
-		template <typename T> void num(const T& v, Radix R = Radix::_dec) { ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, (ssh_u)R); }
+		template <typename T> void num(const T& v, Radix R = Radix::_dec) { ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, (ssh_u)R, nullptr); }
 		// вернуть по индексу
 		ssh_ws operator[](ssh_u idx) const { return at(idx); }
 		// операторы сравнения

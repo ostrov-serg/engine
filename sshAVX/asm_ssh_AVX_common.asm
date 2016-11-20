@@ -210,8 +210,6 @@ asm_ssh_ntow endp
 ; ret - result of whar_t*
 asm_ssh_parse_spec proc public
 		push rdi
-		push r10
-		push r11
 		push r12
 		mov r10, rcx
 		mov r11, rdx
@@ -234,8 +232,6 @@ asm_ssh_parse_spec proc public
 		mov word ptr [rax], 0
 @@:		add qword ptr [r10], 8
 		pop r12
-		pop r11
-		pop r10
 		pop rdi
 		ret
 sp_ii:	cmp dword ptr [r12], 00340036h	; I64
@@ -335,7 +331,19 @@ sp_ss:	mov r8, [r10]
 sp_s:	mov rax, [r10]
 		mov rax, [rax]
 		ret
-f_spec:	movd xmm1, rax
+f_spec:	mov rdi, offset _spec
+		lea rdx, [rcx - 1]
+		repnz scasb
+		mov rax, rcx
+		jnz @f
+		sub rcx, rdx
+		neg rcx
+		mov rax, offset _spec_tbl
+		shl rcx, 4
+		mov rdx, [rax + rcx]
+		stc
+		ret
+		movd xmm1, rax
 		xor rax, rax
 		pcmpistri xmm1, xmmword ptr [_spec], 0
 		jnc @f

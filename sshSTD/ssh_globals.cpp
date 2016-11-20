@@ -14,19 +14,19 @@ namespace ssh
 	using	__cnv_make	= void (CALLBACK* )(void* cd, const ssh_b* inbuf, ssh_u inbytesleft, ssh_b* out);
 	using	__cnv_calc	= ssh_u (CALLBACK* )(void* cd, const ssh_b* inbuf, ssh_u inbytesleft);
 
-	__xin_xenable	ssh_xin_enable(nullptr);
-	__xin_xgstate	ssh_xin_gstate(nullptr);
-	__xin_xsstate	ssh_xin_sstate(nullptr);
-	__xin_xcaps		ssh_xin_caps(nullptr);
+	__xin_xenable			ssh_xin_enable(nullptr);
+	__xin_xgstate			ssh_xin_gstate(nullptr);
+	__xin_xsstate			ssh_xin_sstate(nullptr);
+	__xin_xcaps				ssh_xin_caps(nullptr);
 
-	__cnv_open		ssh_cnv_open(nullptr);
-	__cnv_close		ssh_cnv_close(nullptr);
-	__cnv_make		ssh_cnv_make(nullptr);
-	__cnv_calc		ssh_cnv_calc(nullptr);
+	__cnv_open				ssh_cnv_open(nullptr);
+	__cnv_close				ssh_cnv_close(nullptr);
+	__cnv_make				ssh_cnv_make(nullptr);
+	__cnv_calc				ssh_cnv_calc(nullptr);
 
-	__regx_compile	ssh_regx_compile(nullptr);
-	__regx_exec		ssh_regx_exec(nullptr);
-	__regx_free		ssh_regx_free(nullptr);
+	__regx_compile			ssh_regx_compile(nullptr);
+	__regx_exec				ssh_regx_exec(nullptr);
+	__regx_free				ssh_regx_free(nullptr);
 
 	Base* Base::root(nullptr);
 	RTTI* RTTI::root(nullptr);
@@ -749,14 +749,40 @@ namespace ssh
 		}
 	}
 
-	__ssh_rand		SSH ssh_rand(ssh_SSE_rand);
-	__ssh_hash		SSH ssh_hash(ssh_SSE_hash);
+	__ssh_rand				SSH ssh_rand(ssh_SSE_rand);
+	__ssh_hash				SSH ssh_hash(ssh_SSE_hash);
+	
+	__asm_ssh_capability	SSH asm_ssh_capability(nullptr);
+	__asm_ssh_to_base64		SSH asm_ssh_to_base64(nullptr);
+	__asm_ssh_from_base64	SSH asm_ssh_from_base64(nullptr);
+	__asm_ssh_parse_xml		SSH asm_ssh_parse_xml(nullptr);
+	__asm_ssh_parse_spec	SSH asm_ssh_parse_spec(nullptr);
+	__asm_ssh_wcslen		SSH asm_ssh_wcslen(nullptr);
+	__asm_ssh_wcsstr		SSH asm_ssh_wcsstr(nullptr);
+	__asm_ssh_wcschr		SSH asm_ssh_wcschr(nullptr);
+	__asm_ssh_wcscmp		SSH asm_ssh_wcscmp(nullptr);
+	__asm_ssh_wton			SSH asm_ssh_wton(nullptr);
+	__asm_ssh_ntow			SSH asm_ssh_ntow(nullptr);
 
 	static void ssh_init_libs()
 	{
+		ssh_cws _dll(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::AVX) ? L"sshAVX.dll" : L"sshSSE.dll");
 		// инициализировать процессорно-зависимые функции
 		ssh_rand = (__ssh_rand)(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::RDRAND) ? ssh_AVX_rand : ssh_SSE_rand);
 		ssh_hash = (__ssh_hash)(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::SSE4_2) ? ssh_AVX_hash : ssh_SSE_hash);
+
+		asm_ssh_capability = (__asm_ssh_capability)ssh_dll_proc(_dll, "asm_ssh_capability");
+		asm_ssh_to_base64 = (__asm_ssh_to_base64)ssh_dll_proc(_dll, "asm_ssh_to_base64");
+		asm_ssh_from_base64 = (__asm_ssh_from_base64)ssh_dll_proc(_dll, "asm_ssh_from_base64");
+		asm_ssh_parse_xml = (__asm_ssh_parse_xml)ssh_dll_proc(_dll, "asm_ssh_parse_xml");
+		asm_ssh_parse_spec = (__asm_ssh_parse_spec)ssh_dll_proc(_dll, "asm_ssh_parse_spec");
+		asm_ssh_wcslen = (__asm_ssh_wcslen)ssh_dll_proc(_dll, "asm_ssh_wcslen");
+		asm_ssh_wcsstr = (__asm_ssh_wcsstr)ssh_dll_proc(_dll, "asm_ssh_wcsstr");
+		asm_ssh_wcschr = (__asm_ssh_wcschr)ssh_dll_proc(_dll, "asm_ssh_wcschr");
+		asm_ssh_wcscmp = (__asm_ssh_wcscmp)ssh_dll_proc(_dll, "asm_ssh_wcscmp");
+		asm_ssh_wton = (__asm_ssh_wton)ssh_dll_proc(_dll, "asm_ssh_wton");;
+		asm_ssh_ntow = (__asm_ssh_ntow)ssh_dll_proc(_dll, "asm_ssh_ntow");;
+		
 		// инициализировать функции стандартных библиотек - sshREGX, sshCNV
 		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");
 		ssh_cnv_close = (__cnv_close)ssh_dll_proc(L"sshCNV.dll", "cnv_close");
