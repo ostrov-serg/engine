@@ -30,7 +30,7 @@ namespace ssh
 	using	__xin_xcaps		= ssh_d (CALLBACK* )(ssh_d idx, ssh_d flags, XINPUT_CAPABILITIES* caps);
 
 	// определения для процессорно - зависимых функций
-	using	__ssh_rand		= ssh_u(*)(ssh_u begin, ssh_u end);
+	using	__ssh_rand = ssh_u (*)(ssh_u begin, ssh_u end);
 
 	// указатели на процессорно - зависимые функции
 	extern __ssh_rand		SSH ssh_rand;
@@ -94,7 +94,6 @@ namespace ssh
 
 	ssh_u SSH ssh_system_values(SystemInfo type, CpuCaps value);
 	ssh_u SSH ssh_dll_proc(ssh_cws dll, ssh_ccs proc, ssh_cws suffix = L"d");
-	ssh_u SSH ssh_hash(ssh_cws wcs);//
 	ssh_u SSH ssh_offset_line(const String& text, ssh_l ln);
 	ssh_u SSH ssh_count_lines(const String& text);
 	ssh_u SSH ssh_split(ssh_ws split, ssh_cws src, ssh_u* vec, ssh_u count_vec);

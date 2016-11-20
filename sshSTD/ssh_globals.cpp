@@ -28,21 +28,21 @@ namespace ssh
 	__regx_exec		ssh_regx_exec(nullptr);
 	__regx_free		ssh_regx_free(nullptr);
 
-	__ssh_rand		SSH ssh_rand(nullptr);
-
 	Base* Base::root(nullptr);
 	RTTI* RTTI::root(nullptr);
 
-	ssh_u SSH ssh_hash(ssh_cws wcs)
+	static int ssh_AVX_hash(ssh_cws _cws)
 	{
-		ssh_u _val(14695981039346656037ULL);
-		while(*wcs)
-		{
-			_val ^= (ssh_u)*wcs++;
-			_val *= (ssh_u)1099511628211ULL;
-		}
-		_val ^= _val >> 32;
-		return _val;
+		int hash(1315423911);
+		while(*_cws) hash = _mm_crc32_u16(hash, *_cws++);
+		return hash;
+	}
+
+	static int ssh_SSE_hash(ssh_cws _cws)
+	{
+		int hash(1315423911);
+		while(*_cws) hash ^= ((hash << 5) + (*_cws++) + (hash >> 2));
+		return hash;
 	};
 
 	static ssh_u ssh_SSE_rand(ssh_u begin, ssh_u end)
@@ -749,8 +749,14 @@ namespace ssh
 		}
 	}
 
+	__ssh_rand		SSH ssh_rand(ssh_SSE_rand);
+	__ssh_hash		SSH ssh_hash(ssh_SSE_hash);
+
 	static void ssh_init_libs()
 	{
+		// инициализировать процессорно-зависимые функции
+		ssh_rand = (__ssh_rand)(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::RDRAND) ? ssh_AVX_rand : ssh_SSE_rand);
+		ssh_hash = (__ssh_hash)(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::SSE4_2) ? ssh_AVX_hash : ssh_SSE_hash);
 		// инициализировать функции стандартных библиотек - sshREGX, sshCNV
 		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");
 		ssh_cnv_close = (__cnv_close)ssh_dll_proc(L"sshCNV.dll", "cnv_close");
@@ -763,10 +769,6 @@ namespace ssh
 		ssh_xin_gstate = (__xin_xgstate)ssh_dll_proc(L"xinput1_3.dll", "XInputGetState", 0);
 		ssh_xin_sstate = (__xin_xsstate)ssh_dll_proc(L"xinput1_3.dll", "XInputSetState", 0);
 		ssh_xin_caps = (__xin_xcaps)ssh_dll_proc(L"xinput1_3.dll", "XInputGetCapabilities", 0);
-		// получить возможности процессора
-		ssh_cws avx(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::AVX) ? L"sshAVX" : L"sshSSE");
-		// инициализировать процессорно-зависимые функции
-		ssh_rand = (__ssh_rand)(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::RDRAND) ? ssh_AVX_rand : ssh_SSE_rand);
 	}
 }
 

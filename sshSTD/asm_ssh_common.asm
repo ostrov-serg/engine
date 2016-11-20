@@ -6,7 +6,6 @@ extern MultiByteToWideChar:near
 .data?
 
 result		dw 128 dup(?)
-temp_print	dw 32 dup(?)
 end_ptr		dq ?
 
 .data
@@ -246,14 +245,18 @@ sp_ii:	cmp dword ptr [r12], 00340036h	; I64
 		call f_spec
 		jnc sp_err
 		add r12, 6
+		jmp @f
 sp_x:
 sp_o:
-sp_i:	mov rcx, [r10]
+sp_i:	mov rax, [r10]
+		mov ecx, [rax]
+		mov [rax], rcx
+@@:		mov rcx, [r10]
 		xor r8, r8
 		call asm_ssh_ntow
 		mov rdi, rax
 		mov r9, rax
-		mov rcx, offset result + 126
+		mov rcx, offset result + 128
 		sub rax, rcx
 		neg rax
 		shr rax, 1				; length number

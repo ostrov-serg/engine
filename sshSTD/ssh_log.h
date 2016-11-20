@@ -187,7 +187,7 @@ namespace ssh
 			stk_email* email = nullptr;
 		protected:
 			// тип вывода
-			TypeOutput out = TypeOutput::file;
+			TypeOutput out = TypeOutput::null;
 		};
 		static Log* instance() { static Log log; return &log; }
 		// добавить шаблонное сообщение
