@@ -159,6 +159,7 @@
     <ClCompile Include="ssh_srlz.cpp" />
     <ClCompile Include="ssh_str.cpp" />
     <ClCompile Include="ssh_time.cpp" />
+    <ClCompile Include="ssh_tracer.cpp" />
     <ClCompile Include="ssh_xml.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -167,6 +168,9 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NatvisFile.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="asm_ssh_common.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

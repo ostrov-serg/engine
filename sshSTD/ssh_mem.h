@@ -56,21 +56,23 @@ namespace ssh
 		// вернуть признак блокировки
 		bool is_started() const { return is_enabled; }
 		// установить признак блокировки
-		void start() { is_enabled = false; }
-		void stop() { is_enabled = true; }
+		void start() { is_enabled = true; }
+		void stop() { is_enabled = false; }
 		// обработчики нестандартных исключительных ситуаций
 		void set_exceptionHandlers();
 	protected:
 		// вернуть не освобожденные блоки
 		void leaks();
-		// максимум выделенных
+		// количество блоков
+		ssh_u count_alloc = 0, max_alloc = 0;
+		// всего выделено
 		ssh_u total_alloc = 0;
 		// всего было освобождено
 		ssh_u total_free = 0;
 		// максимум единовременно выделенной памяти
 		ssh_u use_mem = 0, use_max_mem = 0;
 		// признак блокировки
-		bool is_enabled = true;
+		bool is_enabled = false;
 		// корневой блок
 		NodeMem* root = nullptr;
 	};

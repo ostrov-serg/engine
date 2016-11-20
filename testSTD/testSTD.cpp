@@ -114,35 +114,29 @@ String operator ""_r(ssh_ccs _ccs)
 
 using namespace std;
 
-extern "C"
+void _func()
 {
-	ssh_u	asm_ssh_wcslen1(ssh_cws _1);
-}
-
-inline int ssh_wcslen1(ssh_cws _wcs)
-{
-	int res(0), ret(0);
-	do
-	{
-		__m128i _1(_mm_lddqu_si128((__m128i*)(_wcs)));
-		res = _mm_cmpistri(_1, _1, 0b00010001);
-		ret += res;
-		_wcs += res;
-	} while(res == 8);
-	return ret;
+	SSH_TRACE;
 }
 
 int main() noexcept
 {
+	ssh_ws _ws[32];
+	_ws[10] = 0;
+	ssh_ws ws = L'1';
+	_wcsset(_ws, ws);
+
+	ssh_log->init(Log::TypeOutput::debug);
+	SSH_TRACE;
 	String _1(L"123");
 	_1 += L" 456";
+	_func();
 	String _2(_1 + L"2345677");
 	ssh_ws* _ws1 = _1.str();
 	ssh_ws* _ws2 = _2.str();
 	ssh_u ret(123);
-	_1 = ssh_printf(L"%% %z % I64i, %.9f, %s, %S, %c, %C", 1L, ret, 3.0, _1.str(), "qwert", L'!', '@');
-	Log::instance()->init();
-	Log::stk_common _c;
+	_1 = ssh_printf(L"%%%z % I64i, %.9f, %s, %S, %c, %C", 1L, ret, 3.0, _1.str(), "qwert", L'!', '@');
+	return 0;
 	Xml xml;
 	tp t;
 	t.make();

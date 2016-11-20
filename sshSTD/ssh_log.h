@@ -2,6 +2,7 @@
 #pragma once
 
 #include "ssh_file.h"
+#include "ssh_tracer.h"
 //#include "ssh_email.h"
 //#include "ssh_sock.h"
 
@@ -23,6 +24,7 @@ namespace ssh
 
 	class SSH Log final
 	{
+		friend class Tracer;
 //		friend void socket_receive(Socket* sock, Socket::SOCK* s, const Buffer& buf);
 	public:
 		enum TypeMessage
@@ -214,5 +216,22 @@ namespace ssh
 		void shutdown();
 		// основная структура
 		stk_common common;
+		// трассировщик стека
+		StackTrace _tracer;
+	};
+
+	class SSH Tracer
+	{
+	public:
+		Tracer(ssh_cws _fn, ssh_cws _fl, int _ln) : fn(_fn)
+		{
+			if(ssh_trc.is_started()) ssh_trc.add(true, _fn, _fl, _ln);
+		}
+		~Tracer()
+		{
+			if(ssh_trc.is_started()) ssh_trc.add(false, fn);
+		}
+	protected:
+		ssh_cws fn;
 	};
 }

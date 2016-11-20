@@ -752,7 +752,6 @@ namespace ssh
 	__ssh_rand				SSH ssh_rand(ssh_SSE_rand);
 	__ssh_hash				SSH ssh_hash(ssh_SSE_hash);
 	
-	__asm_ssh_capability	SSH asm_ssh_capability(nullptr);
 	__asm_ssh_to_base64		SSH asm_ssh_to_base64(nullptr);
 	__asm_ssh_from_base64	SSH asm_ssh_from_base64(nullptr);
 	__asm_ssh_parse_xml		SSH asm_ssh_parse_xml(nullptr);
@@ -771,17 +770,16 @@ namespace ssh
 		ssh_rand = (__ssh_rand)(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::RDRAND) ? ssh_AVX_rand : ssh_SSE_rand);
 		ssh_hash = (__ssh_hash)(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::SSE4_2) ? ssh_AVX_hash : ssh_SSE_hash);
 
-		asm_ssh_capability = (__asm_ssh_capability)ssh_dll_proc(_dll, "asm_ssh_capability");
-		asm_ssh_to_base64 = (__asm_ssh_to_base64)ssh_dll_proc(_dll, "asm_ssh_to_base64");
-		asm_ssh_from_base64 = (__asm_ssh_from_base64)ssh_dll_proc(_dll, "asm_ssh_from_base64");
-		asm_ssh_parse_xml = (__asm_ssh_parse_xml)ssh_dll_proc(_dll, "asm_ssh_parse_xml");
-		asm_ssh_parse_spec = (__asm_ssh_parse_spec)ssh_dll_proc(_dll, "asm_ssh_parse_spec");
-		asm_ssh_wcslen = (__asm_ssh_wcslen)ssh_dll_proc(_dll, "asm_ssh_wcslen");
-		asm_ssh_wcsstr = (__asm_ssh_wcsstr)ssh_dll_proc(_dll, "asm_ssh_wcsstr");
-		asm_ssh_wcschr = (__asm_ssh_wcschr)ssh_dll_proc(_dll, "asm_ssh_wcschr");
-		asm_ssh_wcscmp = (__asm_ssh_wcscmp)ssh_dll_proc(_dll, "asm_ssh_wcscmp");
-		asm_ssh_wton = (__asm_ssh_wton)ssh_dll_proc(_dll, "asm_ssh_wton");;
-		asm_ssh_ntow = (__asm_ssh_ntow)ssh_dll_proc(_dll, "asm_ssh_ntow");;
+		asm_ssh_to_base64 = (__asm_ssh_to_base64)ssh_dll_proc(_dll, "asm_ssh_to_base64", 0);
+		asm_ssh_from_base64 = (__asm_ssh_from_base64)ssh_dll_proc(_dll, "asm_ssh_from_base64", 0);
+		asm_ssh_parse_xml = (__asm_ssh_parse_xml)ssh_dll_proc(_dll, "asm_ssh_parse_xml", 0);
+		asm_ssh_parse_spec = (__asm_ssh_parse_spec)ssh_dll_proc(_dll, "asm_ssh_parse_spec", 0);
+		asm_ssh_wcslen = (__asm_ssh_wcslen)ssh_dll_proc(_dll, "asm_ssh_wcslen", 0);
+		asm_ssh_wcsstr = (__asm_ssh_wcsstr)ssh_dll_proc(_dll, "asm_ssh_wcsstr", 0);
+		asm_ssh_wcschr = (__asm_ssh_wcschr)ssh_dll_proc(_dll, "asm_ssh_wcschr", 0);
+		asm_ssh_wcscmp = (__asm_ssh_wcscmp)ssh_dll_proc(_dll, "asm_ssh_wcscmp", 0);
+		asm_ssh_wton = (__asm_ssh_wton)ssh_dll_proc(_dll, "asm_ssh_wton", 0);;
+		asm_ssh_ntow = (__asm_ssh_ntow)ssh_dll_proc(_dll, "asm_ssh_ntow", 0);;
 		
 		// инициализировать функции стандартных библиотек - sshREGX, sshCNV
 		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");

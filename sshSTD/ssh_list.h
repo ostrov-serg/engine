@@ -45,6 +45,7 @@ namespace ssh
 		{
 			auto n(new Node(t, nlast, nullptr));
 			if(nroot) nlast->next = n; else nroot = n;
+			count++;
 			return (nlast = n);
 		}
 		// вставка(перед n)
@@ -57,6 +58,7 @@ namespace ssh
 			if(n) n->prev = nd;
 			if(n == nroot) nroot = nd;
 			if(!nlast) nlast = nd;
+			count++;
 			return nd;
 		}
 		// удалить

@@ -86,7 +86,7 @@ namespace ssh
 			// установить обработчики исключений
 			ssh_mem->set_exceptionHandlers();
 			// старт трассировщика
-			ssh_trc->start();
+			ssh_trc.start();
 			// старт менеджера памяти
 			ssh_mem->start();
 		}
@@ -98,15 +98,15 @@ namespace ssh
 
 	void Log::add(TypeMessage type, ssh_cws fn, ssh_cws fl, int ln, ssh_cws msg)
 	{
-		if(ssh_trc->is_started())
+		if(ssh_trc.is_started())
 		{
-			ssh_trc->stop();
+			ssh_trc.stop();
 			String msgArgs(msg);
 			msgArgs.replace(L'\r', L'.');
 			msgArgs.replace(L'\n', L'.');
 			// формируем сообщение на основании шаблона
 			common.message(msgArgs, type, fn, fl, ln);
-			ssh_trc->start();
+			ssh_trc.start();
 		}
 	}
 
@@ -125,16 +125,16 @@ namespace ssh
 
 	void Log::close()
 	{
-		ssh_trc->stop();
+		ssh_trc.stop();
 		ssh_mem->stop();
-		ssh_trc->output();
+		ssh_trc.output();
 		ssh_mem->output();
 		common.shutdown();
 	}
 
 	void Log::shutdown()
 	{
-		ssh_trc->stop();
+		ssh_trc.stop();
 		ssh_mem->stop();
 		common.shutdown();
 	}

@@ -142,17 +142,17 @@ namespace ssh
 
 	void MemMgr::leaks()
 	{
-		if(total_alloc)
+		if(count_alloc)
 		{
 			Section cs;
 			String txt;
-			ssh_log->add_msg(ssh_printf(L"Обнаружено %I64i потерянных блоков памяти...\r\n", total_alloc));
+			ssh_log->add_msg(ssh_printf(L"Обнаружено %I64i потерянных блоков памяти...\r\n", count_alloc));
 			auto n(root);
 			while(n)
 			{
-				ssh_b* ptr((ssh_b*)(n + sizeof(NodeMem)));
+				ssh_b* ptr((ssh_b*)(n) + sizeof(NodeMem));
 				String bytes(ssh_make_hex_string(ptr, n->sz > 48 ? 48 : n->sz, txt, true, n->sz > 48));
-				ssh_log->add_msg(ssh_printf(L"node <0x%I64X, %i, %s\t%s>", ptr, n->sz, bytes, txt));
+				ssh_log->add_msg(ssh_printf(L"node <0x%I64X, %i,\t%s\t%s>", ptr, n->sz, bytes.str(), txt.str()));
 				n = n->next;
 			}
 		}
@@ -161,15 +161,16 @@ namespace ssh
 	void MemMgr::output()
 	{
 		leaks();
-		ssh_log->add_msg(ssh_printf(L"\r\nЗа данный сеанс было выделено %i(~%s) байт памяти ..., освобождено %i(~%s) ...:%c, максимум - %i блоков\r\n", use_max_mem, ssh_num_volume(use_max_mem), total_free, ssh_num_volume(total_free), (use_mem != total_free ? L'(' : L')'), total_alloc));
+		ssh_log->add_msg(ssh_printf(L"\r\nЗа данный сеанс было выделено %i(~%s) байт памяти ..., освобождено %i(~%s) ...:%c, максимум - %i(~%s), блоков - %i\r\n",
+									total_alloc, ssh_num_volume(total_alloc), total_free, ssh_num_volume(total_free), (total_alloc != total_free ? L'(' : L')'),
+									use_max_mem, ssh_num_volume(use_max_mem), max_alloc));
 	}
 
 	void* MemMgr::alloc(ssh_u sz)
 	{
 		Section cs;
 
-		// _alligned_malloc
-		ssh_b* p((ssh_b*)::malloc(sz + sizeof(NodeMem) + 4));
+		ssh_b* p((ssh_b*)::_mm_malloc(sz + sizeof(NodeMem) + 4, 16));
 		// создать узел
 		NodeMem* nd(::new((NodeMem*)(p)) NodeMem((int)sz, root));
 		if(is_enabled)
@@ -178,7 +179,9 @@ namespace ssh
 			memset(p + sizeof(NodeMem), 0xBB, sz);
 #endif
 			// добавить статистику
-			total_alloc++;
+			count_alloc++;
+			max_alloc = count_alloc;
+			total_alloc += sz;
 			use_mem += sz;
 			if(use_max_mem < use_mem) use_max_mem = use_mem;
 			if(root) root->prev = nd;
@@ -204,7 +207,7 @@ namespace ssh
 				// корректируем статистику
 				total_free += sz;
 				use_mem -= sz;
-				total_alloc--;
+				count_alloc--;
 				// удаляем узел из списка
 				auto nn(nd->next);
 				auto np(nd->prev);
@@ -216,7 +219,7 @@ namespace ssh
 #endif
 			}
 			// освобождаем память
-			::free(p);
+			::_mm_free(p);
 		}
 	}
 }

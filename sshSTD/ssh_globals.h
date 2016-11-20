@@ -4,6 +4,11 @@
 #include "ssh_str.h"
 #include "ssh_buf.h"
 
+extern "C"
+{
+	ssh_u asm_ssh_capability();
+}
+
 namespace ssh
 {
 	class EnumReflector;
@@ -17,7 +22,6 @@ namespace ssh
 	using	__xin_xcaps				= ssh_d (CALLBACK* )(ssh_d idx, ssh_d flags, XINPUT_CAPABILITIES* caps);
 
 	// определения для процессорно - зависимых функций
-	using	__asm_ssh_capability	= ssh_u(*)();
 	using	__asm_ssh_to_base64		= ssh_cws(*)(ssh_b* ptr, ssh_u count);
 	using	__asm_ssh_from_base64	= ssh_b*(*)(ssh_ws* str, ssh_u count, ssh_u* len_buf);
 	using	__asm_ssh_parse_xml		= ssh_l(*)(ssh_ws* src, ssh_w* vec);
@@ -30,7 +34,6 @@ namespace ssh
 
 	// указатели на процессорно - зависимые функции
 	extern __ssh_rand				SSH ssh_rand;
-	extern __asm_ssh_capability		SSH asm_ssh_capability;
 	extern __asm_ssh_to_base64		SSH asm_ssh_to_base64;
 	extern __asm_ssh_from_base64	SSH asm_ssh_from_base64;
 	extern __asm_ssh_parse_xml		SSH asm_ssh_parse_xml;
@@ -123,7 +126,6 @@ namespace ssh
 	GUID   SSH ssh_make_guid(ssh_cws src);
 	Buffer SSH ssh_base64(const String& str);
 	Buffer SSH ssh_convert(ssh_cws charset, ssh_cws str);
-	void SSH _ssh_printf(String& ret, ssh_cws s);
 	void SSH ssh_make_path(ssh_cws path);
 	void SSH ssh_remove_comments(String* lst, ssh_u count, bool is_simple);//
 	inline bool ssh_is_null(ssh_cws str) { return (!str || !str[0]); }

@@ -41,7 +41,7 @@ typedef wchar_t*						ssh_pws;
 #define ssh_mse							ssh::Mouse::instance()
 #define ssh_key							ssh::Keyboard::instance()
 #define ssh_pad							ssh::Gamepad::instance()
-#define ssh_trc							ssh::StackTrace::instance()
+#define ssh_trc							ssh_log->_tracer
 
 #define SSH_CLAMP(val, low, high)		(val < low ? low : (val > high ? high : val))
 #define SSH_FMT(tp, msg, ...)			String::fmt(msg, __VA_ARGS__)

@@ -32,7 +32,8 @@ namespace ssh
 	String::String(ssh_ws ws, ssh_l rep)
 	{
 		init();
-		_wcsset(alloc(rep, false), ws);
+		auto buf(alloc(rep, false));
+		while(rep--) { *buf++ = ws; }
 		update();
 	}
 
