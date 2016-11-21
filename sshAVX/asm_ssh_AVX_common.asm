@@ -29,12 +29,14 @@ is_valid	dw 0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4,
 ; rcx - string
 ; ret - rax
 asm_ssh_wcslen proc
+		push rdx
 		mov rdx, rcx
 		xor rax, rax
 @@:		vlddqu xmm0, xmmword ptr [rdx + rax * 2]
 		vpcmpistri xmm0, xmm0, 00010001b
 		lea rax, [rax + rcx]
 		jnz @b
+		pop rdx
 		ret
 asm_ssh_wcslen endp
 
@@ -42,12 +44,41 @@ asm_ssh_wcslen endp
 ; rcx - wstring
 ; rdx - wsubstring
 ; ret - rax = index
-asm_ssh_wcsstr proc public
-		mov rax, rdx
-		vlddqu xmm0, xmmword ptr [rcx]
-@@:		vpcmpistri xmm0, xmmword ptr [rdx + rax * 2], 00001101b
-		lea rax, [rax + rcx]
-		jnc @b
+asm_ssh_wcsstr proc public USES r10 r11 r12 rdi rsi
+		mov r10, rcx
+		call asm_ssh_wcslen
+		mov r8, rax
+		mov r11, rdx
+		mov rcx, rdx
+		call asm_ssh_wcslen
+		mov r9, rax
+		xor r12, r12		; r
+		xor rdi, rdi		; i
+		xor rsi, rsi		; j
+_next_j:cmp rsi, r9
+		jae _exit
+		vlddqu xmm0, xmmword ptr [r10 + rsi * 2]
+_next_i:cmp rdi, r8
+		jae @f
+		mov rax, r8
+		mov rdx, r9
+		sub rax, rsi
+		sub rdx, rdi
+		vpcmpestri xmm0, xmmword ptr [r11 + rdi * 2], 00001101b
+		add rdi, rcx
+		jrcxz _find
+		test r12, r12
+		jz _next_i
+		xor r12, r12
+		mov rsi, -8
+		jmp @f
+_find:	lea rax, [rdi + r11]
+		test r12, r12
+		cmovz r12, rax
+		add rdi, 8
+@@:		add rsi, 8
+		jnz _next_j
+_exit:	mov rax, r12
 		ret
 asm_ssh_wcsstr endp
 
@@ -74,19 +105,32 @@ asm_ssh_wcschr endp
 ; rcx - wstring1
 ; rdx - wstring2
 ; ret - rax 
-asm_ssh_wcscmp proc
-		xor r10, r10
+asm_ssh_wcscmp proc USES r10 r11
+		cmp rdx, rcx
+		jz _zero
 		mov r8, rcx
-@@:		vlddqu xmm0, xmmword ptr [r8 + r10 * 2]
-		vlddqu xmm1, xmmword ptr [rdx + r10 * 2]
-		vpcmpistri xmm0, xmm1, 01011001b
-		lea r10, [r10 + rcx]
-		jnz @b
-		movzx rcx, word ptr [r8 + r10 * 2]
-		movzx rdx, word ptr [rdx + r10 * 2]
+		call asm_ssh_wcslen
+		mov r10, rax
+		mov r9, rdx
+		mov rcx, rdx
+		call asm_ssh_wcslen
+		mov r11, rax
 		xor rax, rax
-		ret
+@@:		lddqu xmm0, xmmword ptr [r8 + rax * 2]
+		vpcmpistri xmm0, xmmword ptr [r9 + rax * 2], 00011001b
+		lea rax, [rax + rcx]
+		jc @b
+		sub r10, rax
+		sub r11, rax
+		cmp r10, r11
+		mov rax, -1
+		mov rcx, 1
+		cmovl rax, rcx
+_zero:	jnz @f
+		xor rax, rax
+@@:		ret
 asm_ssh_wcscmp endp
+
 ; преобразовать число в строку, в зависимости от системы счисления 0-decimal, (1-bin, 2-oct, 3-hex, 4-double,5-float,6-bool)
 ; rcx - указатель на число
 ; rdx - radix

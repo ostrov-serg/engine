@@ -122,6 +122,12 @@ void _func()
 
 int main() noexcept
 {
+	String _ws1(L"2311fgff4 ");
+	String _ws2(L"231fgff4 ");
+	int i1 = ssh_wcscmp(_ws1, _ws2);
+	int i2 = wcscmp(_ws1, _ws2);
+	ssh_ws* __ws1 = ssh_wcsstr(_ws1.buffer(), L"fgf");
+	ssh_ws* __ws2 = wcsstr(_ws1.buffer(), L"fgf");
 	ssh_log->init();
 	SSH_TRACE;
 	_func();

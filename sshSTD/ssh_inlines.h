@@ -69,9 +69,8 @@ namespace ssh
 	inline bool ssh_is_digit(ssh_cws str) { return (*str >= L'0' && *str <= L'9'); }
 	inline ssh_b ssh_cpu_caps(CpuCaps caps) { return _bittest64((const ssh_l*)&cpuCaps, (ssh_u)caps); }
 
-	inline ssh_u ssh_wcslen(ssh_cws _wcs)
+	inline ssh_u ssh_sse_wcslen(ssh_cws _wcs)
 	{
-		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return wcslen(_wcs);
 		int res(0), ret(0);
 		do
 		{
@@ -82,38 +81,78 @@ namespace ssh
 		} while(res == 8);
 		return ret;
 	}
+
+	inline ssh_u ssh_wcslen(ssh_cws _wcs)
+	{
+		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return wcslen(_wcs);
+		return ssh_sse_wcslen(_wcs);
+	}
 	
 	inline ssh_ws* ssh_wcschr(ssh_cws _wcs, ssh_ws _ws)
 	{
 		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return (ssh_ws*)wcschr(_wcs, _ws);
-		return (ssh_ws*)wcschr(_wcs, _ws);
-
-		/*
-		test rdx, rdx
-		jz _zero
-		movd xmm0, rdx
-		mov rax, rcx
-		@@:		pcmpistri xmm0, xmmword ptr [rax], 00000001b
-		lea rax, [rax + rcx * 2]
-		jnc @b
-		ret
-		_zero:	mov r8, rcx
-		call asm_ssh_wcslen
-		lea rax, [r8 + rax * 2]
-		ret
-		*/
+		if(!_ws) return (ssh_ws*)(_wcs + ssh_sse_wcslen(_wcs));
+		__m128i _1(_mm_cvtsi32_si128((int)_ws));
+		int res;
+		do
+		{
+			res = _mm_cmpistri(_1, _mm_lddqu_si128((__m128i*)(_wcs)), 0b00000001);
+			_wcs += res;
+		} while(res == 8);
+		return (ssh_ws*)_wcs;
 	}
 
 	inline int ssh_wcscmp(ssh_cws _s1, ssh_cws _s2)
 	{
 		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return wcscmp(_s1, _s2);
-		return wcscmp(_s1, _s2);
+		if(_s1 != _s2)
+		{
+			ssh_u l1(ssh_sse_wcslen(_s1));
+			ssh_u l2(ssh_sse_wcslen(_s2));
+			int ret, l(0);
+			do
+			{
+				ret = _mm_cmpistri(_mm_lddqu_si128((__m128i*)(_s1 + l)), _mm_lddqu_si128((__m128i*)(_s2 + l)), 0b00011001);
+				l += ret;
+			} while(ret == 8);
+			l1 -= l;
+			l2 -= l;
+			if(l1 < l2) return 1;
+			else if(l1 > l2) return -1;
+		}
+		return 0;
 	}
 
 	inline ssh_ws* ssh_wcsstr(ssh_ws* _s1, ssh_cws _s2)
 	{
 		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return wcsstr(_s1, _s2);
-		return wcsstr(_s1, _s2);
+		ssh_u l1(ssh_sse_wcslen(_s1));
+		ssh_u l2(ssh_sse_wcslen(_s2));
+		ssh_ws* _r(nullptr);
+		int ret, i(0), j(0);
+		while(j < l2)
+		{
+			__m128i _2(_mm_lddqu_si128((__m128i*)(_s2 + j)));
+			while(i < l1)
+			{
+				if(!(ret = _mm_cmpestri(_2, (int)l2 - j, _mm_lddqu_si128((__m128i*)(_s1 + i)), (int)l1 - i, 0b00001101)))
+				{
+					if(!_r) _r = _s1 + i;
+					i += 8;
+					break;
+				}
+				else if(_r)
+				{
+					_r = nullptr;
+					j = -8;
+					break;
+				}
+				i += ret;
+			}
+			j += 8;
+			if(!j) break;
+		}
+		return _r;
 	}
 
 	// преобразовать значение в ближайшую степень двойки

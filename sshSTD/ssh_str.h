@@ -42,7 +42,7 @@ namespace ssh
 		explicit operator float() const { return to_num<float>(0, Radix::_flt); }
 		explicit operator bool() const { return to_num<bool>(0, Radix::_bool); }
 		template<typename T> operator T() const { return to_num<T>(0, Radix::_dec); }
-		template <typename T> T to_num(ssh_l idx, Radix R = Radix::_dec) const { return *(T*)asm_ssh_wton(str() + idx, (ssh_u)R, nullptr); }
+		template <typename T> T to_num(ssh_l idx, Radix R = Radix::_dec) const { static_assert(std::is_arithmetic<T>(), "Expected arithmetic type!"); return *(T*)asm_ssh_wton(str() + idx, (ssh_u)R, nullptr); }
 		template <typename T> void num(const T& v, Radix R = Radix::_dec) { static_assert(std::is_arithmetic<T>(), "Expected arithmetic type!"); ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, (ssh_u)R, nullptr); }
 		// вернуть по индексу
 		ssh_ws operator[](ssh_u idx) const { return at(idx); }
