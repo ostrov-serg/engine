@@ -127,8 +127,16 @@ namespace ssh
 		}
 		else
 		{
-			out = Buffer(str.length());
-			WideCharToMultiByte(get_acp(charset), 0, str.str(), (int)out.size(), out.to<ssh_cs*>(), (int)out.size(), nullptr, nullptr);
+			if(!ssh_wcscmp(charset, cp_utf16))
+			{
+				out = Buffer(str.length() * 2);
+				memcpy(out.to<void*>(), str.str(), out.size());
+			}
+			else
+			{
+				out = Buffer(WideCharToMultiByte(get_acp(charset), 0, str.str(), (int)str.length(), nullptr, 0, nullptr, nullptr));
+				WideCharToMultiByte(get_acp(charset), 0, str.str(), (int)str.length(), out.to<ssh_cs*>(), (int)out.size(), nullptr, nullptr);
+			}
 		}
 		return out;
 	}
@@ -140,14 +148,23 @@ namespace ssh
 		if(ssh_cnv_open)
 		{
 			ssh_cnv h(ssh_cnv_open(cp_utf16, charset));
-			out = ssh_cnv_calc(h, (ssh_b*)in + offs, in_c);
-			ssh_cnv_make(h, (ssh_b*)in + offs, in_c, out);
+			ssh_b* _in((ssh_b*)in + offs);
+			out = ssh_cnv_calc(h, _in, in_c);
+			ssh_cnv_make(h, _in, in_c, out);
 			ssh_cnv_close(h);
 		}
 		else
 		{
-			out = Buffer(in_c * 2);
-			MultiByteToWideChar(get_acp(charset), 0, in.to<ssh_cs*>() + offs, (int)in_c, out.to<ssh_ws*>(), (int)in_c);
+			if(!ssh_wcscmp(charset, cp_utf16))
+			{
+				out = Buffer(in_c * 2);
+				memcpy(out.to<void*>(), in.to<void*>(), out.size());
+			}
+			else
+			{
+				out = Buffer(MultiByteToWideChar(CP_ACP, 0, in.to<ssh_cs*>() + offs, (int)in_c, nullptr, 0) * 2);
+				MultiByteToWideChar(get_acp(charset), 0, in.to<ssh_cs*>() + offs, (int)in_c, out.to<ssh_ws*>(), (int)out.size());
+			}
 		}
 		return String(out.to<ssh_cws>(), out.size() / 2);
 	}
@@ -760,15 +777,6 @@ namespace ssh
 		return flt;
 	}
 
-	void SSH _ssh_printf(String& ret, ssh_cws s)
-	{
-		while(*s)
-		{
-			if(*s == L'%' && *(++s) != L'%') break;// SSH_THROW(L"Несоответствие параметров в ssh_printf()!");
-			ret += *s++;
-		}
-	}
-
 	__ssh_rand				SSH ssh_rand(ssh_SSE_rand);
 	__ssh_hash				SSH ssh_hash(ssh_SSE_hash);
 	
@@ -799,7 +807,7 @@ namespace ssh
 		asm_ssh_ntow = (__asm_ssh_ntow)ssh_dll_proc(_dll, "asm_ssh_ntow", 0);;
 		
 		// инициализировать функции стандартных библиотек - sshREGX, sshCNV
-//		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");
+		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");
 		ssh_cnv_close = (__cnv_close)ssh_dll_proc(L"sshCNV.dll", "cnv_close");
 		ssh_cnv_make = (__cnv_make)ssh_dll_proc(L"sshCNV.dll", "cnv_make");
 		ssh_cnv_calc = (__cnv_calc)ssh_dll_proc(L"sshCNV.dll", "cnv_calc");

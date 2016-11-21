@@ -3,7 +3,20 @@
 
 namespace ssh
 {
-	#define SSH_BUFFER_LENGTH			32
+	#define SSH_BUFFER_LENGTH			20
+
+	/*
+	template<typename T, typename is = void> struct Num;
+	template<typename T> struct Num<T, typename std::enable_if<std::is_arithmetic<T>::value>::type>
+	{
+		static ssh_cws make(const T& v, Radix r)
+		{
+			ssh_u tmp(0);
+			*(T*)&tmp = v;
+			return asm_ssh_ntow(&tmp, (ssh_u)r, nullptr);
+		}
+	};
+	*/
 
 	class SSH String
 	{
@@ -11,15 +24,15 @@ namespace ssh
 	public:
 		// конструкторы
 		String() { init(); }
-		String(std::nullptr_t) { } //-V730
 		String(String&& str) { _str = str._str; str.init(); }
 		String(ssh_cws cws, ssh_l len = -1);
-		String(ssh_ws* ws, ssh_l len = -1) : String((ssh_cws)ws, len) {}
 		String(ssh_ccs ccs, ssh_l len = -1);
+		String(ssh_ws* ws, ssh_l len = -1) : String((ssh_cws)ws, len) {}
 		String(const String& str) { init(); *this = str; }
-		String(ssh_ws ws, ssh_l rep);
-		String(const float v) { init(); num(v, Radix::_flt); }
-		String(const double v) { init(); num(v, Radix::_dbl); }
+		explicit String(std::nullptr_t) { } //-V730
+		explicit String(ssh_ws ws, ssh_l rep);
+		explicit String(float v) { init(); num(v, Radix::_flt); }
+		explicit String(double v) { init(); num(v, Radix::_dbl); }
 		template <typename T> String(const T& v, Radix r = Radix::_dec) { init(); num(v, r); }
 		// деструктор
 		~String() { empty(); }
@@ -30,7 +43,7 @@ namespace ssh
 		explicit operator bool() const { return to_num<bool>(0, Radix::_bool); }
 		template<typename T> operator T() const { return to_num<T>(0, Radix::_dec); }
 		template <typename T> T to_num(ssh_l idx, Radix R = Radix::_dec) const { return *(T*)asm_ssh_wton(str() + idx, (ssh_u)R, nullptr); }
-		template <typename T> void num(const T& v, Radix R = Radix::_dec) { ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, (ssh_u)R, nullptr); }
+		template <typename T> void num(const T& v, Radix R = Radix::_dec) { static_assert(std::is_arithmetic<T>(), "Expected arithmetic type!"); ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, (ssh_u)R, nullptr); }
 		// вернуть по индексу
 		ssh_ws operator[](ssh_u idx) const { return at(idx); }
 		// операторы сравнения
@@ -60,7 +73,7 @@ namespace ssh
 		ssh_l length() const { return _str.len; }
 		ssh_ws at(ssh_u idx) const { return (idx < (ssh_u)length() ? str()[idx] : L'0'); }
 		void set(ssh_u idx, ssh_ws ws) { if(idx < (ssh_u)length()) buffer()[idx] = ws; }
-		void empty() { if(_str.len >= SSH_BUFFER_LENGTH) delete _str.ptr; init(); }
+		void empty() { if(_str.len_buf > SSH_BUFFER_LENGTH) delete _str.ptr; init(); }
 		bool is_empty() const { return !length(); }
 		bool compare(ssh_cws wcs) const { return (_wcsicmp(str(), wcs) == 0); }
 		ssh_u hash() const { return _str.hash; }
@@ -82,13 +95,13 @@ namespace ssh
 		const String& trim_left(ssh_cws wcs);
 		const String& trim_right(ssh_cws wcs);
 		// поиск
-		ssh_l find(ssh_cws wcs, ssh_l idx = 0) const { auto buf(str()); return (idx < length() ? (wcsstr(buf + idx, wcs) - buf) : -1); }
+		ssh_l find(ssh_cws wcs, ssh_l idx = 0) const { auto buf(buffer()); return (idx < length() ? (ssh_wcsstr(buf + idx, wcs) - buf) : -1); }
 		ssh_l find(ssh_ws ws, ssh_l idx = 0) const { auto buf(str()); return (idx < length() ? (ssh_wcschr(buf + idx, ws) - buf) : -1); }
 		ssh_l find_rev(ssh_ws ws) const { auto buf(str()); return (ssh_l)(wcsrchr(buf, ws) - buf); }
 		String substr(ssh_l idx, ssh_l len = -1) const;
 		String left(ssh_l idx) const { return substr(0, idx); }
 		String right(ssh_l idx) const { return substr(length() - idx); }
-		ssh_cws str() const { return ( _str.len >= SSH_BUFFER_LENGTH ? _str.ptr : _str.str); }
+		ssh_cws str() const { return ( _str.len_buf > SSH_BUFFER_LENGTH ? _str.ptr : _str.str); }
 	protected:
 		struct STRING_BUFFER
 		{

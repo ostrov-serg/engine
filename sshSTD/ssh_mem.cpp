@@ -162,6 +162,7 @@ namespace ssh
 
 	void MemMgr::output()
 	{
+		ssh_log->add_msg(ssh_printf(L"\r\n------------------------------------------------------- Статистика ----------------------------------------------------------------\r\n"));
 		leaks();
 		ssh_log->add_msg(ssh_printf(L"\r\nЗа данный сеанс было выделено %i(~%s) байт памяти ..., освобождено %i(~%s) ...:%c, максимум - %i(~%s), блоков - %i\r\n",
 									total_alloc, ssh_num_volume(total_alloc), total_free, ssh_num_volume(total_free), (total_alloc != total_free ? L'(' : L')'),
@@ -190,6 +191,7 @@ namespace ssh
 			root = nd;
 		}
 		else nd->use = 0;
+		*(int*)(p + sz + sizeof(NodeMem)) = 0;
 		return (void*)(p + sizeof(NodeMem));
 	}
 

@@ -4,7 +4,6 @@ extern MultiByteToWideChar:near
 .data?
 
 result		dw 128 dup(?)
-end_ptr		dq ?
 
 .data
 
@@ -168,16 +167,17 @@ asm_ssh_ntow endp
 ; rdx - указатель на ptr
 ; ret - result of whar_t*
 asm_ssh_parse_spec proc public
+LOCAL @@end:QWORD
 		push rdi
 		push r12
 		mov r10, rcx
 		mov r11, rdx
 		mov rcx, [rdx]
 		mov rdx, 4
-		lea r8, end_ptr
+		lea r8, @@end
 		call asm_ssh_wton
 		movsd xmm0, qword ptr [rax]
-		mov r12, end_ptr
+		mov r12, @@end
 		mov ax, [r12]
 		mov rcx, 14
 		call f_spec
@@ -193,6 +193,7 @@ asm_ssh_parse_spec proc public
 		pop r12
 		pop rdi
 		ret
+OPTION EPILOGUE:NONE
 sp_ii:	cmp dword ptr [r12], 00340036h	; I64
 		jnz sp_err
 		mov ax, [r12 + 4]
@@ -236,11 +237,11 @@ sp_f:	mov rcx, 10
 		loopz @b
 		push rax
 		mov rcx, [r10]
-		lea r8, end_ptr
+		lea r8, @@end
 		call asm_ssh_ntow
 		mov r9, rax
 		mov rax, offset result + 130
-		mov rdi, [end_ptr]
+		mov rdi, @@end
 		sub rax, rdi
 		neg rax
 		shr rax, 1				; length number
@@ -303,6 +304,7 @@ f_spec:	mov rdi, offset _spec
 		mov rdx, [rax + rcx]
 		stc
 @@:		ret
+OPTION EPILOGUE:EPILOGUEDEF
 align 16
 _spec	db 'BbOoIiXxCcSsf', 0, 0, 0, 0, 0
 _spec_tbl dq 1, sp_b, 1, sp_b, 2, sp_o, 2, sp_o, 0, sp_ii, 0, sp_i, 3, sp_x, 3, sp_x, 0, sp_cc, 0, sp_c, 0, sp_ss, 0, sp_s, 4, sp_f, 0, 0

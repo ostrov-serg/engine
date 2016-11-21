@@ -119,9 +119,9 @@ namespace ssh
 		static ssh_cws rpl[] = {L"$DT", L"$fn", L"$ln", L"$fl", L"$ms", L"$tm", L"$dt", L"$us", L"$cm", L"$nm", L"$tp", nullptr};
 		Time tm(Time::current());
 		String tmp(ssh_printf(L"%s\1%s\1%i\1%s\1%s\1%s\1%s\1%s\1%s\1%s\1%s\1\1", //-V510
-							   tm.fmt(L"%ÄÀÒÀ"), fn, ln, fl, msg, tm.fmt(L"%ÂÐÅÌß"),
-							   tm.fmt(L"%Ä %Ì_) %Ã (%ÄÍ_)"), ssh_system_paths(SystemInfo::USER_NAME),
-							   ssh_system_paths(SystemInfo::COMP_NAME), ssh_system_paths(SystemInfo::PROG_NAME), m_types[tp]));
+							   tm.fmt(L"%ÄÀÒÀ").str(), fn, ln, fl, msg, tm.fmt(L"%ÂÐÅÌß").str(),
+							   tm.fmt(L"%Ä %Ì_) %Ã (%ÄÍ_)").str(), ssh_system_paths(SystemInfo::USER_NAME).str(),
+							   ssh_system_paths(SystemInfo::COMP_NAME).str(), ssh_system_paths(SystemInfo::PROG_NAME).str(), m_types[tp]));
 		tmp.replace(L'\1', L'\0');
 		return tpl.replace(rpl, tmp);
 	}

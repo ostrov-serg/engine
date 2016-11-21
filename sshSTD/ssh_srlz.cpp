@@ -8,6 +8,7 @@ namespace ssh
 
 	void ssh::Serialize::open(const Buffer & buf, bool is_xml)
 	{
+		SSH_TRACE;
 		_sc = get_scheme();
 		if(is_xml)
 		{
@@ -22,6 +23,7 @@ namespace ssh
 
 	void ssh::Serialize::save(const String & path, bool is_xml)
 	{
+		SSH_TRACE;
 		_sc = get_scheme();
 		if(is_xml)
 		{
@@ -55,7 +57,7 @@ namespace ssh
 			if(!(opt & (SC_NODE | SC_CV | SC_OBJ | SC_PTR)))
 			{
 				val = xml->get_attr<String>(h, sc->name, sc->def);
-				if(opt & SC_BASE64) val = ssh_base64(val).to<String>();
+				if(opt & SC_BASE64) val = ssh_base64(val).to<ssh_cws>();
 				_tmp = val.buffer();
 			}
 			for(ssh_u _idx = 0; _idx < count; _idx++)
@@ -68,7 +70,7 @@ namespace ssh
 						_sc = srlz->get_scheme();
 						srlz->readXml(h, xml, 0, _idx);
 						// если последний индекс
-						if((_idx + 1) < count) _sc = --sc; else _sc = ++sc;
+						if((_idx + 1) < count) _sc = sc; else _sc = ++sc;
 					}
 					else
 					{
@@ -81,15 +83,16 @@ namespace ssh
 					ssh_b* obj((ssh_b*)(this) + offs);
 					if(opt & SC_LIT)
 					{
-						memcpy(obj, (width == 2 ? _tmp : Buffer(ssh_convert(cp_ansi, _tmp)).to<ssh_ws*>()), (val.length() + 1) * width);
+						memset(obj, 0, width * count);
+						memcpy(obj, (width == 2 ? _tmp : Buffer(ssh_convert(cp_ansi, _tmp)).to<ssh_ws*>()), val.length() * width);
 						break;
 					}
 					if(count > 1)
 					{
 						ssh_ws* tmp(_tmp);
 						if((tmp = (ssh_ws*)ssh_wcschr(_tmp, L','))) *tmp = 0;
-						_val = tmp;
-						_tmp = ++tmp;
+						_val = _tmp;
+						_tmp = tmp + 1;
 					}
 					else _val = std::move(val);
 					if(opt & SC_FLT)
@@ -111,10 +114,10 @@ namespace ssh
 								ssh_u idx(sc->stk->find(_ws));
 								if(idx == -1) { ret = (ssh_u)String(sc->def); break; }
 								ret |= sc->stk->at(idx).value;
-								_ws = ++tmp;
+								_ws = tmp + 1;
 							}
 						}
-						else ret = (ssh_u)String(_val, (Radix)(opt & 3));
+						else ret = _val.to_num<ssh_u>(0, (Radix)(opt & 3));
 						memcpy(obj, &ret, width);
 					}
 				}
@@ -146,7 +149,7 @@ namespace ssh
 						Serialize* srlz((Serialize*)((ssh_b*)(this) + offs));
 						_sc = srlz->get_scheme();
 						srlz->writeXml(h, xml, 0);
-						if(count) _sc = sc - 1; else _sc = sc + 1;
+						if(count) _sc = sc; else _sc = ++sc;
 					}
 					else
 					{

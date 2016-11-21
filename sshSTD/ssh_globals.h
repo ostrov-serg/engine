@@ -100,7 +100,7 @@ namespace ssh
 		T tmp;
 		while(count && t)
 		{
-			if((t = wcsstr(_wcs, split))) *t = 0;
+			if((t = ssh_wcsstr(_wcs, split))) *t = 0;
 			if(stk)
 			{
 				ssh_u val(0);

@@ -223,9 +223,9 @@ namespace ssh
 	class SSH Tracer
 	{
 	public:
-		Tracer(ssh_cws _fn, ssh_cws _fl, int _ln) : fn(_fn)
+		Tracer(ssh_cws _fn) : fn(_fn)
 		{
-			if(ssh_trc.is_started()) ssh_trc.add(true, _fn, _fl, _ln);
+			if(ssh_trc.is_started()) ssh_trc.add(true, _fn);
 		}
 		~Tracer()
 		{

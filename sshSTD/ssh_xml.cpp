@@ -30,7 +30,7 @@ namespace ssh
 			// 2. загружаем, декодируем и строим дерево
 			_make(f.read(0));
 		}
-		catch(const Exception& e) { e.out_log(ssh_printf(L"ѕарсер XML <%s>!", path)); }
+		catch(const Exception& e) { e.out_log(ssh_printf(L"ѕарсер XML <%s>!", path.str())); }
 	}
 
 	String Xml::encode(const Buffer& buf)
@@ -45,7 +45,7 @@ namespace ssh
 		bool bom8(_0 == 0xef && _1 == 0xbb && _2 == 0xbf);
 		int width((bom16le || bom16be) + 1);
 		// определить границы заголовка xml
-		if((pos = (width == 1 ? (strstr(buf.to<ssh_ccs>(), "?>") - buf.to<ssh_ccs>()) : (wcsstr(buf.to<ssh_cws>(), L"?>") - buf.to<ssh_cws>()))) < 0) SSH_THROW(L"Ќе удалось найти заголовок XML!");
+		if((pos = (width == 1 ? (strstr(buf.to<ssh_ccs>(), "?>") - buf.to<ssh_ccs>()) : (ssh_wcsstr(buf.to<ssh_ws*>(), L"?>") - buf.to<ssh_cws>()))) < 0) SSH_THROW(L"Ќе удалось найти заголовок XML!");
 		pos += 2;
 		ssh_cs _cs(buf[pos * width]);
 		buf[pos * width] = 0;
@@ -103,7 +103,7 @@ namespace ssh
 			if(len_vec(1) == 2)
 			{
 				_x[vec[5]] = 0;
-				if(get_name(hp) != (ssh_cws)(_x + vec[4])) SSH_THROW(L"");
+				if(get_name(hp) != (ssh_cws)(_x + vec[4])) SSH_THROW(L"ќткрывающий и завершающий теги не совпадают!");
 				return;
 			}
 			_x[vec[5]] = 0;
@@ -113,7 +113,7 @@ namespace ssh
 			h = add_node(hp, _x + vec[4], (vec[8] ? _x + vec[8] : L""));
 			bool is_child(len_vec(3) == 1);
 			// есть атрибуты?
-			if(ret > 5)
+			if(ret >= 5)
 			{
 				ssh_l attr(5);
 				while(attr <= ret)

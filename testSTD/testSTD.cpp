@@ -115,23 +115,18 @@ void _func()
 	SSH_TRACE;
 	Xml xml;
 	tp t;
+	t.save(L"c:\\11.xml", true);
 	File f(L"c:\\1.xml", File::open_read);
 	t.open(f.read(0), true);
 }
 
 int main() noexcept
 {
-	ssh_ws _ws[] = L"Шаталов Сергей";
-	ssh_u r = ssh_wcslen(_ws);
-	ssh_log->init(Log::TypeOutput::file);
+	ssh_log->init();
 	SSH_TRACE;
-	String _1(L"123");
-	_1 += L" 456";
 	_func();
-	String _2(_1 + L"2345677");
-	ssh_u ret(123);
 	float _11 = 4.111f;
-	printf("%2.9f", _11);
-	_1 = ssh_printf(L"%%%z % I64i, %2.9f, %s, %S, %c, %C", 1L, ret, _11, _1.str(), "qwert", L'!', '@');
+	ssh_u ret = 1234567;
+	String _1 = ssh_printf(L"%%%z % I64i, %2.9f, %s, %S, %c, %C", 1L, ret, _11, _1.str(), "qwert", L'!', '@');
 	return 0;
 }

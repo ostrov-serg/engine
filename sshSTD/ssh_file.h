@@ -53,8 +53,8 @@ namespace ssh
 		// чтение в предоставленный буфер определенного размера
 		Buffer read(const Buffer& buf, ssh_u size) const
 		{
-			if(size > buf.size())  SSH_THROW(ssh_printf(L"Размер буфера %i слишком мал для чтения файла %s!", buf.size(), path));
-			if(_read(h, buf, (ssh_i)size) != size) SSH_THROW(ssh_printf(L"Ошибка чтения файла %s!", path));
+			if(size > buf.size())  SSH_THROW(ssh_printf(L"Размер буфера %i слишком мал для чтения файла %s!", buf.size(), path.str()));
+			if(_read(h, buf, (ssh_i)size) != size) SSH_THROW(ssh_printf(L"Ошибка чтения файла %s!", path.str()));
 			return buf;
 		}
 		// чтение определенного размера
@@ -83,7 +83,7 @@ namespace ssh
 		// запись области памяти
 		void write(void* ptr, ssh_u size) const
 		{
-			if(_write(h, ptr, (ssh_i)size) != size) SSH_THROW(ssh_printf(L"Ошибка записи файла %s!", path));
+			if(_write(h, ptr, (ssh_i)size) != size) SSH_THROW(ssh_printf(L"Ошибка записи файла %s!", path.str()));
 		}
 		// запись буфера определенного размера
 		void write(const Buffer& buf, ssh_u size = 0) const
@@ -106,7 +106,7 @@ namespace ssh
 		void get_time(Time* create, Time* access, Time* write) const
 		{
 			struct _stat64 stat;
-			if(_wstat64(path, &stat)) SSH_THROW(ssh_printf(L"Не удалось получить время файла %s!", path));
+			if(_wstat64(path, &stat)) SSH_THROW(ssh_printf(L"Не удалось получить время файла %s!", path.str()));
 			if(access) *access = stat.st_atime;
 			if(create) *create = stat.st_ctime;
 			if(write) *write = stat.st_mtime;

@@ -12,7 +12,7 @@ namespace ssh
 		// инициализировать трассировщик
 		void init(int _depth) { depth = _depth; }
 		// добавить новый элемент
-		void add(bool is, ssh_cws func, ssh_cws file = nullptr, int line = 0);
+		void add(bool is, ssh_cws func);
 		// вывести в лог
 		void output();
 		// запуск/остановка

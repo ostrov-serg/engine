@@ -25,7 +25,6 @@ namespace ssh
 			ssh_l t(strlen(ccs));
 			if(len < 0 || len >= t) len = t;
 			*this = ssh_convert(cp_ansi, Buffer((ssh_b*)ccs, len, false), 0);
-			update();
 		}
 	}
 
@@ -105,7 +104,7 @@ namespace ssh
 		ssh_l nDstOffs(0), nSrcOffs(0), nDiff, l;
 		ssh_ws* f(buffer()), *buf(f);
 		// расчитать новый размер
-		while((f = wcsstr(f, _old))) nCount++, f += nOld;
+		while((f = ssh_wcsstr(f, _old))) nCount++, f += nOld;
 		nDiff = nNew - nOld;
 		if(nNew > nOld) nDstOffs = nDiff; else nSrcOffs = -nDiff;
 		l = nDiff * nCount;
@@ -116,7 +115,7 @@ namespace ssh
 		buf = _buf;
 		_buf[nLen + l] = _ws;
 		// непосредственно замена
-		while((f = wcsstr(_buf, _old)))
+		while((f = ssh_wcsstr(_buf, _old)))
 		{
 			l = (nLen - ((f + nSrcOffs) - buf)) + 1;
 			memmove(f + nDstOffs, f + nSrcOffs, l * 2);
@@ -145,7 +144,7 @@ namespace ssh
 	{
 		ssh_l nWcs(ssh_wcslen(wcs)), nLen(length());
 		ssh_ws* f(buffer()), *_buf(f);
-		while((f = wcsstr(f, wcs))) { nLen -= nWcs; memcpy(f, f + nWcs, ((nLen - (f - _buf)) + 1) * 2); }
+		while((f = ssh_wcsstr(f, wcs))) { nLen -= nWcs; memcpy(f, f + nWcs, ((nLen - (f - _buf)) + 1) * 2); }
 		_str.len = (int)nLen;
 		update();
 		return *this;

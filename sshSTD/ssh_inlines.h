@@ -86,7 +86,7 @@ namespace ssh
 	inline ssh_ws* ssh_wcschr(ssh_cws _wcs, ssh_ws _ws)
 	{
 		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return (ssh_ws*)wcschr(_wcs, _ws);
-		return nullptr;
+		return (ssh_ws*)wcschr(_wcs, _ws);
 
 		/*
 		test rdx, rdx
@@ -107,13 +107,13 @@ namespace ssh
 	inline int ssh_wcscmp(ssh_cws _s1, ssh_cws _s2)
 	{
 		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return wcscmp(_s1, _s2);
-		return 0;
+		return wcscmp(_s1, _s2);
 	}
 
 	inline ssh_ws* ssh_wcsstr(ssh_ws* _s1, ssh_cws _s2)
 	{
 		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return wcsstr(_s1, _s2);
-		return 0;
+		return wcsstr(_s1, _s2);
 	}
 
 	// преобразовать значение в ближайшую степень двойки

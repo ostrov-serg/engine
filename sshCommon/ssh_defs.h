@@ -44,8 +44,7 @@ typedef wchar_t*						ssh_pws;
 #define ssh_trc							ssh_log->_tracer
 
 #define SSH_CLAMP(val, low, high)		(val < low ? low : (val > high ? high : val))
-#define SSH_FMT(tp, msg, ...)			String::fmt(msg, __VA_ARGS__)
-//#define SSH_FMT(tp, msg, ...)			ssh_printf<tp>(msg, __VA_ARGS__)
+#define __FUNCSIGW__					_CRT_WIDE(__FUNCSIG__)
 #define SSH_THROW(msg)					throw Exception(SSH_FFL, msg)
 #define SSH_FAULT(code, except)			ssh_mem->fault(code, SSH_FFL, except)
 
