@@ -2,7 +2,7 @@
 /*
 *	Автор:		Шаталов С. В.
 *	Создано:	Владикавказ, 19 июля 2015, 1:26
-*	Модификация:1 августа 2015 - убрал привязку к либе xinput1_3.dll
+*	Модификация:10 ноября 2016
 *	Описание:	Классы для операций ввода/вывода и геймпада
 */
 
@@ -152,16 +152,10 @@ namespace ssh
 		ssh_u hcapture = 0;
 	};
 
-	extern __xin_xenable	ssh_xin_enable;
-	extern __xin_xgstate	ssh_xin_gstate;
-	extern __xin_xsstate	ssh_xin_sstate;
-	extern __xin_xcaps		ssh_xin_caps;
-
-	#define MAX_CONTROLLERS	4
-
 	class SSH Gamepad final
 	{
 	public:
+		enum { MAX_CONTROLLERS	= 4 };
 		enum Side : int
 		{
 			left	= 1,

@@ -3,12 +3,6 @@
 
 namespace ssh
 {
-	// процедуры из библиотеки sshREGX
-
-	extern __regx_compile ssh_regx_compile;
-	extern __regx_exec ssh_regx_exec;
-	extern __regx_free ssh_regx_free;
-
 	class SSH regx
 	{
 	public:
@@ -40,7 +34,7 @@ namespace ssh
 		ssh_l match(ssh_cws subject, ssh_l idx, ssh_u idx_ptrn = -1)
 		{
 			subj = subject;
-			return (result = ssh_regx_exec((idx_ptrn == -1 ? re : patterns[idx_ptrn]), subject, wcslen(subject), idx, 0, vector, 256));
+			return (result = ssh_regx_exec((idx_ptrn == -1 ? re : patterns[idx_ptrn]), subject, ssh_wcslen(subject), idx, 0, vector, 256));
 		}
 		// найти совпадения с компиляцией паттерна
 		ssh_l match(ssh_cws subject, ssh_cws pattern, ssh_l idx)
@@ -60,7 +54,7 @@ namespace ssh
 		// заменить без компиляции паттерна
 		bool replace(String& subject, ssh_cws repl, ssh_l idx, ssh_u idx_ptrn)
 		{
-			ssh_l nWcs(wcslen(repl));
+			ssh_l nWcs(ssh_wcslen(repl));
 			while(match(subject, idx_ptrn, idx) > 0)
 			{
 				idx = vector[0];

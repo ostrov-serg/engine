@@ -6,7 +6,7 @@ namespace ssh
 {
 	Half::Half(float value)
 	{
-		if(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::HALF))
+		if(ssh_cpu_caps(CpuCaps::HALF))
 			val = _mm_cvtps_ph(_mm_set_ss(value), 0).m128i_u16[0];
 		else
 		{
@@ -29,7 +29,7 @@ namespace ssh
 
 	Half::operator float() const
 	{
-		if(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::HALF))
+		if(ssh_cpu_caps(CpuCaps::HALF))
 			return _mm_cvtph_ps(_mm_set1_epi16(val)).m128_f32[0];
 		Bits v;
 		v.ui = val;

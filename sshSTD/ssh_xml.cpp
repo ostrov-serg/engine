@@ -13,6 +13,7 @@ namespace ssh
 	{
 		try
 		{
+			SSH_TRACE;
 			_make(buf);
 		}
 		catch(const Exception& e) { e.out_log(L"Парсер XML!"); }
@@ -22,6 +23,7 @@ namespace ssh
 	{
 		try
 		{
+			SSH_TRACE;
 			close();
 			// 1. открываем файл
 			File f(path, File::open_read);
@@ -33,6 +35,7 @@ namespace ssh
 
 	String Xml::encode(const Buffer& buf)
 	{
+		SSH_TRACE;
 		String ret, charset, caption;
 		// проверить на BOM
 		ssh_b _0(buf[0]), _1(buf[1]), _2(buf[2]);
@@ -42,10 +45,7 @@ namespace ssh
 		bool bom8(_0 == 0xef && _1 == 0xbb && _2 == 0xbf);
 		int width((bom16le || bom16be) + 1);
 		// определить границы заголовка xml
-		if((pos = (width == 1 ? (strstr(buf.to<ssh_ccs>(), "?>") - buf.to<ssh_ccs>()) : (wcsstr(buf.to<ssh_cws>(), L"?>") - buf.to<ssh_cws>()))) < 0)
-		{
-			SSH_THROW(L"Не удалось найти заголовок XML!");
-		}
+		if((pos = (width == 1 ? (strstr(buf.to<ssh_ccs>(), "?>") - buf.to<ssh_ccs>()) : (wcsstr(buf.to<ssh_cws>(), L"?>") - buf.to<ssh_cws>()))) < 0) SSH_THROW(L"Не удалось найти заголовок XML!");
 		pos += 2;
 		ssh_cs _cs(buf[pos * width]);
 		buf[pos * width] = 0;
@@ -64,8 +64,10 @@ namespace ssh
 
 	void Xml::_make(const Buffer& buf)
 	{
+		SSH_TRACE;
 		tree.reset();
-		_xml = encode(buf).buffer();
+		String tmp(encode(buf));
+		_xml = tmp.buffer();
 		// формирование
 		make(root(), 0);
 	}
@@ -156,12 +158,13 @@ namespace ssh
 
 	void Xml::save(const String& path, ssh_cws code)
 	{
+		SSH_TRACE;
 		String txt(ssh_printf(L"<?xml version=\"1.0\" encoding=\"%s\" ?>\r\n", code));
 		txt += _save(tree.get_root(), 0);
 		File f(path, File::create_write);
 		ssh_u bom(0);
-		if(!wcscmp(code, L"utf-16le")) bom = 0xfeff;
-		else if(!wcscmp(code, L"utf-16be")) bom = 0xfffe;
+		if(!ssh_wcscmp(code, L"utf-16le")) bom = 0xfeff;
+		else if(!ssh_wcscmp(code, L"utf-16be")) bom = 0xfffe;
 		if(bom) f.write(&bom, 2);
 		f.write(txt, code);
 	}

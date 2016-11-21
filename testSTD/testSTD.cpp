@@ -71,10 +71,6 @@ public:
 	ssh_cs _ccs = '?';
 	stk _stk[2];
 	ttt _t[3];
-	void make()
-	{
-		Serialize::save(L"c:\\1.xml", true);
-	}
 };
 
 class bs1 : public Base
@@ -117,28 +113,25 @@ using namespace std;
 void _func()
 {
 	SSH_TRACE;
+	Xml xml;
+	tp t;
+	File f(L"c:\\1.xml", File::open_read);
+	t.open(f.read(0), true);
 }
 
 int main() noexcept
 {
-	ssh_ws _ws[32];
-	_ws[10] = 0;
-	ssh_ws ws = L'1';
-	_wcsset(_ws, ws);
-
-	ssh_log->init(Log::TypeOutput::debug);
+	ssh_ws _ws[] = L"Шаталов Сергей";
+	ssh_u r = ssh_wcslen(_ws);
+	ssh_log->init(Log::TypeOutput::file);
 	SSH_TRACE;
 	String _1(L"123");
 	_1 += L" 456";
 	_func();
 	String _2(_1 + L"2345677");
-	ssh_ws* _ws1 = _1.str();
-	ssh_ws* _ws2 = _2.str();
 	ssh_u ret(123);
-	_1 = ssh_printf(L"%%%z % I64i, %.9f, %s, %S, %c, %C", 1L, ret, 3.0, _1.str(), "qwert", L'!', '@');
-	return 0;
-	Xml xml;
-	tp t;
-	t.make();
+	float _11 = 4.111f;
+	printf("%2.9f", _11);
+	_1 = ssh_printf(L"%%%z % I64i, %2.9f, %s, %S, %c, %C", 1L, ret, _11, _1.str(), "qwert", L'!', '@');
 	return 0;
 }

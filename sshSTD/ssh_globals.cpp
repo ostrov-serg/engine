@@ -105,25 +105,50 @@ namespace ssh
 		return ret;
 	}
 
-	Buffer SSH ssh_convert(ssh_cws charset, ssh_cws str)
+	static ssh_i get_acp(ssh_cws charset)
 	{
-		ssh_cnv h;
-		ssh_u in_c(wcslen(str) * 2);
-		h = ssh_cnv_open(charset, cp_utf16);
-		Buffer out(ssh_cnv_calc(h, (ssh_b*)str, in_c));
-		ssh_cnv_make(h, (ssh_b*)str, in_c, out);
-		ssh_cnv_close(h);
+		if(!ssh_wcscmp(charset, cp_ansi)) return CP_ACP;
+		else if(!ssh_wcscmp(charset, cp_utf8)) return CP_UTF8;
+		SSH_LOG(Log::info, ssh_printf(L"Неизвестная кодировка %s", charset));
+		return CP_THREAD_ACP;
+	}
+
+	Buffer SSH ssh_convert(ssh_cws charset, const String& str)
+	{
+		Buffer out;
+		if(ssh_cnv_open)
+		{
+			ssh_u in_c(str.length() * 2);
+			ssh_b* in((ssh_b*)str.str());
+			ssh_cnv h(ssh_cnv_open(charset, cp_utf16));
+			out = ssh_cnv_calc(h, in, in_c);
+			ssh_cnv_make(h, in, in_c, out);
+			ssh_cnv_close(h);
+		}
+		else
+		{
+			out = Buffer(str.length());
+			WideCharToMultiByte(get_acp(charset), 0, str.str(), (int)out.size(), out.to<ssh_cs*>(), (int)out.size(), nullptr, nullptr);
+		}
 		return out;
 	}
 
 	String SSH ssh_convert(ssh_cws charset, const Buffer& in, ssh_u offs)
 	{
-		ssh_cnv h;
-		ssh_u in_c(in.size() - offs), out_c(0);
-		h = ssh_cnv_open(cp_utf16, charset);
-		Buffer out(ssh_cnv_calc(h, (ssh_b*)in + offs, in_c));
-		ssh_cnv_make(h, (ssh_b*)in + offs, in_c, out);
-		ssh_cnv_close(h);
+		ssh_u in_c(in.size() - offs);
+		Buffer out;
+		if(ssh_cnv_open)
+		{
+			ssh_cnv h(ssh_cnv_open(cp_utf16, charset));
+			out = ssh_cnv_calc(h, (ssh_b*)in + offs, in_c);
+			ssh_cnv_make(h, (ssh_b*)in + offs, in_c, out);
+			ssh_cnv_close(h);
+		}
+		else
+		{
+			out = Buffer(in_c * 2);
+			MultiByteToWideChar(get_acp(charset), 0, in.to<ssh_cs*>() + offs, (int)in_c, out.to<ssh_ws*>(), (int)in_c);
+		}
 		return String(out.to<ssh_cws>(), out.size() / 2);
 	}
 
@@ -197,7 +222,7 @@ namespace ssh
 		ssh_cws txt(_text);
 		while(ln-- > 0)
 		{
-			if(!(_text = wcschr(_text, L'\n'))) return text.length();
+			if(!(_text = ssh_wcschr(_text, L'\n'))) return text.length();
 			_text++;
 		}
 		return (_text - txt);
@@ -210,22 +235,22 @@ namespace ssh
 		while(!ssh_is_null(_text))
 		{
 			count++;
-			if(!(_text = wcschr(_text, L'\n'))) break;
+			if(!(_text = ssh_wcschr(_text, L'\n'))) break;
 			_text++;
 		}
 		return count;
 	}
 
-	ssh_u SSH ssh_split(ssh_ws split, ssh_cws src, ssh_u* vec, ssh_u count)
+	ssh_u SSH ssh_split(ssh_ws split, const String& src, ssh_u* vec, ssh_u count)
 	{
 		ssh_u i(0);
-		if(split && src && vec && count)
+		if(split && vec && count)
 		{
-			ssh_ws* _src((ssh_ws*)src), *esrc(_src + wcslen(src)), *_wcs;
+			ssh_ws* _src(src.buffer()), *_src1(_src), *esrc(_src + src.length()), *_wcs;
 			while(i < count && _src < esrc)
 			{
-				vec[i * 2 + 0] = (int)(_src - src);
-				if(!(_wcs = wcschr(_src, split))) _wcs = esrc;
+				vec[i * 2 + 0] = (int)(_src - _src1);
+				if(!(_wcs = ssh_wcschr(_src, split))) _wcs = esrc;
 				vec[i * 2 + 1] = (int)(_wcs - _src);
 				_src = _wcs + 1;
 				i++;
@@ -254,11 +279,11 @@ namespace ssh
 		return _guid;
 	}
 
-	void SSH ssh_make_path(ssh_cws path)
+	void SSH ssh_make_path(const String& path)
 	{
-		ssh_ws* _path((ssh_ws*)path);
+		ssh_ws* _path(path.buffer());
 		String dir(ssh_system_paths(SystemInfo::WORK_FOLDER));
-		while((_path = wcschr(_path, L'\\')))
+		while((_path = ssh_wcschr(_path, L'\\')))
 		{
 			*_path = 0;
 			if(!SetCurrentDirectory(path)) CreateDirectory(path, nullptr);
@@ -296,7 +321,7 @@ namespace ssh
 		ssh_cws err(errLexs ? errLexs : wrong_lexem);
 		for(ssh_u i = 0; i < l; i++)
 		{
-			if(wcschr(err, str[i])) return true;
+			if(ssh_wcschr(err, str[i])) return true;
 		}
 		return false;
 	}
@@ -372,7 +397,7 @@ namespace ssh
 		return buf;
 	}
 
-	String SSH ssh_translate(ssh_cws text, bool to_eng)
+	String SSH ssh_translate(String text, bool to_eng)
 	{
 		static ssh_cws rus1[] = {L"Ч", L"Ш", L"Э", L"А", L"Б", L"В", L"Г", L"Д", L"Е", L"Ё", L"Ж", L"З", L"И", L"Й", L"К", L"Л", L"М", L"Н", L"О", L"П", L"Р", L"С", L"Т", L"У", L"Ф", L"Х", L"Ц", L"Щ", L"Ю", L"Я", L"Ь", L"Ъ", L"Ы",
 			L"ч", L"ш", L"э", L"а", L"б", L"в", L"г", L"д", L"е", L"ё", L"ж", L"з", L"и", L"й", L"к", L"л", L"м", L"н", L"о", L"п", L"р", L"с", L"т", L"у", L"ф", L"х", L"ц", L"щ", L"ю", L"я", L"ь", L"ъ", L"ы", nullptr};
@@ -382,12 +407,11 @@ namespace ssh
 			L"ch", L"sh", L"je", L"yu", L"ya", L"a", L"b", L"v", L"g", L"d", L"e", L"jo", L"zh", L"z", L"i", L"j", L"k", L"l", L"m", L"n", L"o", L"p", L"r", L"s", L"t", L"u", L"f", L"h", L"c", L"w", L"q", L"x", L"y", nullptr};
 		static ssh_cws rus2 = L"Ч\0Ш\0Э\0Ю\0Я\0А\0Б\0В\0Г\0Д\0Е\0Ё\0Ж\0З\0И\0Й\0К\0Л\0М\0Н\0О\0П\0Р\0С\0Т\0У\0Ф\0Х\0Ц\0Щ\0Ь\0Ъ\0Ы\0ч\0ш\0э\0ю\0я\0а\0б\0в\0г\0д\0е\0ё\0ж\0з\0и\0й\0к\0л\0м\0н\0о\0п\0р\0с\0т\0у\0ф\0х\0ц\0щ\0ь\0ъ\0ы\0\0";
 
-		String txt(text);
-		if(to_eng) return txt.replace(rus1, eng1);
-		return txt.replace(eng2, rus2);
+		if(to_eng) return text.replace(rus1, eng1);
+		return text.replace(eng2, rus2);
 	}
 
-	ssh_u SSH ssh_system_values(SystemInfo type, CpuCaps value)
+	ssh_u SSH ssh_system_values(SystemInfo type)
 	{
 		// платформа
 		static WindowsTypes platform(WindowsTypes::_UNK);
@@ -397,8 +421,6 @@ namespace ssh
 		static MEMORYSTATUS memStatus;
 		// скорость процессора
 		static ssh_u cpuSpeed(0);
-		// флаги процессора
-		static ssh_u cpuCaps;
 
 		if(!cpuSpeed)
 		{
@@ -434,12 +456,10 @@ namespace ssh
 			Sleep(100);
 			ssh_u endTime(__rdtsc());
 			cpuSpeed = (endTime - startTime) / 100;
-			cpuCaps = asm_ssh_capability();
 		}
 
 		switch(type)
 		{
-			case SystemInfo::CPU_CAPS: return _bittest64((const ssh_l*)&cpuCaps, (ssh_u)value);
 			case SystemInfo::PLATFORM: return (ssh_u)platform;
 			case SystemInfo::TOTAL_MEMORY: return memStatus.dwAvailPhys + memStatus.dwAvailPageFile;
 			case SystemInfo::PHYSICAL_MEMORY: return memStatus.dwTotalPhys;
@@ -657,7 +677,7 @@ namespace ssh
 				{
 					folder = ssh_slash_path(folder);
 					result--;
-					while(result < count && *(_files += (wcslen(_files) + 1))) arr[result++] = folder + (ssh_cws)_files;
+					while(result < count && *(_files += (ssh_wcslen(_files) + 1))) arr[result++] = folder + (ssh_cws)_files;
 				}
 			}
 		}
@@ -752,8 +772,6 @@ namespace ssh
 	__ssh_rand				SSH ssh_rand(ssh_SSE_rand);
 	__ssh_hash				SSH ssh_hash(ssh_SSE_hash);
 	
-	__asm_ssh_to_base64		SSH asm_ssh_to_base64(nullptr);
-	__asm_ssh_from_base64	SSH asm_ssh_from_base64(nullptr);
 	__asm_ssh_parse_xml		SSH asm_ssh_parse_xml(nullptr);
 	__asm_ssh_parse_spec	SSH asm_ssh_parse_spec(nullptr);
 	__asm_ssh_wcslen		SSH asm_ssh_wcslen(nullptr);
@@ -765,13 +783,12 @@ namespace ssh
 
 	static void ssh_init_libs()
 	{
-		ssh_cws _dll(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::AVX) ? L"sshAVX.dll" : L"sshSSE.dll");
+//		cpuCaps = (CpuCaps)asm_ssh_capability();
+		ssh_cws _dll(ssh_cpu_caps(CpuCaps::AVX) ? L"sshAVX.dll" : L"sshSSE.dll");
 		// инициализировать процессорно-зависимые функции
-		ssh_rand = (__ssh_rand)(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::RDRAND) ? ssh_AVX_rand : ssh_SSE_rand);
-		ssh_hash = (__ssh_hash)(ssh_system_values(SystemInfo::CPU_CAPS, CpuCaps::SSE4_2) ? ssh_AVX_hash : ssh_SSE_hash);
+		ssh_rand = (__ssh_rand)(ssh_cpu_caps(CpuCaps::RDRAND) ? ssh_AVX_rand : ssh_SSE_rand);
+		ssh_hash = (__ssh_hash)(ssh_cpu_caps(CpuCaps::SSE4_2) ? ssh_AVX_hash : ssh_SSE_hash);
 
-		asm_ssh_to_base64 = (__asm_ssh_to_base64)ssh_dll_proc(_dll, "asm_ssh_to_base64", 0);
-		asm_ssh_from_base64 = (__asm_ssh_from_base64)ssh_dll_proc(_dll, "asm_ssh_from_base64", 0);
 		asm_ssh_parse_xml = (__asm_ssh_parse_xml)ssh_dll_proc(_dll, "asm_ssh_parse_xml", 0);
 		asm_ssh_parse_spec = (__asm_ssh_parse_spec)ssh_dll_proc(_dll, "asm_ssh_parse_spec", 0);
 		asm_ssh_wcslen = (__asm_ssh_wcslen)ssh_dll_proc(_dll, "asm_ssh_wcslen", 0);
@@ -782,7 +799,7 @@ namespace ssh
 		asm_ssh_ntow = (__asm_ssh_ntow)ssh_dll_proc(_dll, "asm_ssh_ntow", 0);;
 		
 		// инициализировать функции стандартных библиотек - sshREGX, sshCNV
-		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");
+//		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");
 		ssh_cnv_close = (__cnv_close)ssh_dll_proc(L"sshCNV.dll", "cnv_close");
 		ssh_cnv_make = (__cnv_make)ssh_dll_proc(L"sshCNV.dll", "cnv_make");
 		ssh_cnv_calc = (__cnv_calc)ssh_dll_proc(L"sshCNV.dll", "cnv_calc");

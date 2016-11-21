@@ -90,6 +90,9 @@
     <ClInclude Include="ssh_jpg.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="ssh_inlines.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -142,5 +145,10 @@
     <MASM Include="asm_ssh_common.asm">
       <Filter>Файлы исходного кода</Filter>
     </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ssh_def.def">
+      <Filter>Файлы исходного кода</Filter>
+    </None>
   </ItemGroup>
 </Project>

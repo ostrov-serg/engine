@@ -162,7 +162,7 @@ namespace ssh
 			// путь
 			String path = ssh_system_paths(SystemInfo::PROG_FOLDER) + ssh_system_paths(SystemInfo::PROG_NAME) + L".log";
 			// шаблон
-			String templ = L"[$tp] $DT-$tm\t$fn  -  ($fl: $ln) - <$ms>\r\n";;
+			String templ = L"[$tp] $DT-$tm\t$fn  -  ($fl: $ln)\r\n$ms\r\n";;
 			// флаги
 			int flags = File::create_write;
 		protected:
@@ -193,7 +193,7 @@ namespace ssh
 		};
 		static Log* instance() { static Log log; return &log; }
 		// добавить шаблонное сообщение
-		void add(TypeMessage type, ssh_cws func, ssh_cws file, int line, ssh_cws msg);
+		void add(TypeMessage type, ssh_cws func, ssh_cws file, int line, ssh_cws msg, bool is_repl = true);
 		// добавить простое сообщение
 		void add_msg(ssh_cws msg) { common.message(apply_template(common.trace, msg)); }
 		// инициализация

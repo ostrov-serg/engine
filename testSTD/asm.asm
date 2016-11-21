@@ -1,5 +1,4 @@
 
-extern wcslen:near
 .data
 
 .code

@@ -96,14 +96,17 @@ namespace ssh
 		}
 	}
 
-	void Log::add(TypeMessage type, ssh_cws fn, ssh_cws fl, int ln, ssh_cws msg)
+	void Log::add(TypeMessage type, ssh_cws fn, ssh_cws fl, int ln, ssh_cws msg, bool is_repl)
 	{
 		if(ssh_trc.is_started())
 		{
 			ssh_trc.stop();
 			String msgArgs(msg);
-			msgArgs.replace(L'\r', L'.');
-			msgArgs.replace(L'\n', L'.');
+			if(is_repl)
+			{
+				msgArgs.replace(L'\r', L'.');
+				msgArgs.replace(L'\n', L'.');
+			}
 			// формируем сообщение на основании шаблона
 			common.message(msgArgs, type, fn, fl, ln);
 			ssh_trc.start();
@@ -112,7 +115,7 @@ namespace ssh
 
 	String Log::apply_template(String tpl, ssh_cws msg, ssh_cws fn, ssh_cws fl, int ln, int tp)
 	{
-		static ssh_cws m_types[] = {L"INFO", L"ASSERT", L"EXCEPTION", L"TRACE"};
+		static ssh_cws m_types[] = {L"NONE", L"INFO", L"ASSERT", L"EXCEPTION", L"TRACE"};
 		static ssh_cws rpl[] = {L"$DT", L"$fn", L"$ln", L"$fl", L"$ms", L"$tm", L"$dt", L"$us", L"$cm", L"$nm", L"$tp", nullptr};
 		Time tm(Time::current());
 		String tmp(ssh_printf(L"%s\1%s\1%i\1%s\1%s\1%s\1%s\1%s\1%s\1%s\1%s\1\1", //-V510

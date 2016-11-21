@@ -18,7 +18,7 @@ namespace ssh
 		Buffer(ssh_u count) : data(new ssh_b[count]), sz(count), is_owner(true) { }
 //		Buffer(const Range<int>& wh, int bpp) : sz(wh.w * wh.h * bpp), data(new ssh_b[sz]), is_owner(true) { }
 		// создать из существующего неопределённого буфера
-		Buffer(void* p, ssh_u count, bool is_own = true) : data((ssh_b*)p), sz(count), is_owner(is_own) {}
+		Buffer(ssh_b* p, ssh_u count, bool is_own = true) : data(p), sz(count), is_owner(is_own) {}
 		// деструктор
 		~Buffer() { release(); }
 		// оператор присваивание

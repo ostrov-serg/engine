@@ -110,11 +110,13 @@ namespace ssh
 			case ExceptTypes::NEW_OPERATOR_ERROR: caption = L"Не удалось выделить память оператором new. "; break;
 			case ExceptTypes::INVALID_PARAMETER_ERROR: caption = L"Недопустимый параметр CRT функции, при выполнении операции "; caption += msg_ex; caption += L". "; break;
 		}
-		String msg(ssh_printf(	L"\r\nКонтекст на момент возбуждения исключения: \r\n\r\nадрес: %016I64X flags: %08X\r\n"
-								L"rax: %016I64X rcx: %016I64X rdx: %016I64X rbx: %016I64X rbp: %016I64X rsp: %016I64X rsi: %016I64X rdi: %016I64X\r\n"
-								L"r8: %016I64X r9: %016I64X r10: %016I64X r11: %016I64X r12: %016I64X r13: %016I64X r14: %016I64X r15: %016I64X\r\n"
-								L"xmm0: %016I64X%016I64X xmm1: %016I64X%016I64X xmm2: %016I64X%016I64X xmm3: %016I64X%016I64X xmm4: %016I64X%016I64X xmm5: %016I64X%016I64X xmm6: %016I64X%016I64X xmm7: %016I64X%016I64X\r\n"
-								L"xmm8: %016I64X%016I64X xmm9: %016I64X%016I64X xmm10: %016I64X%016I64X xmm11: %016I64X%016I64X xmm12: %016I64X%016I64X xmm13: %016I64X%016I64X xmm14: %016I64X%016I64X xmm15: %016I64X%016I64X",
+		String msg(ssh_printf(	L"Контекст на момент возбуждения исключения: \r\nrip: %016I64X\tflags: %08B\r\n"
+								L"rax: %016I64X\trcx: %016I64X\trdx: %016I64X\trbx: %016I64X\trbp: %016I64X\trsp: %016I64X\trsi: %016I64X\trdi: %016I64X\r\n"
+								L"r8:  %016I64X\tr9:  %016I64X\tr10: %016I64X\tr11: %016I64X\tr12: %016I64X\tr13: %016I64X\tr14: %016I64X\tr15: %016I64X\r\n"
+								L"xmm0:  %016I64X%016I64X\txmm1:  %016I64X%016I64X\txmm2:  %016I64X%016I64X\txmm3:  %016I64X%016I64X\r\n"
+								L"xmm4:  %016I64X%016I64X\txmm5:  %016I64X%016I64X\txmm6:  %016I64X%016I64X\txmm7:  %016I64X%016I64X\r\n"
+								L"xmm8:  %016I64X%016I64X\txmm9:  %016I64X%016I64X\txmm10: %016I64X%016I64X\txmm11: %016I64X%016I64X\r\n"
+								L"xmm12: %016I64X%016I64X\txmm13: %016I64X%016I64X\txmm14: %016I64X%016I64X\txmm15: %016I64X%016I64X",
 				exc->ExceptionRecord->ExceptionAddress, exc->ContextRecord->EFlags,
 				exc->ContextRecord->Rax, exc->ContextRecord->Rcx, exc->ContextRecord->Rdx, exc->ContextRecord->Rbx,
 				exc->ContextRecord->Rbp, exc->ContextRecord->Rsp, exc->ContextRecord->Rsi, exc->ContextRecord->Rdi,
@@ -136,7 +138,7 @@ namespace ssh
 				exc->ContextRecord->Xmm13.Low, exc->ContextRecord->Xmm13.High,
 				exc->ContextRecord->Xmm14.Low, exc->ContextRecord->Xmm14.High,
 				exc->ContextRecord->Xmm15.Low, exc->ContextRecord->Xmm15.High));
-		ssh_log->add(Log::exception, fn, fl, ln, caption + msg);
+		ssh_log->add(Log::exception, fn, fl, ln, caption + msg, false);
 		return true;
 	}
 

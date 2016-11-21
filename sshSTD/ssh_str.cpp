@@ -12,7 +12,7 @@ namespace ssh
 		init();
 		if(cws)
 		{
-			ssh_l t(wcslen(cws));
+			ssh_l t(ssh_wcslen(cws));
 			make(cws, (len < 0 || len >= t) ? t : len);
 		}
 	}
@@ -24,7 +24,7 @@ namespace ssh
 		{
 			ssh_l t(strlen(ccs));
 			if(len < 0 || len >= t) len = t;
-			MultiByteToWideChar(CP_ACP, 0, ccs, (int)len, alloc(len, false), (int)len);
+			*this = ssh_convert(cp_ansi, Buffer((ssh_b*)ccs, len, false), 0);
 			update();
 		}
 	}
@@ -56,7 +56,7 @@ namespace ssh
 	{
 		if(sz)
 		{
-			ssh_ws* _new(str());
+			ssh_ws* _new(buffer());
 			ssh_l nsz(sz + 1);
 			if(nsz > _str.len_buf)
 			{
@@ -101,9 +101,9 @@ namespace ssh
 
 	void String::_replace(ssh_cws _old, ssh_cws _new)
 	{
-		ssh_l nOld(wcslen(_old)), nNew(wcslen(_new)), nLen(length()), nCount(0);
+		ssh_l nOld(ssh_wcslen(_old)), nNew(ssh_wcslen(_new)), nLen(length()), nCount(0);
 		ssh_l nDstOffs(0), nSrcOffs(0), nDiff, l;
-		ssh_ws* f(str()), *buf(f);
+		ssh_ws* f(buffer()), *buf(f);
 		// расчитать новый размер
 		while((f = wcsstr(f, _old))) nCount++, f += nOld;
 		nDiff = nNew - nOld;
@@ -135,7 +135,7 @@ namespace ssh
 
 	const String& String::replace(ssh_ws _old, ssh_ws _new)
 	{
-		ssh_ws* ptr(str());
+		ssh_ws* ptr(buffer());
 		while(*ptr) { if(*ptr == _old) *ptr = _new; ptr++; }
 		update();
 		return *this;
@@ -143,8 +143,8 @@ namespace ssh
 
 	const String& String::remove(ssh_cws wcs)
 	{
-		ssh_l nWcs(wcslen(wcs)), nLen(length());
-		ssh_ws* f(str()), *_buf(f);
+		ssh_l nWcs(ssh_wcslen(wcs)), nLen(length());
+		ssh_ws* f(buffer()), *_buf(f);
 		while((f = wcsstr(f, wcs))) { nLen -= nWcs; memcpy(f, f + nWcs, ((nLen - (f - _buf)) + 1) * 2); }
 		_str.len = (int)nLen;
 		update();
@@ -153,7 +153,7 @@ namespace ssh
 
 	const String& String::remove(ssh_ws ws)
 	{
-		ssh_ws* ptr(str()), *rem(ptr);
+		ssh_ws* ptr(buffer()), *rem(ptr);
 		while(*ptr) { if(*ptr != ws) *rem++ = *ptr; ptr++; }
 		*rem = 0;
 		_str.len -= (int)(ptr - rem);
@@ -169,7 +169,7 @@ namespace ssh
 			if(len < 0) len = l;
 			if((idx + len) > l) len = (l - idx);
 			ssh_l ll(idx + len);
-			ssh_ws* buf(str());
+			ssh_ws* buf(buffer());
 			memcpy(buf + idx, buf + ll, ((l - ll) + 1) * 2);
 			_str.len -= (int)len;
 			update();
@@ -179,10 +179,10 @@ namespace ssh
 
 	const String& String::insert(ssh_l idx, ssh_cws wcs)
 	{
-		ssh_l len(length()), nWcs(wcslen(wcs));
+		ssh_l len(length()), nWcs(ssh_wcslen(wcs));
 		if(idx >= 0 && idx < len && alloc(len + nWcs, true))
 		{
-			ssh_ws* _buf(str());
+			ssh_ws* _buf(buffer());
 			memmove(_buf + idx + nWcs, _buf + idx, ((len - idx) + 1) * 2);
 			memcpy(_buf + idx, wcs, nWcs * 2);
 			update();
@@ -195,7 +195,7 @@ namespace ssh
 		ssh_l len(length());
 		if(idx >= 0 && idx < len && alloc(len + 1, true))
 		{
-			ssh_ws* _buf(str());
+			ssh_ws* _buf(buffer());
 			memmove(_buf + idx + 1, _buf + idx, ((len - idx) + 1) * 2);
 			_buf[idx] = ws;
 			update();
@@ -206,7 +206,7 @@ namespace ssh
 	const String& String::replace(ssh_cws* _old, ssh_cws _new)
 	{
 		ssh_l idx(0);
-		while(_old[idx]) { _replace(_old[idx++], _new); _new += (wcslen(_new) + 1); }
+		while(_old[idx]) { _replace(_old[idx++], _new); _new += (ssh_wcslen(_new) + 1); }
 		update();
 		return *this;
 	}
@@ -218,7 +218,7 @@ namespace ssh
 		int len(::SizeofResource(hInst, h) / sizeof(ssh_ws));
 		if(alloc(len, false))
 		{
-			::LoadString(hInst, (UINT)id, str(), len);
+			::LoadString(hInst, (UINT)id, buffer(), len);
 			update();
 		}
 		return *this;
@@ -235,8 +235,8 @@ namespace ssh
 
 	const String& String::trim_left(ssh_cws wcs)
 	{
-		ssh_l len(length()), ln(wcslen(wcs));
-		ssh_ws* _ws(str()), *_buf(_ws);
+		ssh_l len(length()), ln(ssh_wcslen(wcs));
+		ssh_ws* _ws(buffer()), *_buf(_ws);
 		while(is_chars(_ws, wcs, ln)) { len--; _ws++; }
 		memcpy(_buf, _ws, (len + 1) * 2);
 		_str.len = (int)len;
@@ -246,10 +246,10 @@ namespace ssh
 
 	const String& String::trim_right(ssh_cws wcs)
 	{
-		ssh_l len(length()), ln(wcslen(wcs));
-		ssh_ws* _ws(str() + len - 1);
+		ssh_l len(length()), ln(ssh_wcslen(wcs));
+		ssh_ws* _ws(buffer() + len - 1);
 		while(is_chars(_ws, wcs, ln)) { len--; _ws--; }
-		str()[len] = 0;
+		buffer()[len] = 0;
 		_str.len = (int)len;
 		update();
 		return *this;

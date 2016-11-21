@@ -51,11 +51,12 @@ namespace ssh
 			ssh_u count(sc->count);
 			ssh_u width(sc->width / count);
 			String val, _val;
-			ssh_l pos(0);
-			if(!(opt & SC_NODE | SC_CV | SC_OBJ | SC_PTR))
+			ssh_ws* _tmp;
+			if(!(opt & (SC_NODE | SC_CV | SC_OBJ | SC_PTR)))
 			{
-				val = (xml->get_attr<String>(h, sc->name, sc->def));
+				val = xml->get_attr<String>(h, sc->name, sc->def);
 				if(opt & SC_BASE64) val = ssh_base64(val).to<String>();
+				_tmp = val.buffer();
 			}
 			for(ssh_u _idx = 0; _idx < count; _idx++)
 			{
@@ -78,12 +79,17 @@ namespace ssh
 				else if(!(opt & (SC_CV | SC_PTR)))
 				{
 					ssh_b* obj((ssh_b*)(this) + offs);
+					if(opt & SC_LIT)
+					{
+						memcpy(obj, (width == 2 ? _tmp : Buffer(ssh_convert(cp_ansi, _tmp)).to<ssh_ws*>()), (val.length() + 1) * width);
+						break;
+					}
 					if(count > 1)
 					{
-						ssh_l npos(val.find(L',', pos));
-						if(npos == -1) npos = val.length();
-						_val = val.substr(pos, npos - pos);
-						pos = ++npos;
+						ssh_ws* tmp(_tmp);
+						if((tmp = (ssh_ws*)ssh_wcschr(_tmp, L','))) *tmp = 0;
+						_val = tmp;
+						_tmp = ++tmp;
 					}
 					else _val = std::move(val);
 					if(opt & SC_FLT)
@@ -93,25 +99,15 @@ namespace ssh
 					}
 					else if(opt & SC_BOOL) *(bool*)obj = (bool)_val;
 					else if(opt & SC_STR) *(String*)obj = _val;
-					else if(opt & SC_LIT)
-					{
-						if(width == 2) *(ssh_ws*)obj = _val.at(_idx);
-						else if(width == 1)
-						{
-							static Buffer buf;
-							if(!_idx) buf = ssh_convert(cp_ansi, val);
-							*(ssh_cs*)obj = buf.to<ssh_cs*>()[_idx];
-						}
-					}
 					else
 					{
 						ssh_u ret(0);
 						if(sc->stk)
 						{
-							ssh_ws* tmp(_val), *_ws(_val);
+							ssh_ws* tmp(_val.buffer()), *_ws(tmp);
 							while(tmp)
 							{
-								if((tmp = (ssh_ws*)wcschr(_ws, L'|'))) *tmp = 0;
+								if((tmp = (ssh_ws*)ssh_wcschr(_ws, L'|'))) *tmp = 0;
 								ssh_u idx(sc->stk->find(_ws));
 								if(idx == -1) { ret = (ssh_u)String(sc->def); break; }
 								ret |= sc->stk->at(idx).value;
@@ -249,7 +245,7 @@ namespace ssh
 					{
 						case _hash_wcs:
 						case _hash_ccs: break;
-						case _hash_string: *(String*)obj = (ssh_ws*)_buf; _buf += (wcslen((ssh_ws*)_buf) * 2 + 2); break;
+						case _hash_string: *(String*)obj = (ssh_ws*)_buf; _buf += (ssh_wcslen((ssh_ws*)_buf) * 2 + 2); break;
 						default: memcpy(obj, _buf, sc->width); _buf += sc->width; break;
 					}
 				}
