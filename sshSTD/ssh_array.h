@@ -9,65 +9,66 @@ namespace ssh
 		// конструктор по умолчанию
 		Array() { }
 		// инициализирующий конструктор
-		Array(ssh_u _count, ssh_u _grow) : grow(_grow) { alloc(_count); }
+		Array(ssh_u _count) { alloc(_count); }
 		// конструктор из списка инициализации
 		Array(const std::initializer_list<T>& _list) { insert(0, _list.begin(), _list.size()); }
 		// конструктор копии
 		Array(const Array<T>& src) { *this = src; }
 		// конструктор переноса
-		Array(Array<T>&& src) { data = src.data; count = src.count; max_count = src.max_count; grow = src.grow; src.init(); }
+		Array(Array<T>&& src) { data = src.data; count = src.count; max_count = src.max_count; src.init(); }
 		// деструктор
 		~Array() { reset(); }
 		// сброс
-		void reset() { remove(0, count); SSH_DEL(data); init(); }
+		void reset() noexcept { remove(0, count); delete data; init(); }
 		// установить размер
-		void resize(ssh_u _count) { reset(); alloc(_count); }
+		void resize(ssh_u _count) noexcept { reset(); alloc(_count); }
 		// добавить элемент
-		const Array& operator += (const T& elem) { return insert(count, elem, 1); }
+		T& operator += (const T& elem) noexcept { return insert(count, elem); }
 		// добавить массив
-		const Array& operator += (const Array<T>& src) { return insert(count, src.data(), src.size()); }
+		const Array& operator += (const Array<T>& src) noexcept { return insert(count, src.data(), src.size()); }
 		// заместить массив
-		const Array& operator = (const Array<T>& src) { reset(); grow = src.grow; return insert(0, src); }
+		const Array& operator = (const Array<T>& src) noexcept { reset(); return insert(0, src.get_data(), src.size()); }
 		// оператор индекса
-		T& operator [] (ssh_u idx) const { return data[idx]; }
+		T& operator [] (ssh_u idx) const noexcept { return data[idx]; }
 		// оператор переноса
-		const Array& operator = (Array<T>&& src) { reset(); data = src.data; count = src.count; max_count = src.max_count; grow = src.grow; src.init(); return *this; }
+		const Array& operator = (Array<T>&& src) noexcept { reset(); data = src.data; count = src.count; max_count = src.max_count; src.init(); return *this; }
 		// установка элемента по индексу
-		const Array& set(ssh_u idx, const T& elem)
+		T& set(ssh_u idx, const T& elem) noexcept
 		{
 			if(idx < count)
 			{
 				SSH_RELEASE_NODE(T, data[idx]);
 				data[idx] = elem;
 			}
-			return *this;
+			return data[idx];
 		}
 		// вставка элемента по индексу
-		const Array& insert(ssh_u idx, const T* elem, ssh_u _count)
+		T& insert(ssh_u idx, const T& elem) noexcept
 		{
 			if(idx <= count)
 			{
-				alloc(_count);
-				memmove(data + idx + _count, data + idx, (count - idx) * sizeof(T));
-				for(ssh_u i = 0; i < _count; i++) data[i + idx] = elem[i];
+				alloc(1);
+				memmove(data + idx + 1, data + idx, (count - idx) * sizeof(T));
+				data[idx] = elem;
+				count++;
 			}
-			return *this;
+			return data[idx];
 		}
-		// удаление элемента
-		const Array& remove(ssh_u idx, ssh_u _count)
+		// удаление элементов
+		const Array& remove(ssh_u idx, ssh_u _count) noexcept
 		{
 			if(idx < count)
 			{
 				if((idx + _count) > count) _count = (count - idx);
 				for(ssh_u i = 0; i < _count; i++) SSH_RELEASE_NODE(T, data[i + idx]);
 				ssh_u ll(idx + _count);
-				memcpy(data + idx, data + ll, (count - ll) * sizeof(T));
+				ssh_memcpy(data + idx, data + ll, (count - ll) * sizeof(T));
 				count -= _count;
 			}
 			return *this;
 		}
 		// найти элемент
-		ssh_l find(const T& t) const
+		ssh_l find(const T& t) const noexcept
 		{
 			for(ssh_u i = 0; i < count; i++)
 			{
@@ -76,16 +77,23 @@ namespace ssh
 			return -1;
 		}
 		// диапазонный цикл
-		T* begin() const { return data; }
-		T* end() const { return &data[count]; }
+		T* begin() const noexcept { return data; }
+		T* end() const noexcept { return &data[count]; }
 		// вернуть размер
-		ssh_u size() const { return count; }
+		ssh_u size() const noexcept { return count; }
 		// вернуть по индексу
-		T& at(ssh_u idx) const { return data[idx]; }
+		T& at(ssh_u idx) const noexcept { return data[idx]; }
 		// вернуть указатель на данные
-		const T* getData() const { return (const T*)data; }
-		T* getData() { return (T*)data; }
+		const T* get_data() const noexcept { return (const T*)data; }
+		T* get_data() noexcept { return (T*)data; }
 	protected:
+		// вставка нескольких элементов
+		const Array& insert(ssh_u idx, const T* elem, ssh_u _count)
+		{
+			alloc(_count);
+			while(_count--) { insert(idx, elem[idx]); idx++; }
+			return *this;
+		}
 		// очистить
 		void init() { count = max_count = 0; data = nullptr; }
 		// выделение памяти
@@ -93,25 +101,22 @@ namespace ssh
 		{
 			if((count + _count) >= max_count)
 			{
-				max_count += (_count + grow);
+				max_count += (_count + max_count);
 				// выделяем блок
 				T* ptr((T*)new ssh_b[max_count * sizeof(T)]);
 				// копируем старые данные, если есть
 				if(data)
 				{
-					memcpy(ptr, data, count * sizeof(T));
+					ssh_memcpy(ptr, data, count * sizeof(T));
 					delete data;
 				}
 				// инициализируем новые
 				for(ssh_u i = count; i < max_count; i++) ::new((void*)(ptr + i)) T();
 				data = ptr;
 			}
-			count += _count;
 		}
 		// количество элементов
 		ssh_u count = 0;
-		// приращение
-		ssh_u grow = 32;
 		// выделено элементов
 		ssh_u max_count = 0;
 		// данные

@@ -59,7 +59,7 @@
 	#endif
 	#define SSH_ASSERT(express, msg, ...)		if(!(express)) Log::add(Log::mAssert, __FILEW__, __LINE__, msg, #express, __VA_ARGS__);
 	#define SSH_TRACE							Tracer tracer(__FUNCSIGW__);
-	#define SSH_LOG(tp, msg, ...)				ssh_log->add(tp, __FUNCTIONW__, __FILEW__, __LINE__, msg, __VA_ARGS__)
+	#define SSH_LOG(tp, msg)					ssh_log->add(tp, __FUNCTIONW__, __FILEW__, __LINE__, msg)
 #endif
 
 #define MAIL_PASS				L"IfnfkjdCthutq"

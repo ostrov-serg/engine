@@ -3,9 +3,13 @@
 
 extern "C"
 {
-	ssh_u asm_ssh_capability();
+	ssh_u	asm_ssh_capability();
 	ssh_cws asm_ssh_to_base64(ssh_b* ptr, ssh_u count);
-	ssh_b* asm_ssh_from_base64(ssh_ws* str, ssh_u count, ssh_u* len_buf);
+	ssh_b*	asm_ssh_from_base64(ssh_ws* str, ssh_u count, ssh_u* len_buf);
+	void*	asm_ssh_wton(ssh_cws str, ssh_u radix, ssh_ws* end = nullptr);
+	ssh_cws asm_ssh_ntow(const void* ptr, ssh_u radix, ssh_ws* end = nullptr);
+	ssh_ws* asm_ssh_parse_spec(void* arg, ssh_cws* str);
+	ssh_l	asm_ssh_parse_xml(ssh_ws* src, ssh_w* vec);
 }
 
 namespace ssh
@@ -31,28 +35,16 @@ namespace ssh
 	extern __xin_xcaps			ssh_xin_caps;
 
 	// определения для процессорно - зависимых функций
-	using	__asm_ssh_parse_xml = ssh_l(*)(ssh_ws* src, ssh_w* vec);
-	using	__asm_ssh_parse_spec = ssh_ws*(*)(void* val, ssh_cws* ptr);
-	using	__asm_ssh_wcslen	= ssh_u(*)(ssh_cws _1);
 	using	__asm_ssh_wcsstr	= ssh_ws*(*)(ssh_cws _1, ssh_cws _2);
-	using	__asm_ssh_wcschr	= ssh_ws*(*)(ssh_cws _cws, ssh_ws _ws);
-	using	__asm_ssh_wcscmp	= ssh_u(*)(ssh_cws _1, ssh_cws _2);
+	using	__asm_ssh_wcscmp	= int(*)(ssh_cws _1, ssh_cws _2);
 	using	__ssh_rand			= ssh_u(*)(ssh_u begin, ssh_u end);
 	using	__ssh_hash			= int(*)(ssh_cws _cws);
-	using	__asm_ssh_wton		= void*(*)(ssh_cws str, ssh_u radix, ssh_ws* end);
-	using	__asm_ssh_ntow		= ssh_cws(*)(const void* num, ssh_u radix, ssh_ws* end);
 
 	// указатели на процессорно - зависимые функции
 	extern __ssh_rand			SSH ssh_rand;
-	extern __asm_ssh_parse_xml	SSH asm_ssh_parse_xml;
-	extern __asm_ssh_parse_spec	SSH asm_ssh_parse_spec;
-	extern __asm_ssh_wcslen		SSH asm_ssh_wcslen;
 	extern __asm_ssh_wcsstr		SSH asm_ssh_wcsstr;
-	extern __asm_ssh_wcschr		SSH asm_ssh_wcschr;
 	extern __asm_ssh_wcscmp		SSH asm_ssh_wcscmp;
 	extern	__ssh_hash			SSH ssh_hash;
-	extern	__asm_ssh_wton		SSH asm_ssh_wton;
-	extern	__asm_ssh_ntow		SSH asm_ssh_ntow;
 
 	enum class Radix { _dec, _bin, _oct, _hex, _dbl, _flt, _bool };
 
@@ -91,70 +83,66 @@ namespace ssh
 	inline ssh_ws* ssh_wcschr(ssh_cws _wcs, ssh_ws _ws)
 	{
 		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return (ssh_ws*)wcschr(_wcs, _ws);
-		if(!_ws) return (ssh_ws*)(_wcs + ssh_sse_wcslen(_wcs));
-		__m128i _1(_mm_cvtsi32_si128((int)_ws));
-		int res;
+		__m128i _1(_mm_cvtsi32_si128((int)_ws)), _2;
+		int res, is;
 		do
 		{
-			res = _mm_cmpistri(_1, _mm_lddqu_si128((__m128i*)(_wcs)), 0b00000001);
+			_2 = _mm_lddqu_si128((__m128i*)_wcs);
+			res = _mm_cmpistri(_1, _2, 0b00000001);
+			is = _mm_cmpistrz(_1, _2, 0b00000001);
 			_wcs += res;
-		} while(res == 8);
-		return (ssh_ws*)_wcs;
+		} while(res == 8 && !is);
+		return (ssh_ws*)(is ? nullptr : _wcs);
 	}
 
 	inline int ssh_wcscmp(ssh_cws _s1, ssh_cws _s2)
 	{
-		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return wcscmp(_s1, _s2);
-		if(_s1 != _s2)
-		{
-			ssh_u l1(ssh_sse_wcslen(_s1));
-			ssh_u l2(ssh_sse_wcslen(_s2));
-			int ret, l(0);
-			do
-			{
-				ret = _mm_cmpistri(_mm_lddqu_si128((__m128i*)(_s1 + l)), _mm_lddqu_si128((__m128i*)(_s2 + l)), 0b00011001);
-				l += ret;
-			} while(ret == 8);
-			l1 -= l;
-			l2 -= l;
-			if(l1 < l2) return 1;
-			else if(l1 > l2) return -1;
-		}
-		return 0;
+		return asm_ssh_wcscmp(_s1, _s2);
 	}
 
 	inline ssh_ws* ssh_wcsstr(ssh_ws* _s1, ssh_cws _s2)
 	{
-		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return wcsstr(_s1, _s2);
-		ssh_u l1(ssh_sse_wcslen(_s1));
-		ssh_u l2(ssh_sse_wcslen(_s2));
-		ssh_ws* _r(nullptr);
-		int ret, i(0), j(0);
-		while(j < l2)
-		{
-			__m128i _2(_mm_lddqu_si128((__m128i*)(_s2 + j)));
-			while(i < l1)
-			{
-				if(!(ret = _mm_cmpestri(_2, (int)l2 - j, _mm_lddqu_si128((__m128i*)(_s1 + i)), (int)l1 - i, 0b00001101)))
-				{
-					if(!_r) _r = _s1 + i;
-					i += 8;
-					break;
-				}
-				else if(_r)
-				{
-					_r = nullptr;
-					j = -8;
-					break;
-				}
-				i += ret;
-			}
-			j += 8;
-			if(!j) break;
-		}
-		return _r;
+		return asm_ssh_wcsstr(_s1, _s2);
 	}
 
+	inline void* ssh_memset(void* ptr, ssh_u set, ssh_u count)
+	{
+		ssh_b* _ptr((ssh_b*)ptr);
+		if(count >= 8) { __stosq((ssh_u*)_ptr, set, count / 8); _ptr += (count / 8) * 8; count &= 7; }
+		if(count >= 4) { *(ssh_d*)_ptr = (ssh_d)set; _ptr += 4; count &= 3; set >>= 32; }
+		if(count >= 2) { *(ssh_w*)_ptr = (ssh_w)set; _ptr += 2; count &= 1; set >>= 16; }
+		if(count >= 1) { *(ssh_b*)_ptr = (ssh_b)set; _ptr++; }
+		return _ptr;
+	}
+
+	inline void* ssh_memzero(void* ptr, ssh_u count)
+	{
+		return ssh_memset(ptr, 0, count);
+	}
+
+	inline void* ssh_memcpy(void* dst, const void* src, ssh_u count)
+	{
+		ssh_b* _dst((ssh_b*)dst);
+		ssh_b* _src((ssh_b*)src);
+		if(count >= 8) { __movsq((ssh_u*)_dst, (ssh_u*)_src, count / 8); _dst += (count / 8) * 8; _src += (count / 8) * 8; count &= 7; }
+		if(count >= 4) { __movsd((ssh_d*)_dst, (ssh_d*)_src, 1); _dst += 4; _src += 4; count &= 3; }
+		if(count >= 2) { __movsw((ssh_w*)_dst, (ssh_w*)_src, 1); _dst += 2; _src += 2; count &= 1; }
+		if(count >= 1) { __movsb((ssh_b*)_dst, (ssh_b*)_src, 1); _dst++; }
+		return _dst;
+	}
+	// реверс бит
+	inline int ssh_rev(int x)
+	{
+		x = ((x & 0x55555555) << 1) | ((x >> 1) & 0x55555555);
+		x = ((x & 0x33333333) << 2) | ((x >> 2) & 0x33333333);
+		x = ((x & 0x0f0f0f0f) << 4) | ((x >> 4) & 0x0f0f0f0f);
+		return (_rotr((x & 0x00ff00ff), 8) | (_rotl(x, 8) & 0x00ff00ff));
+	}
+	// остаток от деления для вещественных чисел
+	inline float ssh_modf(float x, float y)
+	{
+		return (x - y *(int)(x / y));
+	}
 	// преобразовать значение в ближайшую степень двойки
 	inline ssh_u ssh_pow2(ssh_u val, bool nearest)
 	{
@@ -186,4 +174,70 @@ namespace ssh
 	{
 		return (val1 > val2 ? val1 : val2);
 	}
+	// итератор
+	template <typename T> class Iter
+	{
+	public:
+		// конструктор по значению
+		Iter(T* n) : val(n) {}
+		// оператор сравнения
+		bool operator != (const Iter& it) const { return (val != it.val); }
+		// оператор приращения
+		Iter operator++() const { val = val->next; return *this; }
+		// оператор извлечения
+		auto operator*() const { return val->value; }
+	protected:
+		// значение
+		mutable T* val;
+	};
+	// менеджер памяти для однотипных элементов
+	template <typename T, ssh_u N = 128> class MemArray
+	{
+	public:
+		struct Block
+		{
+			union
+			{
+				Block* next;
+				ssh_b t[sizeof(T)];
+			};
+		};
+
+		struct BlockFix
+		{
+			BlockFix() : next(nullptr) {}
+			~BlockFix() { SSH_DEL(next); }
+			BlockFix* next;
+			Block arr[N];
+		};
+		void Reset() { if(!count) { SSH_DEL(arrs); free = nullptr; } }
+		T* Alloc()
+		{
+			if(!free)
+			{
+				BlockFix* tmp(new BlockFix);
+				ssh_memzero(tmp->arr, sizeof(Block) * N);
+				tmp->next = arrs; arrs = tmp;
+				for(ssh_u i = 0; i < N; i++)
+				{
+					arrs->arr[i].next = free;
+					free = &(arrs->arr[i]);
+				}
+			}
+			Block* b(free);
+			free = free->next;
+			count++;
+			return (T*)(b->t);
+		}
+		void Free(T* t)
+		{
+			Block* b((Block*)t);
+			b->next = free;
+			free = b;
+			count--;
+		}
+		Block* free = nullptr;
+		BlockFix* arrs = nullptr;
+		int count = 0;
+	};
 }

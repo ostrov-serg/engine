@@ -2,8 +2,8 @@
 #pragma once
 
 #include "ssh_inlines.h"
-#include "ssh_str.h"
 #include "ssh_buf.h"
+#include "ssh_types.h"
 
 namespace ssh
 {
@@ -11,7 +11,7 @@ namespace ssh
 
 	struct DESC_WND
 	{
-		//		DESC_WND() : bkg(0), icon(0), iconSm(0), cursor(0), processingWnd(nullptr), stylesClass(CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS), stylesWnd(WS_OVERLAPPEDWINDOW), hWndParent(nullptr), hInst(::GetModuleHandle(nullptr)), bar(0, 0, 256, 256) {}
+		DESC_WND() : bkg(0), icon(0), iconSm(0), cursor(0), processingWnd(nullptr), stylesClass(CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS), stylesWnd(WS_OVERLAPPEDWINDOW), hWndParent(nullptr), hInst(::GetModuleHandle(nullptr)), bar(0, 0, 256, 256) {}
 		// заголовок
 		String caption;
 		// курсор
@@ -35,7 +35,7 @@ namespace ssh
 		// хэндл модуля
 		HINSTANCE hInst;
 		// габариты окна
-		//Bar<int> bar;
+		Bar<int> bar;
 		// процедура обработки окна
 		WNDPROC processingWnd;
 	};
@@ -169,70 +169,4 @@ namespace ssh
 		if(is_cont) bytes += L". . .";
 		return bytes;
 	}
-
-	template <typename T> class Iter
-	{
-	public:
-		// конструктор по значению
-		Iter(T* n) : val(n) {}
-		// оператор сравнения
-		bool operator != (const Iter& it) const { return (val != it.val); }
-		// оператор приращения
-		Iter operator++() const { val = val->next; return *this; }
-		// оператор извлечения
-		auto operator*() const { return val->value; }
-	protected:
-		// значение
-		mutable T* val;
-	};
-
-	template <typename T, ssh_u N = 128> class MemArray
-	{
-	public:
-		struct Block
-		{
-			union
-			{
-				Block* next;
-				ssh_b t[sizeof(T)];
-			};
-		};
-
-		struct BlockFix
-		{
-			BlockFix() : next(nullptr) {}
-			~BlockFix() { SSH_DEL(next); }
-			BlockFix* next;
-			Block arr[N];
-		};
-		void Reset() { if(!count) { SSH_DEL(arrs); free = nullptr; } }
-		T* Alloc()
-		{
-			if(!free)
-			{
-				BlockFix* tmp(new BlockFix);
-				memset(tmp->arr, 0, sizeof(Block) * N);
-				tmp->next = arrs; arrs = tmp;
-				for(ssh_u i = 0; i < N; i++)
-				{
-					arrs->arr[i].next = free;
-					free = &(arrs->arr[i]);
-				}
-			}
-			Block* b(free);
-			free = free->next;
-			count++;
-			return (T*)(b->t);
-		}
-		void Free(T* t)
-		{
-			Block* b((Block*)t);
-			b->next = free;
-			free = b;
-			count--;
-		}
-		Block* free = nullptr;
-		BlockFix* arrs = nullptr;
-		int count = 0;
-	};
 }

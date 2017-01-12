@@ -1,10 +1,4 @@
 EXPORTS
 
-asm_ssh_ntow			@1
-asm_ssh_wton			@2
-asm_ssh_parse_spec		@3
-asm_ssh_parse_xml		@4
-asm_ssh_wcslen			@5
-asm_ssh_wcsstr			@6
-asm_ssh_wcschr			@7
-asm_ssh_wcscmp			@8
+asm_ssh_wcsstr			@1
+asm_ssh_wcscmp			@2

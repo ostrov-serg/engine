@@ -19,7 +19,7 @@ namespace ssh
 			if(!pad->is_connected) continue;
 			if(pad->is_inserted)
 			{
-				memset(pad, 0, sizeof(GAMEPAD));
+				ssh_memzero(pad, sizeof(GAMEPAD));
 				pad->is_connected = true;
 				pad->is_inserted = true;
 				if(ssh_xin_caps) ssh_xin_caps(idx, XINPUT_DEVTYPE_GAMEPAD, &pad->caps);

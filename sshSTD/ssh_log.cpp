@@ -5,20 +5,17 @@
 
 namespace ssh
 {
-	String Log::header(L"\r\n-------------------- Запуск сеанса [$us - $cm] - $nm ($dt - $tm) --------------------\r\n\r\n");
-	String Log::footer(L"\r\n------------------------------ Завершение сеанса - $nm ($dt - $tm) ------------------------------\r\n\r\n");
-
 	void Log::stk_common::init(TypeOutput _out)
 	{
 		out = _out;
-		header = Log::apply_template(header);
+		ssh_log->header = Log::apply_template(ssh_log->header);
 		switch(out) //-V719
 		{
 			case TypeOutput::file:
 				file = new stk_file();
 				break;
 			case TypeOutput::debug:
-				OutputDebugString(header);
+				OutputDebugString(ssh_log->header);
 				break;
 			case TypeOutput::email:
 				email = new stk_email();
@@ -31,7 +28,7 @@ namespace ssh
 
 	void Log::stk_common::shutdown()
 	{
-		Log::footer = Log::apply_template(Log::footer);
+		ssh_log->footer = Log::apply_template(ssh_log->footer);
 		switch(out) //-V719
 		{
 			case TypeOutput::net:
@@ -49,7 +46,7 @@ namespace ssh
 				SSH_DEL(email);
 				break;
 			case TypeOutput::debug:
-				OutputDebugStringW(footer);
+				OutputDebugStringW(ssh_log->footer);
 				break;
 		}
 		out = TypeOutput::null;
@@ -118,11 +115,11 @@ namespace ssh
 		static ssh_cws m_types[] = {L"NONE", L"INFO", L"ASSERT", L"EXCEPTION", L"TRACE"};
 		static ssh_cws rpl[] = {L"$DT", L"$fn", L"$ln", L"$fl", L"$ms", L"$tm", L"$dt", L"$us", L"$cm", L"$nm", L"$tp", nullptr};
 		Time tm(Time::current());
-		String tmp(ssh_printf(L"%s\1%s\1%i\1%s\1%s\1%s\1%s\1%s\1%s\1%s\1%s\1\1", //-V510
-							   tm.fmt(L"%ДАТА").str(), fn, ln, fl, msg, tm.fmt(L"%ВРЕМЯ").str(),
-							   tm.fmt(L"%Д %М_) %Г (%ДН_)").str(), ssh_system_paths(SystemInfo::USER_NAME).str(),
+		String tmp(ssh_printf(L"%s;%s;%i;%s;%s;%s;%s;%s;%s;%s;%s;;", //-V510
+							  tm.fmt(L"%ДАТА").str(), fn, ln, fl, msg, tm.fmt(L"%ВРЕМЯ").str(),
+							  tm.fmt(L"%Д %М_) %Г (%ДН_)").str(), ssh_system_paths(SystemInfo::USER_NAME).str(),
 							   ssh_system_paths(SystemInfo::COMP_NAME).str(), ssh_system_paths(SystemInfo::PROG_NAME).str(), m_types[tp]));
-		tmp.replace(L'\1', L'\0');
+		tmp.replace(L';', L'\0');
 		return tpl.replace(rpl, tmp);
 	}
 
@@ -177,10 +174,41 @@ namespace ssh
 	{
 //		if(!sock.is_closed())
 		{
-			//			sock.send(0, msg);
+//			sock.send(0, msg);
 			if(WaitForSingleObject(hEventSocket, 30000) != WAIT_OBJECT_0) {}
 //				sock.close();
 			ResetEvent(hEventSocket);
 		}
+	}
+
+	void StackTrace::add(bool is, ssh_cws func)
+	{
+		stop();
+		if(!is) indent--;
+		if(elems.size() >= depth) elems.remove(elems.last());
+		if(indent < 0) indent = 0;
+		String _indent(L' ', indent * 2);
+		ssh_ws _is(is ? L'+' : L'-');
+		elems += ssh_printf(L"%s%c%s", _indent, _is, func); //-V510
+		if(is) indent++;
+		start();
+	}
+
+	void StackTrace::output()
+	{
+		if(elems.size())
+		{
+			ssh_log->add_msg(ssh_printf(L"\r\n\r\n-------------------------------------------------- Трассировка стека (%i вызовов) --------------------------------------------------\r\n\r\n", elems.size() / 2));
+			for(auto n : elems) ssh_log->add_msg(n);
+			//ssh_log->add_msg(L"\r\n\r\n--------------------------------------------------------- Трассировка стека -------------------------------------------------------\r\n\r\n");
+		}
+		elems.reset();
+	}
+
+	void Exception::out_log(String msg) const
+	{
+		if(!msg.is_empty()) msg += L", ";
+		// добавляем в лог
+		ssh_log->add(Log::exception, func, file, line, msg + message);
 	}
 }

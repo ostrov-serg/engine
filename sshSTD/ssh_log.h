@@ -1,13 +1,54 @@
 
 #pragma once
 
+namespace ssh
+{
+	class SSH Exception
+	{
+	public:
+		Exception(ssh_cws fn, ssh_cws fl, int ln, ssh_cws msg) : func(fn), file(fl), line(ln), message(msg) {}
+		virtual void out_log(String msg) const;
+		virtual ~Exception() {}
+	protected:
+		Exception() : line(0), func(nullptr), file(nullptr) {}
+		int line;
+		ssh_cws func, file;
+		String message;
+	};
+}
+
+#include "ssh_list.h"
 #include "ssh_file.h"
-#include "ssh_tracer.h"
 //#include "ssh_email.h"
 //#include "ssh_sock.h"
 
 namespace ssh
 {
+	class SSH StackTrace final
+	{
+	public:
+		// инициализировать трассировщик
+		void init(int _depth) { depth = _depth; }
+		// добавить новый элемент
+		void add(bool is, ssh_cws func);
+		// вывести в лог
+		void output();
+		// запуск/остановка
+		void start() { is_enabled = true; }
+		void stop() { is_enabled = false; }
+		// признак отключения
+		bool is_started() const { return is_enabled; }
+	protected:
+		// признак активности
+		bool is_enabled = false;
+		// макс глубина
+		int depth = 256;
+		// отступ
+		int indent = 0;
+		// список
+		List<String> elems;
+	};
+
 	// формат шаблонов:
 	// $fn - файл
 	// $ln - строка
@@ -49,11 +90,11 @@ namespace ssh
 			stk_email()
 			{
 				file.open(path, flags_file);
-				file.write(Log::header, charset);
+				file.write(ssh_log->header, charset);
 			}
 			void shutdown()
 			{
-				if(!file.is_close()) file.write(Log::footer, charset);
+				if(!file.is_close()) file.write(ssh_log->footer, charset);
 				send(L"");
 			}
 			// сообщение
@@ -108,7 +149,7 @@ namespace ssh
 			}
 			void shutdown()
 			{
-				send(Log::footer);
+				send(ssh_log->footer);
 				if(hEventSocket)
 				{
 					CloseHandle(hEventSocket);
@@ -121,7 +162,7 @@ namespace ssh
 //				if(sock.is_closed())
 				{
 //					sock.init(name, 0, flags, cert, pwd_cert);
-					send(Log::header);
+					send(ssh_log->header);
 				}
 				send(msg);
 			}
@@ -148,11 +189,11 @@ namespace ssh
 			stk_file()
 			{
 				file.open(path, flags);
-				file.write(Log::header, L"utf-8");
+				file.write(ssh_log->header, L"utf-8");
 			}
 			void shutdown()
 			{
-				if(!file.is_close()) file.write(Log::footer, L"utf-8");
+				if(!file.is_close()) file.write(ssh_log->footer, L"utf-8");
 			}
 			// сообщение
 			void message(const String& msg)
@@ -191,21 +232,21 @@ namespace ssh
 			// тип вывода
 			TypeOutput out = TypeOutput::null;
 		};
+		// доступ
 		static Log* instance() { static Log log; return &log; }
 		// добавить шаблонное сообщение
 		void add(TypeMessage type, ssh_cws func, ssh_cws file, int line, ssh_cws msg, bool is_repl = true);
 		// добавить простое сообщение
-		void add_msg(ssh_cws msg) { common.message(apply_template(common.trace, msg)); }
+		void add_msg(ssh_cws msg, bool apply = true) { common.message(apply ? apply_template(common.trace, msg) : msg); }
 		// инициализация
 		void init(TypeOutput _out = TypeOutput::file);
 		// вернуть базовую структуру
 		const stk_common* get_common() const { return &common; }
 		// заголовок
-		static String header;
+		String header = L"\r\n-------------------- Запуск сеанса [$us - $cm] - $nm ($dt - $tm) --------------------\r\n\r\n";
 		// завершение
-		static String footer;
+		String footer = L"\r\n------------------------------ Завершение сеанса - $nm ($dt - $tm) ------------------------------\r\n\r\n";
 	protected:
-		//Log() {}
 		// деструктор
 		~Log() { close(); }
 		// приминение шаблона к сообщению

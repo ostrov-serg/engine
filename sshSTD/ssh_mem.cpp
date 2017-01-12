@@ -78,8 +78,8 @@ namespace ssh
 	{
 		CONTEXT ContextRecord;
 		EXCEPTION_RECORD ExceptionRecord;
-		memset(&ContextRecord, 0, sizeof(CONTEXT));
-		memset(&ExceptionRecord, 0, sizeof(EXCEPTION_RECORD));
+		ssh_memzero(&ContextRecord, sizeof(CONTEXT));
+		ssh_memzero(&ExceptionRecord, sizeof(EXCEPTION_RECORD));
 
 		RtlCaptureContext(&ContextRecord);
 
@@ -90,8 +90,8 @@ namespace ssh
 		exc->ContextRecord = new CONTEXT;
 		exc->ExceptionRecord = new EXCEPTION_RECORD;
 
-		memcpy(exc->ContextRecord, &ContextRecord, sizeof(CONTEXT));
-		memcpy(exc->ExceptionRecord, &ExceptionRecord, sizeof(EXCEPTION_RECORD));
+		ssh_memcpy(exc->ContextRecord, &ContextRecord, sizeof(CONTEXT));
+		ssh_memcpy(exc->ExceptionRecord, &ExceptionRecord, sizeof(EXCEPTION_RECORD));
 	
 		String caption;
 		switch(type)
@@ -110,13 +110,13 @@ namespace ssh
 			case ExceptTypes::NEW_OPERATOR_ERROR: caption = L"Не удалось выделить память оператором new. "; break;
 			case ExceptTypes::INVALID_PARAMETER_ERROR: caption = L"Недопустимый параметр CRT функции, при выполнении операции "; caption += msg_ex; caption += L". "; break;
 		}
-		String msg(ssh_printf(	L"Контекст на момент возбуждения исключения: \r\nrip: %016I64X\tflags: %08B\r\n"
-								L"rax: %016I64X\trcx: %016I64X\trdx: %016I64X\trbx: %016I64X\trbp: %016I64X\trsp: %016I64X\trsi: %016I64X\trdi: %016I64X\r\n"
-								L"r8:  %016I64X\tr9:  %016I64X\tr10: %016I64X\tr11: %016I64X\tr12: %016I64X\tr13: %016I64X\tr14: %016I64X\tr15: %016I64X\r\n"
-								L"xmm0:  %016I64X%016I64X\txmm1:  %016I64X%016I64X\txmm2:  %016I64X%016I64X\txmm3:  %016I64X%016I64X\r\n"
-								L"xmm4:  %016I64X%016I64X\txmm5:  %016I64X%016I64X\txmm6:  %016I64X%016I64X\txmm7:  %016I64X%016I64X\r\n"
-								L"xmm8:  %016I64X%016I64X\txmm9:  %016I64X%016I64X\txmm10: %016I64X%016I64X\txmm11: %016I64X%016I64X\r\n"
-								L"xmm12: %016I64X%016I64X\txmm13: %016I64X%016I64X\txmm14: %016I64X%016I64X\txmm15: %016I64X%016I64X",
+		String msg(ssh_printf(	L"Контекст на момент возбуждения исключения: \r\nrip: %016I64x\tflags: %08b\r\n"
+								L"rax: %016I64x\trcx: %016I64x\trdx: %016I64x\trbx: %016I64x\trbp: %016I64x\trsp: %016I64x\trsi: %016I64x\trdi: %016I64x\r\n"
+								L"r8:  %016I64x\tr9:  %016I64x\tr10: %016I64x\tr11: %016I64x\tr12: %016I64x\tr13: %016I64x\tr14: %016I64x\tr15: %016I64x\r\n"
+								L"xmm0:  %016I64x%016I64x\txmm1:  %016I64x%016I64x\txmm2:  %016I64x%016I64x\txmm3:  %016I64x%016I64x\r\n"
+								L"xmm4:  %016I64x%016I64x\txmm5:  %016I64x%016I64x\txmm6:  %016I64x%016I64x\txmm7:  %016I64x%016I64x\r\n"
+								L"xmm8:  %016I64x%016I64x\txmm9:  %016I64x%016I64x\txmm10: %016I64x%016I64x\txmm11: %016I64x%016I64x\r\n"
+								L"xmm12: %016I64x%016I64x\txmm13: %016I64x%016I64x\txmm14: %016I64x%016I64x\txmm15: %016I64x%016I64x",
 				exc->ExceptionRecord->ExceptionAddress, exc->ContextRecord->EFlags,
 				exc->ContextRecord->Rax, exc->ContextRecord->Rcx, exc->ContextRecord->Rdx, exc->ContextRecord->Rbx,
 				exc->ContextRecord->Rbp, exc->ContextRecord->Rsp, exc->ContextRecord->Rsi, exc->ContextRecord->Rdi,
@@ -146,7 +146,7 @@ namespace ssh
 	{
 		if(count_alloc)
 		{
-			Section cs;
+			Lock cs;
 			String txt;
 			ssh_log->add_msg(ssh_printf(L"Обнаружено %I64i потерянных блоков памяти...\r\n", count_alloc));
 			auto n(root);
@@ -154,7 +154,7 @@ namespace ssh
 			{
 				ssh_b* ptr((ssh_b*)(n) + sizeof(NodeMem));
 				String bytes(ssh_make_hex_string(ptr, n->sz > 48 ? 48 : n->sz, txt, true, n->sz > 48));
-				ssh_log->add_msg(ssh_printf(L"node <0x%I64X, %i,\t%s\t%s>", ptr, n->sz, bytes.str(), txt.str()));
+				ssh_log->add_msg(ssh_printf(L"node <0x%I64x, %i,\t%s\t%s>", ptr, n->sz, bytes.str(), txt.str()));
 				n = n->next;
 			}
 		}
@@ -164,14 +164,14 @@ namespace ssh
 	{
 		ssh_log->add_msg(ssh_printf(L"\r\n------------------------------------------------------- Статистика ----------------------------------------------------------------\r\n"));
 		leaks();
-		ssh_log->add_msg(ssh_printf(L"\r\nЗа данный сеанс было выделено %i(~%s) байт памяти ..., освобождено %i(~%s) ...:%c, максимум - %i(~%s), блоков - %i\r\n",
+		ssh_log->add_msg(ssh_printf(L"\r\nЗа данный сеанс было выделено %i(~%s) байт памяти ..., освобождено %i(~%s) ...:%c, единовременно - %i(~%s), блоков - %i\r\n",
 									total_alloc, ssh_num_volume(total_alloc), total_free, ssh_num_volume(total_free), (total_alloc != total_free ? L'(' : L')'),
 									use_max_mem, ssh_num_volume(use_max_mem), max_alloc));
 	}
 
 	void* MemMgr::alloc(ssh_u sz)
 	{
-		Section cs;
+		Lock cs;
 
 		ssh_b* p((ssh_b*)::_mm_malloc(sz + sizeof(NodeMem) + 4, 16));
 		// создать узел
@@ -179,11 +179,11 @@ namespace ssh
 		if(is_enabled)
 		{
 #ifdef _DEBUG
-			memset(p + sizeof(NodeMem), 0xBB, sz);
+			ssh_memset(p + sizeof(NodeMem), 0x2052454755424544, sz);
 #endif
 			// добавить статистику
 			count_alloc++;
-			max_alloc = count_alloc;
+			if(max_alloc < count_alloc) max_alloc = count_alloc;
 			total_alloc += sz;
 			use_mem += sz;
 			if(use_max_mem < use_mem) use_max_mem = use_mem;
@@ -198,7 +198,7 @@ namespace ssh
 	// освобождение
 	void MemMgr::free(ssh_b* p)
 	{
-		Section cs;
+		Lock cs;
 
 		if(p)
 		{
@@ -219,7 +219,7 @@ namespace ssh
 				if(np) np->next = nn;
 				if(nd == root) root = nn;
 #ifdef _DEBUG
-				memset(p + sizeof(NodeMem), 0xaa, sz);
+				ssh_memset(p + sizeof(NodeMem), 0x2020594547524553, sz);
 #endif
 			}
 			// освобождаем память

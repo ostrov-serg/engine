@@ -36,7 +36,7 @@ namespace ssh
 		int	dayOfWeek() const;
 		int	dayOfYear() const { return local()->tm_yday + 1; }
 		int	weekOfYear() const;
-		String fmt(ssh_cws str) const;
+		String fmt(String str) const;
 		static Time current() { return Time(::time(nullptr)); }
 	};
 

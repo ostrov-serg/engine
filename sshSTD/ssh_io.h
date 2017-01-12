@@ -180,7 +180,7 @@ namespace ssh
 		};
 		struct GAMEPAD
 		{
-			GAMEPAD() { memset(this, 0, sizeof(GAMEPAD)); }
+			GAMEPAD() { ssh_memzero(this, sizeof(GAMEPAD)); }
 			// кнопки
 			ssh_w wButtons;
 			ssh_b bLeftTrigger;

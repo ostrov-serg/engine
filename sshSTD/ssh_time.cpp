@@ -10,37 +10,36 @@ namespace ssh
 	static ssh_cws МесяцыК[] = {L"Янв", L"Фев", L"Мар", L"Апр", L"Май", L"Июн", L"Июл", L"Авг", L"Сен", L"Окт", L"Ноя", L"Дек"};
 	static ssh_cws СмешныеМесяцы[] = {L"Пьянваря", L"Фигвраля", L"Кошмарта", L"Сопреля", L"Сымая", L"Теплюня", L"Жарюля", L"Авгрустя", L"Свистября", L"Моктября", L"Гноября", L"Дубабря"};
 
-	String Time::fmt(ssh_cws str) const
+	String Time::fmt(String str) const
 	{
 		static ssh_cws to[] = {L"%ДАТА_", L"%ДАТА", L"%ВРЕМЯ", L"%дата_", L"%дата", L"%М_)", L"%М_", L"%м_", L"%мн", L"%М", L"%Г", L"%г", L"%ДН_", L"%дн_", L"%ДГ", L"%Д", L"%Ч", L"%ч_", L"%ч", L"%С", L"%Н", nullptr};
-		int _month(month() - 1), _year(year()), _dw(dayOfWeek()), _hour(hour());
+		int _month(month() - 1), _year(year()), _dw(dayOfWeek()), _hour(hour()), _day(day()), _min(minute()), _sec(second());
 
-		String result(str);
 		String tmp(ssh_printf(L"%02i %s %02i;%02i.%02i.%02i;%02i:%02i:%02i;%02i %s %02i;%02i.%02i.%02i;%s;%s;%s;%02i;%02i;%02i;%02i;%s;%s;%02i;%02i;%02i;%s;%02i;%02i;%02i;;",
-							   day(), МесяцыД[_month], _year,
-							   day(), _month + 1, _year,
-							   _hour, minute(), second(),
-							   day(), МесяцыК[_month], _year,
-							   day(), _month + 1, _year % 100,
+							   _day, МесяцыД[_month], _year,
+							   _day, _month + 1, _year,
+							   _hour, _min, _sec,
+							   _day, МесяцыК[_month], _year,
+							   _day, _month + 1, _year % 100,
 
 								СмешныеМесяцы[_month],
 								МесяцыД[_month],
 								МесяцыК[_month],
-								minute(),
+								_min,
 								_month + 1,
 								_year,
 								_year % 100,
 								ДниНеделиД[_dw],
 								ДниНеделиК[_dw],
 								dayOfYear(),
-								day(),
+								_day,
 								_hour,
 								(_hour < 12 ? L"pm" : L"am"),
 								(_hour < 12 ? _hour : _hour - 12),
-								second(),
+								_sec,
 								weekOfYear()));
 		tmp.replace(L';', L'\0');
-		return result.replace(to, tmp);
+		return str.replace(to, tmp);
 	}
 
 	int	Time::dayOfWeek() const

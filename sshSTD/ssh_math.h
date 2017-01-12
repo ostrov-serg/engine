@@ -266,7 +266,7 @@ namespace ssh
 		mtx() { identity(); }
 		mtx(float _f11, float _f12, float _f13, float _f14, float _f21, float _f22, float _f23, float _f24, float _f31, float _f32, float _f33, float _f34, float _f41, float _f42, float _f43, float _f44);
 		mtx(__m128 _1, __m128 _2, __m128 _3, __m128 _4) { xmm[0] = _1; xmm[1] = _2; xmm[2] = _3; xmm[3] = _4; }
-		mtx(float* mm) { memcpy(*this, mm, sizeof(mtx)); }
+		mtx(float* mm) { ssh_memcpy(*this, mm, sizeof(mtx)); }
 		mtx(const mtx& mm) { *this = mm; }
 		mtx(const mtx& trans, const mtx& rotx, const mtx& roty, const mtx& rotz) { *this = rotx * roty; *this *= rotz * trans; }
 		mtx(const quat& q) { fromQuat(q); }
@@ -380,7 +380,7 @@ namespace ssh
 			__m128 a(_mm_rcp_ss(_mm_set_ss(f))); a = _mm_shuffle_ps(a, a, 0);
 			return mtx(_mm_mul_ps(a, m.xmm[0]), _mm_mul_ps(a, m.xmm[1]), _mm_mul_ps(a, m.xmm[2]), _mm_mul_ps(a, m.xmm[3]));
 		}
-		const mtx& operator = (const mtx& m) { memcpy((void*)this, (void*)&m, sizeof(mtx)); return *this; }
+		const mtx& operator = (const mtx& m) { ssh_memcpy((void*)this, (void*)&m, sizeof(mtx)); return *this; }
 		float operator [] (ssh_u idx) const { return (idx < 16 ? m[idx] : 0.0f); }
 		bool operator == (const mtx& m) { return (memcmp(*this, &m, sizeof(mtx)) == 0); }
 		bool operator != (const mtx& m) { return !(operator == (m)); }
@@ -536,7 +536,7 @@ namespace ssh
 		dual_quat(float* f) { make(f, &f[4]); }
 		dual_quat(float* q, float* v) { make(q, v); }
 		dual_quat(const quat& q) { make(q, vec3(0, 0, 0)); }
-		dual_quat(const dual_quat& qq) { memcpy(this, &qq, sizeof(dual_quat)); }
+		dual_quat(const dual_quat& qq) { ssh_memcpy(this, &qq, sizeof(dual_quat)); }
 		dual_quat(const quat& q, const vec3& v) { make(q, v); }
 		dual_quat(const mtx& m) { make(quat(m), m.get_translate()); }
 		// формирование
@@ -674,7 +674,7 @@ namespace ssh
 		sphere() { identity(); }
 		sphere(const vec3& v, float f) : c(v), r(f) {}
 		sphere(const sphere& s) : c(s.c), r(s.r) {}
-		sphere(float* f) { memcpy(flt, f, sizeof(sphere)); }
+		sphere(float* f) { ssh_memcpy(flt, f, sizeof(sphere)); }
 		sphere operator + (const sphere& s) const;
 		const sphere& operator += (const sphere& s) { contactSphere(s, c, r); return *this; }
 		void identity() { r = 0.0f; c.x = 0.0f; c.y = 0.0f; c.z = 0.0f; }
@@ -757,7 +757,7 @@ namespace ssh
 		obox(const vec3& _x1y1z1, const vec3& _x2y1z1, const vec3& _x1y2z1, const vec3& _x2y2z1, const vec3& _x1y1z2, const vec3& _x2y1z2, const vec3& _x1y2z2, const vec3& _x2y2z2);
 		obox(const bbox& bbox);
 		obox(float* b);
-		void identity() { memset(this, 0, sizeof(obox)); }
+		void identity() { ssh_memzero(this, sizeof(obox)); }
 		bool intersects(const bbox& b) const;
 		bool intersects(const obox& b) const;
 		bool intersects(const sphere& s) const;

@@ -3,20 +3,7 @@
 
 namespace ssh
 {
-	#define SSH_BUFFER_LENGTH			20
-
-	/*
-	template<typename T, typename is = void> struct Num;
-	template<typename T> struct Num<T, typename std::enable_if<std::is_arithmetic<T>::value>::type>
-	{
-		static ssh_cws make(const T& v, Radix r)
-		{
-			ssh_u tmp(0);
-			*(T*)&tmp = v;
-			return asm_ssh_ntow(&tmp, (ssh_u)r, nullptr);
-		}
-	};
-	*/
+	#define SSH_BUFFER_LENGTH			18
 
 	class SSH String
 	{
@@ -28,12 +15,13 @@ namespace ssh
 		String(ssh_cws cws, ssh_l len = -1);
 		String(ssh_ccs ccs, ssh_l len = -1);
 		String(ssh_ws* ws, ssh_l len = -1) : String((ssh_cws)ws, len) {}
+		String(ssh_b* b, ssh_l len = -1) : String((ssh_ccs)b, len) {}
 		String(const String& str) { init(); *this = str; }
 		explicit String(std::nullptr_t) { } //-V730
 		explicit String(ssh_ws ws, ssh_l rep);
 		explicit String(float v) { init(); num(v, Radix::_flt); }
 		explicit String(double v) { init(); num(v, Radix::_dbl); }
-		template <typename T> String(const T& v, Radix r = Radix::_dec) { init(); num(v, r); }
+		template <typename T, class = std::enable_if_t<std::is_arithmetic<T>::value, T>> String(T v, Radix r = Radix::_dec) { init(); num(v, r); }
 		// деструктор
 		~String() { empty(); }
 		// привидение типа
@@ -42,8 +30,8 @@ namespace ssh
 		explicit operator float() const { return to_num<float>(0, Radix::_flt); }
 		explicit operator bool() const { return to_num<bool>(0, Radix::_bool); }
 		template<typename T> operator T() const { return to_num<T>(0, Radix::_dec); }
-		template <typename T> T to_num(ssh_l idx, Radix R = Radix::_dec) const { static_assert(std::is_arithmetic<T>(), "Expected arithmetic type!"); return *(T*)asm_ssh_wton(str() + idx, (ssh_u)R, nullptr); }
-		template <typename T> void num(const T& v, Radix R = Radix::_dec) { static_assert(std::is_arithmetic<T>(), "Expected arithmetic type!"); ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, (ssh_u)R, nullptr); }
+		template <typename T> T to_num(ssh_l idx, Radix R = Radix::_dec) const { return *(T*)asm_ssh_wton(str() + idx, (ssh_u)R, nullptr); }
+		template <typename T> void num(T v, Radix R = Radix::_dec) { ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, (ssh_u)R, nullptr); }
 		// вернуть по индексу
 		ssh_ws operator[](ssh_u idx) const { return at(idx); }
 		// операторы сравнения
@@ -103,6 +91,7 @@ namespace ssh
 		String right(ssh_l idx) const { return substr(length() - idx); }
 		ssh_cws str() const { return ( _str.len_buf > SSH_BUFFER_LENGTH ? _str.ptr : _str.str); }
 	protected:
+#pragma pack(push, 1)
 		struct STRING_BUFFER
 		{
 			union
@@ -117,6 +106,7 @@ namespace ssh
 			// хэш
 			int hash;
 		};
+#pragma pack(pop)
 		static String add(ssh_cws wcs1, ssh_l len1, ssh_cws wcs2, ssh_l len2);
 		void _replace(ssh_cws _old, ssh_cws _new);
 		void init() { _str.len = _str.hash = 0; _str.len_buf = SSH_BUFFER_LENGTH; _str.ptr = nullptr; }
@@ -126,6 +116,6 @@ namespace ssh
 		const String& add(ssh_cws wcs, ssh_l len);
 		const String& make(ssh_cws wcs, ssh_l len);
 	private:
-		STRING_BUFFER _str;
+		alignas(16) STRING_BUFFER _str;
 	};
 }

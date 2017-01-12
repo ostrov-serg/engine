@@ -83,8 +83,8 @@ namespace ssh
 					ssh_b* obj((ssh_b*)(this) + offs);
 					if(opt & SC_LIT)
 					{
-						memset(obj, 0, width * count);
-						memcpy(obj, (width == 2 ? _tmp : Buffer(ssh_convert(cp_ansi, _tmp)).to<ssh_ws*>()), val.length() * width);
+						ssh_memzero(obj, width * count);
+						ssh_memcpy(obj, (width == 2 ? _tmp : Buffer(ssh_convert(cp_ansi, _tmp)).to<ssh_ws*>()), val.length() * width);
 						break;
 					}
 					if(count > 1)
@@ -118,7 +118,7 @@ namespace ssh
 							}
 						}
 						else ret = _val.to_num<ssh_u>(0, (Radix)(opt & 3));
-						memcpy(obj, &ret, width);
+						ssh_memcpy(obj, &ret, width);
 					}
 				}
 				offs += width;
@@ -169,7 +169,7 @@ namespace ssh
 					else
 					{
 						ssh_u lval(0);
-						memcpy(&lval, obj, width);
+						ssh_memcpy(&lval, obj, width);
 						val += (sc->stk ? ssh_implode2(lval, sc->stk, sc->def, !(opt & SC_FLGS)) : String(lval, (Radix)(opt & 3)));
 					}
 				}
@@ -249,7 +249,7 @@ namespace ssh
 						case _hash_wcs:
 						case _hash_ccs: break;
 						case _hash_string: *(String*)obj = (ssh_ws*)_buf; _buf += (ssh_wcslen((ssh_ws*)_buf) * 2 + 2); break;
-						default: memcpy(obj, _buf, sc->width); _buf += sc->width; break;
+						default: ssh_memcpy(obj, _buf, sc->width); _buf += sc->width; break;
 					}
 				}
 				offs += sc->width;

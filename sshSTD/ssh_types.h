@@ -14,11 +14,11 @@ namespace ssh
 	#define SSH_RELEASE_NODE(T, V)	release_node<T, SSH_IS_PTR(T)>::release(V)
 	#define SSH_DUMMY(T)			release_node<T, SSH_IS_PTR(T)>::dummy()
 
-	class SSH Section
+	class SSH Lock
 	{
 	public:
-		Section() { EnterCriticalSection(get_section()); }
-		~Section() { LeaveCriticalSection(get_section()); }
+		Lock() { EnterCriticalSection(get_section()); }
+		~Lock() { LeaveCriticalSection(get_section()); }
 	protected:
 		static CRITICAL_SECTION* get_section()
 		{

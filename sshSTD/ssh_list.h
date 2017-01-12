@@ -25,31 +25,36 @@ namespace ssh
 		// конструктор копии
 		List(const List<T>& src) { *this = src; }
 		// конструктор из списка инициализации
-		List(const std::initializer_list<T>& _list) { for(auto& t : _list) add(t); }
+		List(const std::initializer_list<T>& _list) { for(auto& n : _list) add(n); }
 		// конструктор переноса
 		List(List<T>&& src) { nroot = src.nroot; nlast = src.nlast; src.free(); }
 		// деструктор
 		~List() { reset(); }
 		// принудительное освобождение
-		void free() { count = 0; nroot = nlast = nullptr; Node::reset(); }
+		void free() noexcept { count = 0; nroot = nlast = nullptr; Node::reset(); }
 		// количество узлов
-		int size() const { return count; }
+		int size() const noexcept { return count; }
 		// приращение
-		Node* operator += (const T& t) { return add(t); }
-		const List& operator += (const List<T>& src) { for(auto n : src) add(n); return *this; }
+		Node* operator += (const T& n) noexcept { return add(n); }
+		const List& operator += (const List<T>& src) noexcept { for(auto n : src) add(n); return *this; }
 		// присваивание
-		const List& operator = (const List<T>& src) { reset(); return operator += (src); }
-		const List& operator = (List<T>&& src) { reset(); nroot = src.nroot; nlast = src.nlast; src.free(); return *this; }
-		// добавить
-		Node* add(const T& t)
+		const List& operator = (const List<T>& src) noexcept { reset(); return operator += (src); }
+		const List& operator = (List<T>&& src) noexcept { reset(); nroot = src.nroot; nlast = src.nlast; src.free(); return *this; }
+		// вставка(после n)
+		auto add(const T& t, Node* n = nullptr) noexcept
 		{
-			auto n(new Node(t, nlast, nullptr));
-			if(nroot) nlast->next = n; else nroot = n;
+			if(!n) n = nlast;
+			auto nn(n ? n->next : nullptr);
+			auto nd(new Node(t, n, nn));
+			if(nn) nn->prev = nd;
+			if(n) n->next = nd;
+			if(n == nroot) nroot = nd;
+			if(!nlast) nlast = nd;
 			count++;
-			return (nlast = n);
+			return nd;
 		}
 		// вставка(перед n)
-		Node* insert(Node* n, const T& t)
+		auto insert(const T& t, Node* n = nullptr) noexcept
 		{
 			if(!n) n = nroot;
 			auto np(n ? n->prev : nullptr);
@@ -62,7 +67,7 @@ namespace ssh
 			return nd;
 		}
 		// удалить
-		void remove(Node* nd)
+		void remove(Node* nd) noexcept
 		{
 			if(nd)
 			{
@@ -76,15 +81,37 @@ namespace ssh
 				count--;
 			}
 		}
+		// найти дочерний по значению
+		auto get_node_value(const T& t) const noexcept
+		{
+			auto n(root());
+			while(n)
+			{
+				if(n->value == t) break;
+				n = n->next;
+			}
+			return n;
+		}
+		// найти дочерний по имени
+		auto get_node_name(const String& name) const noexcept
+		{
+			auto n(root());
+			while(n)
+			{
+				if(n->value->name() == name) break;
+				n = n->next;
+			}
+			return n;
+		}
 		// итерация по списку
-		Iter<Node> begin() const { return Iter<Node>(nroot); }
-		Iter<Node> end() const { return Iter<Node>(nullptr); }
-		auto root() const { return nroot; }
-		auto last() const { return nlast; }
+		auto begin() const noexcept { return Iter<Node>(nroot); }
+		auto end() const noexcept { return Iter<Node>(nullptr); }
+		auto root() const noexcept { return nroot; }
+		auto last() const noexcept { return nlast; }
 		// сброс
-		void reset() { while(nroot) { auto n(nroot->next); delete nroot; nroot = n; } free(); }
+		void reset() noexcept { while(nroot) { auto n(nroot->next); delete nroot; nroot = n; } free(); }
 		// вернуть признак пустого
-		bool is_empty() const { return (nroot == nullptr); }
+		bool is_empty() const noexcept { return (nroot == nullptr); }
 	protected:
 		// количество узлов
 		int count = 0;

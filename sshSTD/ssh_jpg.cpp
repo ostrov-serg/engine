@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "ssh_jpg.h"
 
-namespace jpeg
+namespace ssh
 {
 	void Decoder::_DecodeLength()
 	{
@@ -260,7 +260,7 @@ namespace jpeg
 	{
 		unsigned char code;
 		int value, coef = 0;
-		memset(ctx.block, 0, sizeof(ctx.block));
+		ssh_memzero(ctx.block, sizeof(ctx.block));
 		c->dcpred += _GetVLC(&ctx.vlctab[c->dctabsel][0], NULL);
 		ctx.block[0] = (c->dcpred) * ctx.qtab[c->qtsel][0];
 		do
@@ -424,7 +424,7 @@ namespace jpeg
 			int y;
 			for(y = ctx.comp[0].height - 1; y; --y)
 			{
-				memcpy(pout, pin, ctx.comp[0].width);
+				ssh_memcpy(pout, pin, ctx.comp[0].width);
 				pin += ctx.comp[0].stride;
 				pout += ctx.comp[0].width;
 			}

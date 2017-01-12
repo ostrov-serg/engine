@@ -75,22 +75,19 @@
     <ClInclude Include="ssh_mem.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="ssh_except.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
     <ClInclude Include="ssh_io.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="ssh_math.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="ssh_tracer.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
     <ClInclude Include="ssh_jpg.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="ssh_inlines.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="ssh_compress.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
@@ -131,10 +128,7 @@
     <ClCompile Include="ssh_jpg.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
-    <ClCompile Include="ssh_except.cpp">
-      <Filter>Файлы исходного кода</Filter>
-    </ClCompile>
-    <ClCompile Include="ssh_tracer.cpp">
+    <ClCompile Include="ssh_compress.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>

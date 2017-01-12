@@ -109,8 +109,8 @@
   <ItemGroup>
     <ClInclude Include="ssh_array.h" />
     <ClInclude Include="ssh_buf.h" />
+    <ClInclude Include="ssh_compress.h" />
     <ClInclude Include="ssh_enums.h" />
-    <ClInclude Include="ssh_except.h" />
     <ClInclude Include="ssh_file.h" />
     <ClInclude Include="ssh_globals.h" />
     <ClInclude Include="ssh_inlines.h" />
@@ -133,7 +133,6 @@
     </ClInclude>
     <ClInclude Include="ssh_str.h" />
     <ClInclude Include="ssh_time.h" />
-    <ClInclude Include="ssh_tracer.h" />
     <ClInclude Include="ssh_tree.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
@@ -143,7 +142,7 @@
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ssh_except.cpp" />
+    <ClCompile Include="ssh_compress.cpp" />
     <ClCompile Include="ssh_ext.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -160,7 +159,6 @@
     <ClCompile Include="ssh_srlz.cpp" />
     <ClCompile Include="ssh_str.cpp" />
     <ClCompile Include="ssh_time.cpp" />
-    <ClCompile Include="ssh_tracer.cpp" />
     <ClCompile Include="ssh_xml.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

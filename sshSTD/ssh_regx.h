@@ -7,7 +7,7 @@ namespace ssh
 	{
 	public:
 		// конструктор по умолчанию
-		regx() : result(0), re(nullptr) { memset(patterns, 0, sizeof(patterns)); memset(vector, 0, sizeof(vector)); }
+		regx() { ssh_memzero(patterns, sizeof(patterns)); memset(vector, 0, sizeof(vector)); }
 		// инициализирующий конструктор
 		regx(ssh_cws* pattern, ssh_u count) : regx()
 		{
@@ -31,13 +31,17 @@ namespace ssh
 			return false;
 		}
 		// найти совпадени€ без компил€ции паттерна
-		ssh_l match(ssh_cws subject, ssh_l idx, ssh_u idx_ptrn = -1)
+		ssh_l match(const String& subject, ssh_l idx, ssh_u idx_ptrn = -1)
 		{
-			subj = subject;
-			return (result = ssh_regx_exec((idx_ptrn == -1 ? re : patterns[idx_ptrn]), subject, ssh_wcslen(subject), idx, 0, vector, 256));
+			if(ssh_regx_exec)
+			{
+				subj = subject;
+				return (result = ssh_regx_exec((idx_ptrn == -1 ? re : patterns[idx_ptrn]), subject, ssh_wcslen(subject), idx, 0, vector, 256));
+			}
+			return 0;
 		}
 		// найти совпадени€ с компил€цией паттерна
-		ssh_l match(ssh_cws subject, ssh_cws pattern, ssh_l idx)
+		ssh_l match(const String& subject, const String& pattern, ssh_l idx)
 		{
 			return ((re = compile(pattern)) ? match(subject, idx) : 0);
 		}
@@ -55,7 +59,7 @@ namespace ssh
 		bool replace(String& subject, ssh_cws repl, ssh_l idx, ssh_u idx_ptrn)
 		{
 			ssh_l nWcs(ssh_wcslen(repl));
-			while(match(subject, idx_ptrn, idx) > 0)
+			while(match(subject, idx, idx_ptrn) > 0)
 			{
 				idx = vector[0];
 				subject.remove(idx, vector[1] - idx);
@@ -83,9 +87,9 @@ namespace ssh
 		// найденные позиции
 		ssh_l vector[256];
 		// всего найденных
-		ssh_l result;
+		ssh_l result = 0;
 		// временный паттерн
-		regex16* re;
+		regex16* re = nullptr;
 		// откомпилированные паттерны
 		regex16* patterns[32];
 	};

@@ -33,19 +33,17 @@ namespace ssh
 
 	static int ssh_AVX_hash(ssh_cws _cws)
 	{
-		int hash(1315423911);
-		while(*_cws) hash = _mm_crc32_u16(hash, *_cws++);
-		return hash;
+		int hsh(0);
+		while(*_cws) hsh = _mm_crc32_u16(hsh, *_cws++);
+		return hsh;
 	}
 
 	static int ssh_SSE_hash(ssh_cws _cws)
 	{
-		int hash(1315423911);
-		while(*_cws) hash ^= ((hash << 5) + (*_cws++) + (hash >> 2));
-		return hash;
+		return 0;
 	};
 
-	static ssh_u ssh_SSE_rand(ssh_u begin, ssh_u end)
+	static ssh_u ssh_AVX_rand(ssh_u begin, ssh_u end)
 	{
 		ssh_u tmp;
 		for(int i = 0; i < 10; i++)
@@ -55,7 +53,7 @@ namespace ssh
 		return 0;
 	}
 	
-	static ssh_u ssh_AVX_rand(ssh_u begin, ssh_u end)
+	static ssh_u ssh_SSE_rand(ssh_u begin, ssh_u end)
 	{
 		static ssh_u _genRnd(_time64(nullptr));
 		_genRnd *= 1103515245;
@@ -130,7 +128,7 @@ namespace ssh
 			if(!ssh_wcscmp(charset, cp_utf16))
 			{
 				out = Buffer(str.length() * 2);
-				memcpy(out.to<void*>(), str.str(), out.size());
+				ssh_memcpy(out.to<void*>(), str.str(), out.size());
 			}
 			else
 			{
@@ -158,7 +156,7 @@ namespace ssh
 			if(!ssh_wcscmp(charset, cp_utf16))
 			{
 				out = Buffer(in_c * 2);
-				memcpy(out.to<void*>(), in.to<void*>(), out.size());
+				ssh_memcpy(out.to<void*>(), in.to<void*>(), out.size());
 			}
 			else
 			{
@@ -230,7 +228,7 @@ namespace ssh
 	{
 		static ssh_u gen_count(0);
 		gen_count++;
-		return (is_long ? ssh_printf(L"%s%I64X%016I64X", nm, gen_count, __rdtsc()) : ssh_printf(L"%s%I64X", nm, __rdtsc()));
+		return (is_long ? ssh_printf(L"%s%I64x%016I64x", nm, gen_count, __rdtsc()) : ssh_printf(L"%s%I64x", nm, __rdtsc()));
 	}
 
 	ssh_u SSH ssh_offset_line(const String& text, ssh_l ln)
@@ -315,7 +313,8 @@ namespace ssh
 		{
 			regx rx;
 			rx.set_pattern(0, LR"((?mUs)/\*.*\*/)");
-			rx.set_pattern(1, LR"((?m)\s*//.*[\r\n]*)");
+			rx.set_pattern(1, LR"((?m)[\r|\n]{3,})");
+			rx.set_pattern(2, LR"((?m)\s*//.*[\r\n]*)");
 
 			for(ssh_u i = 0; i < count; i++)
 			{
@@ -323,8 +322,9 @@ namespace ssh
 				File of(path, File::open_read);
 				File nf(npath, File::create_write);
 				String text(of.read(0, cp_ansi));
-				if(is_simple) rx.replace(text, L"", 0, 1);
+				if(is_simple) rx.replace(text, L"", 0, 2);
 				rx.replace(text, L"", 0, 0);
+				rx.replace(text, L"\r\n", 0, 1);
 				nf.write(text, cp_ansi);
 			}
 		}
@@ -410,7 +410,7 @@ namespace ssh
 	String SSH ssh_make_guid(const GUID& guid)
 	{
 		ssh_ws buf[64];
-		_swprintf_p(buf, 64, L"{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}", guid.Data1, guid.Data2, guid.Data3, guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
+		_swprintf_p(buf, 64, L"{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}", guid.Data1, guid.Data2, guid.Data3, guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
 		return buf;
 	}
 
@@ -614,7 +614,7 @@ namespace ssh
 	bool SSH ssh_make_wnd(const DESC_WND& desc, bool is_show_wnd)
 	{
 		WNDCLASSEX wc;
-		if(desc.className.is_empty()) desc.className = ssh_gen_name(L"");
+		if(desc.className.is_empty()) desc.className = ssh_gen_name(L"CLASS_");
 
 		wc.cbSize = sizeof(WNDCLASSEX);
 		wc.style = desc.stylesClass;
@@ -630,7 +630,7 @@ namespace ssh
 		wc.hIconSm = desc.iconSm ? desc.iconSm : LoadIcon(0, IDI_APPLICATION);
 		if(RegisterClassEx(&wc))
 		{
-			//if((desc.hWnd = CreateWindow(desc.className, desc.caption, desc.stylesWnd, desc.bar.x, desc.bar.y, desc.bar.w, desc.bar.h, desc.hWndParent, nullptr, desc.hInst, nullptr)))
+			if((desc.hWnd = CreateWindow(desc.className, desc.caption, desc.stylesWnd, desc.bar.x, desc.bar.y, desc.bar.w, desc.bar.h, desc.hWndParent, nullptr, desc.hInst, nullptr)))
 			{
 				if(is_show_wnd)
 				{
@@ -780,31 +780,18 @@ namespace ssh
 	__ssh_rand				SSH ssh_rand(ssh_SSE_rand);
 	__ssh_hash				SSH ssh_hash(ssh_SSE_hash);
 	
-	__asm_ssh_parse_xml		SSH asm_ssh_parse_xml(nullptr);
-	__asm_ssh_parse_spec	SSH asm_ssh_parse_spec(nullptr);
-	__asm_ssh_wcslen		SSH asm_ssh_wcslen(nullptr);
 	__asm_ssh_wcsstr		SSH asm_ssh_wcsstr(nullptr);
-	__asm_ssh_wcschr		SSH asm_ssh_wcschr(nullptr);
 	__asm_ssh_wcscmp		SSH asm_ssh_wcscmp(nullptr);
-	__asm_ssh_wton			SSH asm_ssh_wton(nullptr);
-	__asm_ssh_ntow			SSH asm_ssh_ntow(nullptr);
 
 	static void ssh_init_libs()
 	{
-//		cpuCaps = (CpuCaps)asm_ssh_capability();
 		ssh_cws _dll(ssh_cpu_caps(CpuCaps::AVX) ? L"sshAVX.dll" : L"sshSSE.dll");
 		// инициализировать процессорно-зависимые функции
 		ssh_rand = (__ssh_rand)(ssh_cpu_caps(CpuCaps::RDRAND) ? ssh_AVX_rand : ssh_SSE_rand);
-		ssh_hash = (__ssh_hash)(ssh_cpu_caps(CpuCaps::SSE4_2) ? ssh_AVX_hash : ssh_SSE_hash);
+		ssh_hash = (__ssh_hash)(ssh_cpu_caps(CpuCaps::SSE4_2) ? (__ssh_hash)ssh_dll_proc(L"sshSSE.dll", "asm_ssh_get_hash", 0) : ssh_AVX_hash);
 
-		asm_ssh_parse_xml = (__asm_ssh_parse_xml)ssh_dll_proc(_dll, "asm_ssh_parse_xml", 0);
-		asm_ssh_parse_spec = (__asm_ssh_parse_spec)ssh_dll_proc(_dll, "asm_ssh_parse_spec", 0);
-		asm_ssh_wcslen = (__asm_ssh_wcslen)ssh_dll_proc(_dll, "asm_ssh_wcslen", 0);
 		asm_ssh_wcsstr = (__asm_ssh_wcsstr)ssh_dll_proc(_dll, "asm_ssh_wcsstr", 0);
-		asm_ssh_wcschr = (__asm_ssh_wcschr)ssh_dll_proc(_dll, "asm_ssh_wcschr", 0);
 		asm_ssh_wcscmp = (__asm_ssh_wcscmp)ssh_dll_proc(_dll, "asm_ssh_wcscmp", 0);
-		asm_ssh_wton = (__asm_ssh_wton)ssh_dll_proc(_dll, "asm_ssh_wton", 0);;
-		asm_ssh_ntow = (__asm_ssh_ntow)ssh_dll_proc(_dll, "asm_ssh_ntow", 0);;
 		
 		// инициализировать функции стандартных библиотек - sshREGX, sshCNV
 		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");

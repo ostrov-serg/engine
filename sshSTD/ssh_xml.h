@@ -3,6 +3,7 @@
 
 #include "ssh_tree.h"
 #include "ssh_list.h"
+#include <list>
 
 namespace ssh
 {
@@ -28,6 +29,7 @@ namespace ssh
 		// значение узла/атрибута
 		String val;
 		// список атрибутов
+		//std::list<XmlNode*> attrs;
 		List<XmlNode*> attrs;
 	};
 

@@ -142,7 +142,6 @@ namespace ssh
 		}
 		Node* insert(Node* p, Node* n)
 		{
-			is_root(p);
 			if(p)
 			{
 				if(p->fchild) {p->fchild->prev = n; n->next = p->fchild;} else p->lchild = n;
