@@ -8,21 +8,6 @@ namespace ssh
 	class SSH LZW
 	{
 	public:
-		enum Consts
-		{
-			// Размер словаря в элементах
-			TABLE_SIZE = 5021,
-			// Количество битов в коде
-			BITS = 12,
-			// Максимальное значение кода
-			MAX_CODE = ((1 << BITS) - 1),
-			// Специальный код конца потока
-			END_OF_STREAM = 256,
-			// Значение кода, которое получает первая добавленная в словарь фраза
-			FIRST_CODE = 257,
-			// Признак свободной ячейки в словаре
-			UNUSED = -1
-		};
 		struct dictionary
 		{
 			int code_value;
@@ -52,90 +37,28 @@ namespace ssh
 		ssh_b mask;
 		// текущий символ обработки
 		int rack;
+	private:
+		// Размер словаря в элементах
+		static const int TABLE_SIZE = 5021;
+		// Количество битов в коде
+		static const int BITS = 12;
+		// Максимальное значение кода
+		static const int MAX_CODE = ((1 << BITS) - 1);
+		// Специальный код конца потока
+		static const int END_OF_STREAM = 256;
+		// Значение кода, которое получает первая добавленная в словарь фраза
+		static const int FIRST_CODE = 257;
+		// Признак свободной ячейки в словаре
+		static const int UNUSED = -1;
 		// Структура словаря для алгоритма LZW
 		dictionary dict[TABLE_SIZE];
 		// Стек для декодирования
 		char decode_stack[TABLE_SIZE];
 	};
 
-	class SSH Haffman
-	{
-	public:
-#pragma pack(push, 1)
-		struct node;
-		struct value
-		{
-			value() : len(0) {}
-			union
-			{
-				node* ref = nullptr;
-				ssh_u val;
-			};
-			ssh_w len;
-			// запись бит
-			void write(ssh_b** p, int& shift) noexcept;
-		};
-		struct node
-		{
-			SSH_NEW_DECL(node, 128);
-			node() : l(nullptr), r(nullptr), val(nullptr), freq(0) {}
-			node(node* _l, node* _r, int f) : l(_l), r(_r), freq(f), val(nullptr) {}
-			int freq;
-			value* val;
-			node* l;
-			node* r;
-		};
-#pragma pack(pop)
-		// конструктор
-		Haffman() : head(nullptr), in(nullptr), out(nullptr) {}
-		// деструктор
-		~Haffman() { head->reset(); }
-		// обработка
-		Buffer process(const Buffer& in, bool is_compress) noexcept;
-	protected:
-		// упаковка
-		Buffer compress(ssh_u size) noexcept;
-		// распаковка
-		Buffer decompress() noexcept;
-		// сформировать дерево
-		void make_tree(int size) noexcept;
-		// отображение диагностики
-		void print_haff(Haffman::node* n, int tabs = 1, bool is_tree = true);
-		// запись дерева
-		void write_tree() noexcept;
-		// чтение дерева
-		void read_tree() noexcept;
-		// чтение бит
-		value* read(long val) noexcept;
-		// корень дерева
-		node* head;
-		// значения
-		value vals[256];
-		// дерево узлов
-		Array<node*> nodes;
-		// буферы ввода и вывода
-		ssh_b* in, *out;
-	};
-
 	class SSH Arith
 	{
 	public:
-		enum Consts
-		{
-			// Количество битов в регистре
-			BITS_IN_REGISTER		= 16,
-			// Максимально возможное значение в регистре
-			TOP_VALUE				= ((1 << BITS_IN_REGISTER) - 1),
-			// Диапазоны
-			FIRST_QTR				= (TOP_VALUE / 4 + 1),
-			HALF					= (2 * FIRST_QTR),
-			THIRD_QTR				= (3 * FIRST_QTR),
-			NO_OF_CHARS				= 256,
-			EOF_SYMBOL				= (NO_OF_CHARS + 1),
-			NO_OF_SYMBOLS			= (NO_OF_CHARS + 1),
-			// Порог частоты для масштабирования
-			MAX_FREQUENCY			= 2047
-		};
 		// конструктор
 		Arith();
 		// обработка
@@ -170,5 +93,19 @@ namespace ssh
 		int buffer, bits_to_go;
 		// входной и выходной буферы
 		ssh_b* in, *out;
+	private:
+		// Количество битов в регистре
+		static const int BITS_IN_REGISTER = 16;
+		// Максимально возможное значение в регистре
+		static const int TOP_VALUE = ((1 << BITS_IN_REGISTER) - 1);
+		// Диапазоны
+		static const int FIRST_QTR = (TOP_VALUE / 4 + 1);
+		static const int HALF = (2 * FIRST_QTR);
+		static const int THIRD_QTR = (3 * FIRST_QTR);
+		static const int NO_OF_CHARS = 256;
+		static const int EOF_SYMBOL = (NO_OF_CHARS + 1);
+		static const int NO_OF_SYMBOLS = (NO_OF_CHARS + 1);
+		// Порог частоты для масштабирования
+		static const int MAX_FREQUENCY = 2047;
 	};
 }

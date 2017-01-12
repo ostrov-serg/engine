@@ -125,140 +125,10 @@ extern "C"
 	ssh_ws* ssh_asm_wcsstr1(ssh_ws* _s1, ssh_cws _s2);
 }
 
-#pragma pack(push, 8)
-struct tree_node
-{
-	struct tree_node *Left;
-	struct tree_node *Parent;
-	struct tree_node *Right;
-	char Color; // 0 - Red, 1 - Black
-	char Isnil;
-	// ssh_w _ssh_w;
-	int _int;
-	//std::pair Myval;
-	int first; // called Myval in std::set
-	ssh_ccs second; // not present in std::set
-};
-struct tree_struct
-{
-	ssh_u null;
-	struct tree_node *Myhead;
-	size_t Mysize;
-}; 
-
-void dump_as_tree(int tabs, struct tree_node *n)
-{
-	ssh_log->add_msg(ssh_printf(L"%i %C\n", n->first, n->Color + 48), false);
-	String t(L'\t', tabs * 2);
-	if(n->Left->Isnil == 0)
-	{
-		ssh_log->add_msg(ssh_printf(L"%zL-------", t), false);
-		dump_as_tree(tabs + 1, n->Left);
-	};
-	if(n->Right->Isnil == 0)
-	{
-		ssh_log->add_msg(ssh_printf(L"%zR-------", t), false);
-		dump_as_tree(tabs + 1, n->Right);
-	};
-};
 
 #include <list>
 #include <map>
 #include <forward_list>
-
-void dump_map_and_set(struct tree_struct *m, bool is_set)
-{
-	ssh_log->add_msg(ssh_printf(L"root----"), false);
-	dump_as_tree(1, m->Myhead->Parent);
-	ssh_log->add_msg(ssh_printf(L"\r\n\r\n"), false);
-};
-
-class xtree
-{
-public:
-	enum caps { red, black };
-	struct node
-	{
-		node() {}
-		node(node* p, node* l, node* r, caps _c, int v) : parent(p), left(l), right(r), c(_c), val(v) { }
-		~node() {}
-		int val = 0;
-		caps c;
-		node* parent = nullptr;
-		node* left = nullptr;
-		node* right = nullptr;
-		int count = 0;
-	};
-	void insert(int v)
-	{
-		if(!head)
-		{
-			head = new node(nullptr, nullptr, nullptr, red, v);
-		}
-		else
-		{
-			_insert(head, 0, v);
-		}
-	}
-protected:
-	void swap(node* n, int v)
-	{
-		auto ll(n->left);
-		auto rr(n->right);
-		auto pp(n->parent);
-		node* nn;
-		if(n->c == red)
-		{
-			if(v > n->val) n->right = nullptr, ll = n; else n->left = nullptr, rr = n;
-			nn = new node(pp, ll, rr, n->c, v);
-			if(pp) pp->left = nn;
-		}
-		else
-		{
-			if(v < n->val) n->right = nullptr, ll = n; else n->left = nullptr, rr = n;
-			nn = new node(pp, ll, rr, n->c, v);
-			if(pp) pp->right = nn;
-		}
-		if(rr) rr->parent = nn;
-		if(ll) ll->parent = nn;
-		n->parent = nn;
-	}
-	void _insert(node* n, int c, int v)
-	{
-		auto pp(n->parent);
-		if(n->val == v) return;
-		else if(v > n->val)
-		{
-			if(n->right)
-			{
-				_insert(n->right, c + 1, v);
-			}
-			else
-			{
-				// проверить на родителя
-				if(c > 2 && pp->val > v)
-					swap(pp, v);
-				else
-					n->right = new node(n, nullptr, nullptr, black, v);
-			}
-		}
-		else
-		{
-			if(n->left)
-			{
-				_insert(n->left, c + 1, v);
-			}
-			else
-			{
-				if(c > 2 && pp->val < v)
-					swap(pp, v);
-				// проверить на родителя
-				n->left = new node(n, nullptr, nullptr, red, v);
-			}
-		}
-	}
-	node* head = nullptr;
-};
 
 
 extern "C"
@@ -275,84 +145,125 @@ void lz77(const Buffer& buf)
 	}
 }
 
-class xTree
+#include <stdio.h>
+#include <string.h>
+using namespace std;
+#define MEGABYTE 1024*1024
+
+unsigned char word[256];
+unsigned char _data[1024];
+unsigned short sz = 0;
+unsigned char d = 0;
+unsigned int i = 0;
+unsigned short j = 0;
+
+unsigned short search(unsigned char l)
 {
-public:
-	struct node
-	{
-		node(node* p, int v) : parent(p), val(v) {}
-		int val;
-		node* parent;
-		List<node*> child;
-	};
-	xTree() {}
-	void set(node* n, int v) noexcept
-	{
-//		SSH_RELEASE_NODE(T, n->value);
-		n->val = v;
-	}
-	auto get_root() const noexcept { return root; }
-	auto insert(node* p, int v) noexcept { return insert(p, new node(p, v)); }
-	auto insert(node* p, const xTree& tree) noexcept { return insert(p, tree.get_root()); }
-	auto add(node* p, int v) noexcept { return add(p, new node(p, v)); }
-	auto add(node* p, const xTree& tree) noexcept { return add(p, tree.get_root()); }
-	void remove(node* n) noexcept
-	{
-		if(n == root)
-		{
-			delete root;
-			root = nullptr;
-		}
-		else if(n)
-		{
-			auto p(n->parent);
-			p->child.remove(p->child.get_node_value(n));
-		}
-	}
-	void move(node* n1, node* n2) noexcept
-	{
-		if(is_move(n1, n2))
-		{
-
-		}
-	}
-protected:
-	node* add(node* p, node* n) noexcept
-	{
-		if(p) p->child.add(n);
-		else if(!root) root = n;
-		return n;
-	}
-	node* insert(node* p, node* n) noexcept
-	{
-		if(p) p->child.insert(n);
-		else if(!root) root = n;
-		return n;
-	}
-	// возможно ли перемещение узла? n1 перенести в n2
-	bool is_move(node* n1, node* n2) const noexcept
-	{
-		// проверить находится ли n2 в n1
-		return false;
-	}
-
-	node* root = nullptr;
-};
-#include <regex>
-
-static int ssh_AVX_hash(ssh_cws _cws)
-{
-	int hash(0);
-	while(*_cws) hash = _mm_crc32_u16(hash, *_cws++);
-	return hash;
+	for(j = 0; j < sz; j++)
+		if(word[j] == l) return j + 1;
+	return 0;
 }
+
+void MoveToFront(unsigned int rsz)
+{
+	unsigned short p = 0;
+	for(i = 0; i < rsz; i++)
+	{
+		p = search(_data[i]);
+		if(!p)
+		{
+			for(j = sz; j > 0; j--)
+				word[j] = word[j - 1];
+			word[0] = _data[i];
+			sz++;
+		}
+		else
+		{
+			d = word[p - 1];
+			for(j = p - 1; j > 0; j--)
+				word[j] = word[j - 1];
+			word[0] = d;
+		}
+		_data[i] = (p >= 256 ? 0 : p);
+	}
+}
+
+void MoveToBack(unsigned int rsz)
+{
+	unsigned char p = 0;
+	for(i = rsz - 1; i >= 0; i--)
+	{
+		p = word[0];
+		if(!_data[i])
+		{
+			d = word[0];
+			for(j = 0; j < sz - 1; j++)
+				word[j] = word[j + 1];
+			word[sz - 1] = d;
+		}
+		else
+		{
+			d = word[0];
+			for(j = 0; j < _data[i] - 1; j++)
+				word[j] = word[j + 1];
+			word[_data[i] - 1] = d;
+		}
+		_data[i] = p;
+		if(i == 0) break;
+	}
+}
+
+/*
+int main(int argc, char *argv[])
+{
+	if(argc <= 3)
+	{
+		printf("Usage: %s TYPE IN/FILE/PATH OUT/FILE/PATH\nTYPE:\n-c \t-\tCode\n-d\t-\tDecode\n\n", argv[0]);
+		return 1;
+	}
+	FILE * in = fopen(argv[2], "r");
+	FILE * out = fopen(argv[3], "w");
+	bool type = false;
+	if(strcmp(argv[1], "-c") == 0) type = true;
+	else if(strcmp(argv[1], "-d") == 0) type = false;
+	else
+	{
+		printf("Usage: %s TYPE IN/FILE/PATH OUT/FILE/PATH\nTYPE:\n-c \t-\tCode\n-d\t-\tDecode\n\n", argv[0]);
+		return 1;
+	}
+	if(type)
+		while(!feof(in))
+		{
+			unsigned int rsz = fread(data, 1, MEGABYTE, in);
+			sz = 0;
+			fwrite(&sz, 2, 1, out);
+			fwrite(word, 1, 256, out);
+			fwrite(data, 1, rsz, out);
+			fflush(out);
+		}
+	else
+		while(!feof(in))
+		{
+			fread(&sz, 2, 1, in);
+			fread(word, 1, 256, in);
+			unsigned int rsz = fread(data, 1, MEGABYTE, in);
+			MoveToBack(rsz);
+			fwrite(data, 1, rsz, out);
+			fflush(out);
+		}
+	fclose(in);
+	fclose(out);
+	return 0;
+}
+*/
+
+#include <regex>
 
 int main() noexcept
 {
-	int hash1 = ssh_AVX_hash(L"Сергей Шаталов");
-	int hash2 = ssh_hash(L"Сергей Шаталов");
-	String _f_f(hash1, Radix::_bin);
-	String _f_f1(hash2, Radix::_bin);
+	memset(word, 0, 256);
+	memcpy(_data, "sergey", 7);
+	MoveToFront(6);
 	int T[11];
 	unsigned char in[] = "рдакраааабб";// af
 	int count[256];
