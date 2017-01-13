@@ -134,73 +134,13 @@ void lz77(const Buffer& buf)
 	}
 }
 
-#include <stdio.h>
-#include <string.h>
-using namespace std;
-
-unsigned char word[512];
-unsigned char* pword(&word[256]);
-unsigned char _data[1024];
-unsigned short sz = 0;
-unsigned char d = 0;
-unsigned int i = 0;
-unsigned short j = 0;
-
-void MoveToFront(unsigned int rsz)
-{
-	unsigned short p = 0;
-	for(i = 0; i < rsz; i++)
-	{
-		auto l(_data[i]);
-
-		for(p = 0; p < sz; p++)
-			if(pword[p] == l) break;
-		if(p < sz) memmove(pword + 1, pword, p), p++; else sz++, pword--, p = 0;
-		*pword = l;
-		_data[i] = (ssh_b)p;
-	}
-}
-
-void MoveToBack(unsigned int rsz)
-{
-	unsigned char p = 0;
-	unsigned char* pp(&_data[rsz - 1]);
-	while(rsz--)
-	{
-		auto l(*pp);
-		p = *pword;
-		if(!l) l = (ssh_b)sz;
-		l--;
-		memcpy(pword, pword + 1, l);
-		pword[l] = p;
-		*pp-- = p;
-	}
-}
-
 int main() noexcept
 {
+	ssh_log->init();
+
 	ssh_unit_test();
 
-	ssh_ccs _ccs =	"RNDSRRFFN,RSRENLYYL,RSENN,,R,,,,,EYYFETT,,HENYSYTSDSESYDD,UYFS,TRDEGADEEFSRRTLTSS,FRHFYFNFED,FTYS,NGGDOONDSSSSLELNTDETNSYRESCCE TII MMLIIITHDDM  HRR       RRLWW,WWPPHUMTTHCS. AAIAMNN NUREN NNII RIIEEEIEENEERENNN  IIOUUN AHSRBHCSHHLSUSSPRRNSSIIDNBE EVDUVHSVHVMPTHGGINRSRHORWO OOOOOOOOOOO O  ROONNNAA  NCTSC.WTTTTTTTWPPTTTTTT LLTRCSLLHHTVCDLTSSBBBLL A .    ,KK SDDVTTTSHDD- HHWVRFMMWWWWFLLL  AALAACUB  IIP  IIIA   ECCAAR EFIIIIEOIOOIOOOOOIIAIIIAAIIINOTIIIIO ROEAEEAAEAAAAAAATTBNS     Y    R SS CC IIIIYCCF F      F   EPLLLPPNRYYHH HRH  SRAAMR  X   EOOOOEOOEAOOERRGGEOIAIIPA EEAOOPOPOUAAAAEOIASESMSGIIIESSCCEA,LUIUOUINS S  IST   EOOOEOOE UUUCNOUICNNIIAI E   EO   IIINRRCAAI  AFFNNIIIOOSLLNQCP  AOOOOEEEEOADTT  O  R    ENNNNTRTTNNTTN  ";
-//					"RNDSRRFFN,RSRENLYYL,RSENN,,R,,,,,EYYFETT,,HENYSYTSDSESYDD,UYFS,TRDEGADEEFSRRTLTSS,FRHFYFNFED,FTYS,NGGDOONDSSSSLELNTDETNSYRESCCE TII MMLIIITHDDM  HRR       RRLWW,WWPPHUMTTHCS. AAIAMNN NUREN NNII RIIEEEIEENEERENNN  IIOUUN AHSRBHCSHHLSUSSPRRNSSIIDNBE EVDUVHSVHVMPTHGGINRSRHORWO OOOOOOOOOOO O  ROONNNAA  NCTSC.WTTTTTTTWPPTTTTTT LLTRCSLLHHTVCDLTSSBBBLL A .    ,KK SDDVTTTSHDD- HHWVRFMMWWWWFLLL  AALAACUB  IIP  IIIA   ECCAAR EFIIIIEOIOOIOOOOOIIAIIIAAIIINOTIIIIO ROEAEEAAEAAAAAAATTBNS     Y    R SS CC IIIIYCCF F      F   EPLLLPPNRYYHH HRH  SRAAMR  X   EOOOOEOOEAOOERRGGEOIAIIPA EEAOOPOPOUAAAAEOIASESMSGIIIESSCCEA,LUIUOUINS S  IST   EOOOEOOE UUUCNOUICNNIIAI E   EO   IIINRRCAAI  AFFNNIIIOOSLLNQCP  AOOOOEEEEOADTT  O  R    ENNNNTRTTNNTTN  ";
-//					"RNDSRRFFN,RSRENLYYL,RSENN,,R,,,,,EYYFETT,,HENYSYTSDSESYDD,UYFS,TRDEGADEEFSRRTLTSS,FRHFYFNFED,FTYS,NGGDOONDSSSSLELNTDETNSYRESCCE TII MMLIIITHDDM  HRR       RRLWW,WWPPHUMTTHCS. AAIAMNN NUREN NNII RIIEEEIEENEERENNN  IIOUUN AHSRBHCSHHLSUSSPRRNSSIIDNBE EVDUVHSVHVMPTHGGINRSRHORWO OOOOOOOOOOO O  ROONNNAA  NCTSC.WTTTTTTTWPPTTTTTT LLTRCSLLHHTVCDLTSSBBBLL A .    ,KK SDDVTTTSHDD- HHWVRFMMWWWWFLLL  AALAACUB  IIP  IIIA   ECCAAR EFIIIIEOIOOIOOOOOIIAIIIAAIIINOTIIIIO ROEAEEAAEAAAAAAATTBNS     Y    R SS CC IIIIYCCF F      F   EPLLLPPNRYYHH HRH  SRAAMR  X   EOOOOEOOEAOOERRGGEOIAIIPA EEAOOPOPOUAAAAEOIASESMSGIIIESSCCEA,LUIUOUINS S  IST   EOOOEOOE UUUCNOUICNNIIAI E   EO   IIINRRCAAI  AFFNNIIIOOSLLNQCP  AOOOOEEEEOADTT  O  R    ENNNNTRTTNNTTN  ";
-	size_t len = strlen(_ccs);
-
-	memset(word, 0, 512);
-	memcpy(_data, _ccs, len+1);
-	MoveToFront(len);
-	MoveToBack(len);
-
-	return 0;
-	/*
-	ssh_log->init();
-	std::list<int> lst;
-	lst.push_back(1);
-	lst.push_back(2);
-	std::vector<int> ptr{1,2,3,4};
 	Arith a1;
-	ssh_u v = 10;
-	String str(v);
 	File r(L"c:\\1", File::open_read);
 	Buffer out(a1.process(r.read(0), true));
 	File w(L"c:\\1+", File::create_write);
@@ -211,6 +151,15 @@ int main() noexcept
 	File w1(L"c:\\1++", File::create_write);
 	w1.write(out1);
 	return 0;
+
+	/*
+	std::list<int> lst;
+	lst.push_back(1);
+	lst.push_back(2);
+	std::vector<int> ptr{1,2,3,4};
+	Arith a1;
+	ssh_u v = 10;
+	String str(v);
 	printf("%i", 1);
 	std::regex re;
 

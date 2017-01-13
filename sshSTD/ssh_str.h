@@ -18,10 +18,8 @@ namespace ssh
 		String(ssh_ws* ws, ssh_l len = -1) : String((ssh_cws)ws, len) {}
 		String(ssh_b* b, ssh_l len = -1) : String((ssh_ccs)b, len) {}
 		String(const String& str) { init(); *this = str; }
-		explicit String(std::nullptr_t) { } //-V730
-		explicit String(ssh_ws ws, ssh_l rep);
-		explicit String(float v) { init(); num(v, Radix::_flt); }
-		explicit String(double v) { init(); num(v, Radix::_dbl); }
+		String(std::nullptr_t) { } //-V730
+		String(ssh_ws ws, ssh_l rep);
 		template <typename T, class = str_enable_if> String(T v, Radix r = Radix::_dec) { init(); num(v, r); }
 		// деструктор
 		~String() { empty(); }

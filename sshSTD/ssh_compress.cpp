@@ -161,14 +161,16 @@ namespace ssh
 	Buffer Arith::process(const Buffer& _in, bool is_compress)
 	{
 		LZW lzw;
+		MTF mtf;
 		if(is_compress)
 		{
-			Buffer _lzw(lzw.process(_in, true));
+			Buffer _mtf(mtf.process(_in, true));
+			Buffer _lzw(lzw.process(_mtf, true));
 			in = _lzw;
 			return compress(_lzw.size());
 		}
 		in = _in;
-		return lzw.process(decompress(), false);
+		return mtf.process(lzw.process(decompress(), false), false);
 	}
 
 	Buffer Arith::compress(ssh_u size) noexcept
@@ -361,43 +363,46 @@ namespace ssh
 
 	Buffer MTF::compress(ssh_u size) noexcept
 	{
-		Buffer _out(size + 257); out = _out;
-		ssh_w p;
-
-		while(size--)
+		int i;
+		// создать алфавит
+		for(i = 0; i < size; i++)
 		{
-			ssh_b l(*in++);
-			for(p = 0; p < sz_alphabit; p++)
-				if(palphabit[p] == l) break;
-			if(p < sz_alphabit) memmove(palphabit + 1, palphabit, p), p++; else sz_alphabit++, palphabit--, p = 0;
-			*palphabit = l;
-			*out++ = (ssh_b)p;
+			auto l(in[i]);
+			if(!alphabit[l + 256]) alphabit[sz_alphabit++] = l, alphabit[in[i] + 256] = 1;
 		}
-		// записать алфавит и его размер
-		*out++ = (ssh_b)sz_alphabit;
-		memcpy(out, palphabit, sz_alphabit); out += sz_alphabit;
-		return Buffer(_out, 0, _out.size() - (256 - sz_alphabit));
+		// создать буфер
+		Buffer _out(size + sz_alphabit + 2); out = _out;
+		*(ssh_w*)out = sz_alphabit; out += 2;
+		out = (ssh_b*)ssh_memcpy(out, alphabit, sz_alphabit);
+		// закодировать
+		for(i = 0; i < size; i++)
+		{
+			auto l(*in++);
+			ssh_b idx(0);
+			while(alphabit[idx] != l) { idx++; }
+			memmove(&alphabit[1], &alphabit[0], idx);
+			alphabit[0] = l;
+			*out++ = idx;
+		}
+		return _out;
 	}
 
 	Buffer MTF::decompress(ssh_u size) noexcept
 	{
 		// прочитать алфавит и его размер
-		sz_alphabit = *in++;
-		memcpy(palphabit, in, sz_alphabit);
-		in += sz_alphabit;
-
-		size -= size - (sz_alphabit + 1);
-		Buffer _out(size); out = _out; out += size - 1; in += size - 1;
-
+		sz_alphabit = *(ssh_w*)in; in += 2;
+		ssh_memcpy(alphabit, in, sz_alphabit); in += sz_alphabit;
+		// создать буфер
+		size -= (sz_alphabit + 2);
+		Buffer _out(size); out = _out;
+		// раскодировать
 		while(size--)
 		{
-			ssh_b p(*palphabit);
-			ssh_b l(*in--);
-			if(!l) l = (ssh_b)sz_alphabit;
-			l--;
-			memcpy(palphabit, palphabit + 1, l);
-			palphabit[l] = p;
-			*out-- = p;
+			auto idx(*in++);
+			auto s(alphabit[idx]);
+			memmove(&alphabit[1], &alphabit[0], idx);
+			*out++ = s;
+			alphabit[0] = s;
 		}
 		return _out;
 	}

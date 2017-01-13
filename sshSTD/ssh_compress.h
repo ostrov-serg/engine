@@ -9,7 +9,7 @@ namespace ssh
 	{
 	public:
 		// конструктор
-		MTF() : palphabit(&alphabit[256]), in(nullptr), out(nullptr) {}
+		MTF() : in(nullptr), out(nullptr), sz_alphabit(0) { ssh_memzero(alphabit, 512); }
 		// обработка
 		Buffer process(const Buffer& _in, bool is_compress) { in = _in; return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
 	protected:
@@ -19,8 +19,6 @@ namespace ssh
 		Buffer decompress(ssh_u size) noexcept;
 		// алфавит
 		ssh_b alphabit[512];
-		// указатель на начало алфавита
-		ssh_b* palphabit;
 		// буферы ввода и вывода
 		ssh_b* in, *out;
 		// размер алфавита
