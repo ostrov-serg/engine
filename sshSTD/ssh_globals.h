@@ -50,15 +50,13 @@ namespace ssh
 		PROG_FOLDER, WORK_FOLDER, TEMP_FOLDER, USER_FOLDER, PROG_NAME, USER_NAME, COMP_NAME, CUSTOM, PLATFORM, TOTAL_MEMORY, PHYSICAL_MEMORY, CPU_SPEED
 	};
 
+	void SSH ssh_unit_test();
+
 	SSH float* ssh_vec3_mtx(const float* v, const float* m);
 	SSH float* ssh_vec4_mtx(const float* v, const float* m);
 	SSH float* ssh_mtx_vec3(const float* m, const float* v);
 	SSH float* ssh_mtx_vec4(const float* m, const float* v);
 	SSH float* ssh_mtx_mtx(const float* m1, const float* m2);
-
-	int SSH ssh_ext_count_array();
-	ssh_u SSH ssh_ext_exec_hash(ssh_ccs str);
-	String SSH ssh_ext_exec(ssh_ccs str);
 
 	ssh_u SSH ssh_system_values(SystemInfo type);
 	ssh_u SSH ssh_dll_proc(ssh_cws dll, ssh_ccs proc, ssh_cws suffix = L"d");

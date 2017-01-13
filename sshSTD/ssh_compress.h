@@ -5,6 +5,28 @@
 
 namespace ssh
 {
+	class SSH MTF
+	{
+	public:
+		// конструктор
+		MTF() : palphabit(&alphabit[256]), in(nullptr), out(nullptr) {}
+		// обработка
+		Buffer process(const Buffer& _in, bool is_compress) { in = _in; return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
+	protected:
+		// Процедура сжатия данных
+		Buffer compress(ssh_u size) noexcept;
+		// Процедура декодирования сжатых данных
+		Buffer decompress(ssh_u size) noexcept;
+		// алфавит
+		ssh_b alphabit[512];
+		// указатель на начало алфавита
+		ssh_b* palphabit;
+		// буферы ввода и вывода
+		ssh_b* in, *out;
+		// размер алфавита
+		ssh_w sz_alphabit;
+	};
+	
 	class SSH LZW
 	{
 	public:
@@ -19,9 +41,9 @@ namespace ssh
 		// обработка буфера
 		Buffer process(const Buffer& _in, bool is_compress) { in = _in; return (is_compress ? compress(_in.size()) : decompress()); }
 	protected:
-		// Процедура сжатия файла
+		// Процедура сжатия данных
 		Buffer compress(ssh_u size) noexcept;
-		// Процедура декодирования сжатого файла
+		// Процедура декодирования сжатых данных
 		Buffer decompress();
 		// Процедура декодирования строки. Размещает символы в стеке, возвращает их количество.
 		ssh_i decode_string(ssh_i count, ssh_i code) noexcept;
@@ -31,7 +53,7 @@ namespace ssh
 		void set_bits(ssh_d code) noexcept;
 		// получение бит
 		ssh_d get_bits(int& size);
-		// буферы ввода и  вывода
+		// буферы ввода и вывода
 		ssh_b* in, *out;
 		// маска
 		ssh_b mask;
@@ -50,7 +72,7 @@ namespace ssh
 		static const int FIRST_CODE = 257;
 		// Признак свободной ячейки в словаре
 		static const int UNUSED = -1;
-		// Структура словаря для алгоритма LZW
+		// Структура словаря
 		dictionary dict[TABLE_SIZE];
 		// Стек для декодирования
 		char decode_stack[TABLE_SIZE];

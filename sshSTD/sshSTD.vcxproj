@@ -143,10 +143,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ssh_compress.cpp" />
-    <ClCompile Include="ssh_ext.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="ssh_gamepad.cpp" />
     <ClCompile Include="ssh_globals.cpp" />
     <ClCompile Include="ssh_jpg.cpp" />
@@ -159,6 +155,7 @@
     <ClCompile Include="ssh_srlz.cpp" />
     <ClCompile Include="ssh_str.cpp" />
     <ClCompile Include="ssh_time.cpp" />
+    <ClCompile Include="ssh_unittest.cpp" />
     <ClCompile Include="ssh_xml.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

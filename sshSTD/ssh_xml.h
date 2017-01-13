@@ -3,7 +3,6 @@
 
 #include "ssh_tree.h"
 #include "ssh_list.h"
-#include <list>
 
 namespace ssh
 {

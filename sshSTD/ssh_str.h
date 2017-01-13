@@ -4,6 +4,7 @@
 namespace ssh
 {
 	#define SSH_BUFFER_LENGTH			18
+	#define str_enable_if std::enable_if_t < std::is_arithmetic<T>::value, T>
 
 	class SSH String
 	{
@@ -21,7 +22,7 @@ namespace ssh
 		explicit String(ssh_ws ws, ssh_l rep);
 		explicit String(float v) { init(); num(v, Radix::_flt); }
 		explicit String(double v) { init(); num(v, Radix::_dbl); }
-		template <typename T, class = std::enable_if_t<std::is_arithmetic<T>::value, T>> String(T v, Radix r = Radix::_dec) { init(); num(v, r); }
+		template <typename T, class = str_enable_if> String(T v, Radix r = Radix::_dec) { init(); num(v, r); }
 		// деструктор
 		~String() { empty(); }
 		// привидение типа
@@ -30,8 +31,8 @@ namespace ssh
 		explicit operator float() const { return to_num<float>(0, Radix::_flt); }
 		explicit operator bool() const { return to_num<bool>(0, Radix::_bool); }
 		template<typename T> operator T() const { return to_num<T>(0, Radix::_dec); }
-		template <typename T> T to_num(ssh_l idx, Radix R = Radix::_dec) const { return *(T*)asm_ssh_wton(str() + idx, (ssh_u)R, nullptr); }
-		template <typename T> void num(T v, Radix R = Radix::_dec) { ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, (ssh_u)R, nullptr); }
+		template <typename T, class = str_enable_if> T to_num(ssh_l idx, Radix R = Radix::_dec) const { return *(T*)asm_ssh_wton(str() + idx, (ssh_u)R, nullptr); }
+		template <typename T, class = str_enable_if> void num(T v, Radix R = Radix::_dec) { ssh_u tmp(0); *(T*)&tmp = v; *this = asm_ssh_ntow(&tmp, (ssh_u)R, nullptr); }
 		// вернуть по индексу
 		ssh_ws operator[](ssh_u idx) const { return at(idx); }
 		// операторы сравнения

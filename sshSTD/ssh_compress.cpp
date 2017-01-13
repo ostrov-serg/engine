@@ -358,4 +358,47 @@ namespace ssh
 		decode_stack[count++] = (char)code;
 		return count;
 	}
+
+	Buffer MTF::compress(ssh_u size) noexcept
+	{
+		Buffer _out(size + 257); out = _out;
+		ssh_w p;
+
+		while(size--)
+		{
+			ssh_b l(*in++);
+			for(p = 0; p < sz_alphabit; p++)
+				if(palphabit[p] == l) break;
+			if(p < sz_alphabit) memmove(palphabit + 1, palphabit, p), p++; else sz_alphabit++, palphabit--, p = 0;
+			*palphabit = l;
+			*out++ = (ssh_b)p;
+		}
+		// записать алфавит и его размер
+		*out++ = (ssh_b)sz_alphabit;
+		memcpy(out, palphabit, sz_alphabit); out += sz_alphabit;
+		return Buffer(_out, 0, _out.size() - (256 - sz_alphabit));
+	}
+
+	Buffer MTF::decompress(ssh_u size) noexcept
+	{
+		// прочитать алфавит и его размер
+		sz_alphabit = *in++;
+		memcpy(palphabit, in, sz_alphabit);
+		in += sz_alphabit;
+
+		size -= size - (sz_alphabit + 1);
+		Buffer _out(size); out = _out; out += size - 1; in += size - 1;
+
+		while(size--)
+		{
+			ssh_b p(*palphabit);
+			ssh_b l(*in--);
+			if(!l) l = (ssh_b)sz_alphabit;
+			l--;
+			memcpy(palphabit, palphabit + 1, l);
+			palphabit[l] = p;
+			*out-- = p;
+		}
+		return _out;
+	}
 }

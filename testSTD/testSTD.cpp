@@ -1,18 +1,7 @@
 ﻿
 #include "stdafx.h"
+#include <regex>
 
-
-//typedef void* (CALLBACK* __cnv_open)(ssh_cws to, ssh_cws from);
-typedef ssh_cs* (CALLBACK* __ext_undname)(char* out, const char* name, int len_out, unsigned long flags);
-
-
-
-ssh_u ssh_dll_proc(ssh_cws dll, ssh_ccs nm)
-{
-	HMODULE hdll;
-	if(!(hdll = LoadLibrary(dll))) return 0;
-	return (ssh_u)GetProcAddress(hdll, nm);
-}
 
 class ttt : public Serialize
 {
@@ -148,160 +137,62 @@ void lz77(const Buffer& buf)
 #include <stdio.h>
 #include <string.h>
 using namespace std;
-#define MEGABYTE 1024*1024
 
-unsigned char word[256];
+unsigned char word[512];
+unsigned char* pword(&word[256]);
 unsigned char _data[1024];
 unsigned short sz = 0;
 unsigned char d = 0;
 unsigned int i = 0;
 unsigned short j = 0;
 
-unsigned short search(unsigned char l)
-{
-	for(j = 0; j < sz; j++)
-		if(word[j] == l) return j + 1;
-	return 0;
-}
-
 void MoveToFront(unsigned int rsz)
 {
 	unsigned short p = 0;
 	for(i = 0; i < rsz; i++)
 	{
-		p = search(_data[i]);
-		if(!p)
-		{
-			for(j = sz; j > 0; j--)
-				word[j] = word[j - 1];
-			word[0] = _data[i];
-			sz++;
-		}
-		else
-		{
-			d = word[p - 1];
-			for(j = p - 1; j > 0; j--)
-				word[j] = word[j - 1];
-			word[0] = d;
-		}
-		_data[i] = (p >= 256 ? 0 : p);
+		auto l(_data[i]);
+
+		for(p = 0; p < sz; p++)
+			if(pword[p] == l) break;
+		if(p < sz) memmove(pword + 1, pword, p), p++; else sz++, pword--, p = 0;
+		*pword = l;
+		_data[i] = (ssh_b)p;
 	}
 }
 
 void MoveToBack(unsigned int rsz)
 {
 	unsigned char p = 0;
-	for(i = rsz - 1; i >= 0; i--)
+	unsigned char* pp(&_data[rsz - 1]);
+	while(rsz--)
 	{
-		p = word[0];
-		if(!_data[i])
-		{
-			d = word[0];
-			for(j = 0; j < sz - 1; j++)
-				word[j] = word[j + 1];
-			word[sz - 1] = d;
-		}
-		else
-		{
-			d = word[0];
-			for(j = 0; j < _data[i] - 1; j++)
-				word[j] = word[j + 1];
-			word[_data[i] - 1] = d;
-		}
-		_data[i] = p;
-		if(i == 0) break;
+		auto l(*pp);
+		p = *pword;
+		if(!l) l = (ssh_b)sz;
+		l--;
+		memcpy(pword, pword + 1, l);
+		pword[l] = p;
+		*pp-- = p;
 	}
 }
-
-/*
-int main(int argc, char *argv[])
-{
-	if(argc <= 3)
-	{
-		printf("Usage: %s TYPE IN/FILE/PATH OUT/FILE/PATH\nTYPE:\n-c \t-\tCode\n-d\t-\tDecode\n\n", argv[0]);
-		return 1;
-	}
-	FILE * in = fopen(argv[2], "r");
-	FILE * out = fopen(argv[3], "w");
-	bool type = false;
-	if(strcmp(argv[1], "-c") == 0) type = true;
-	else if(strcmp(argv[1], "-d") == 0) type = false;
-	else
-	{
-		printf("Usage: %s TYPE IN/FILE/PATH OUT/FILE/PATH\nTYPE:\n-c \t-\tCode\n-d\t-\tDecode\n\n", argv[0]);
-		return 1;
-	}
-	if(type)
-		while(!feof(in))
-		{
-			unsigned int rsz = fread(data, 1, MEGABYTE, in);
-			sz = 0;
-			fwrite(&sz, 2, 1, out);
-			fwrite(word, 1, 256, out);
-			fwrite(data, 1, rsz, out);
-			fflush(out);
-		}
-	else
-		while(!feof(in))
-		{
-			fread(&sz, 2, 1, in);
-			fread(word, 1, 256, in);
-			unsigned int rsz = fread(data, 1, MEGABYTE, in);
-			MoveToBack(rsz);
-			fwrite(data, 1, rsz, out);
-			fflush(out);
-		}
-	fclose(in);
-	fclose(out);
-	return 0;
-}
-*/
-
-#include <regex>
 
 int main() noexcept
 {
-	memset(word, 0, 256);
-	memcpy(_data, "sergey", 7);
-	MoveToFront(6);
-	int T[11];
-	unsigned char in[] = "рдакраааабб";// af
-	int count[256];
-	unsigned char out_c[11];
-	unsigned char M[] = "абдкр";
-	int j, i, pos = 5, N = 256, n = strlen((const char*)in), x;
-	for(i = 0; i < n; i++)
-	{
-		int tmpl, tmp2 = 0;
-		x = in[i];
-		tmpl = M[0];
-		M[0] = x;
-		j = 0;
-		while(tmpl != x)
-		{
-			tmp2 = tmpl;
-			tmpl = M[++j];
-			M[j] = tmp2;
-		}
-		in[i] = j;
-	}
-	
-	int sum = 0;
+	ssh_unit_test();
 
-	for(i = 0; i < N; i++) count[i] = 0;
-	for(i = 0; i < n; i++) count[in[i]]++;
-	sum = 0;
-	for(i = 0; i < N; i++)
-	{
-		sum += count[i];
-		count[i] = sum - count[i];
-	}
-	for(i = 0;  i < n;  i++) T[count[in[i]]++] = i;
-	for(i = 0; i < n ; i++)
-	{
-		pos = T[pos];
-		out_c[i] = in[pos];
-	}
+	ssh_ccs _ccs =	"RNDSRRFFN,RSRENLYYL,RSENN,,R,,,,,EYYFETT,,HENYSYTSDSESYDD,UYFS,TRDEGADEEFSRRTLTSS,FRHFYFNFED,FTYS,NGGDOONDSSSSLELNTDETNSYRESCCE TII MMLIIITHDDM  HRR       RRLWW,WWPPHUMTTHCS. AAIAMNN NUREN NNII RIIEEEIEENEERENNN  IIOUUN AHSRBHCSHHLSUSSPRRNSSIIDNBE EVDUVHSVHVMPTHGGINRSRHORWO OOOOOOOOOOO O  ROONNNAA  NCTSC.WTTTTTTTWPPTTTTTT LLTRCSLLHHTVCDLTSSBBBLL A .    ,KK SDDVTTTSHDD- HHWVRFMMWWWWFLLL  AALAACUB  IIP  IIIA   ECCAAR EFIIIIEOIOOIOOOOOIIAIIIAAIIINOTIIIIO ROEAEEAAEAAAAAAATTBNS     Y    R SS CC IIIIYCCF F      F   EPLLLPPNRYYHH HRH  SRAAMR  X   EOOOOEOOEAOOERRGGEOIAIIPA EEAOOPOPOUAAAAEOIASESMSGIIIESSCCEA,LUIUOUINS S  IST   EOOOEOOE UUUCNOUICNNIIAI E   EO   IIINRRCAAI  AFFNNIIIOOSLLNQCP  AOOOOEEEEOADTT  O  R    ENNNNTRTTNNTTN  ";
+//					"RNDSRRFFN,RSRENLYYL,RSENN,,R,,,,,EYYFETT,,HENYSYTSDSESYDD,UYFS,TRDEGADEEFSRRTLTSS,FRHFYFNFED,FTYS,NGGDOONDSSSSLELNTDETNSYRESCCE TII MMLIIITHDDM  HRR       RRLWW,WWPPHUMTTHCS. AAIAMNN NUREN NNII RIIEEEIEENEERENNN  IIOUUN AHSRBHCSHHLSUSSPRRNSSIIDNBE EVDUVHSVHVMPTHGGINRSRHORWO OOOOOOOOOOO O  ROONNNAA  NCTSC.WTTTTTTTWPPTTTTTT LLTRCSLLHHTVCDLTSSBBBLL A .    ,KK SDDVTTTSHDD- HHWVRFMMWWWWFLLL  AALAACUB  IIP  IIIA   ECCAAR EFIIIIEOIOOIOOOOOIIAIIIAAIIINOTIIIIO ROEAEEAAEAAAAAAATTBNS     Y    R SS CC IIIIYCCF F      F   EPLLLPPNRYYHH HRH  SRAAMR  X   EOOOOEOOEAOOERRGGEOIAIIPA EEAOOPOPOUAAAAEOIASESMSGIIIESSCCEA,LUIUOUINS S  IST   EOOOEOOE UUUCNOUICNNIIAI E   EO   IIINRRCAAI  AFFNNIIIOOSLLNQCP  AOOOOEEEEOADTT  O  R    ENNNNTRTTNNTTN  ";
+//					"RNDSRRFFN,RSRENLYYL,RSENN,,R,,,,,EYYFETT,,HENYSYTSDSESYDD,UYFS,TRDEGADEEFSRRTLTSS,FRHFYFNFED,FTYS,NGGDOONDSSSSLELNTDETNSYRESCCE TII MMLIIITHDDM  HRR       RRLWW,WWPPHUMTTHCS. AAIAMNN NUREN NNII RIIEEEIEENEERENNN  IIOUUN AHSRBHCSHHLSUSSPRRNSSIIDNBE EVDUVHSVHVMPTHGGINRSRHORWO OOOOOOOOOOO O  ROONNNAA  NCTSC.WTTTTTTTWPPTTTTTT LLTRCSLLHHTVCDLTSSBBBLL A .    ,KK SDDVTTTSHDD- HHWVRFMMWWWWFLLL  AALAACUB  IIP  IIIA   ECCAAR EFIIIIEOIOOIOOOOOIIAIIIAAIIINOTIIIIO ROEAEEAAEAAAAAAATTBNS     Y    R SS CC IIIIYCCF F      F   EPLLLPPNRYYHH HRH  SRAAMR  X   EOOOOEOOEAOOERRGGEOIAIIPA EEAOOPOPOUAAAAEOIASESMSGIIIESSCCEA,LUIUOUINS S  IST   EOOOEOOE UUUCNOUICNNIIAI E   EO   IIINRRCAAI  AFFNNIIIOOSLLNQCP  AOOOOEEEEOADTT  O  R    ENNNNTRTTNNTTN  ";
+	size_t len = strlen(_ccs);
+
+	memset(word, 0, 512);
+	memcpy(_data, _ccs, len+1);
+	MoveToFront(len);
+	MoveToBack(len);
+
+	return 0;
+	/*
 	ssh_log->init();
 	std::list<int> lst;
 	lst.push_back(1);
@@ -329,60 +220,8 @@ int main() noexcept
 	Buffer buf(f.read(0));
 	f.close();
 	lz77(buf);
-	return 0;
-	/*
-	xtree x;
-	x.insert(10);
-	x.insert(100);
-	x.insert(1);
-	x.insert(5);
-	x.insert(120);
-	x.insert(4);
-	x.insert(2);
-	x.insert(9);
-	x.insert(1000);
-	x.insert(1200);
-	x.insert(990);
-	std::map<int, ssh_ccs> m;
-	m[10] = "ten";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[20] = "twenty";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[3] = "three";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[111] = "one hundred one";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[100] = "one hundred";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[102] = "twelve";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[107] = "one hundred seven";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[0] = "zero";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[9] = "4";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[4] = "2";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[5] = "ninety-nine";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[5] = "five";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[11] = "eleven";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[1001] = "one thousand one";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[1010] = "one thousand ten";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[2] = "two";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	m[9] = "nine";
-	dump_map_and_set((struct tree_struct *)(void*)&m, false);
-	//printf("dumping m as map:\n");
-	*/
-
-
 	SSH_TRACE;
 	_func();
 	return 0;
+	*/
 }
