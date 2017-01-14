@@ -33,6 +33,7 @@ namespace ssh
 							set_val(idx);
 							idx = RT[idx];
 						}
+						break;
 					}
 					else
 					{
@@ -76,8 +77,7 @@ namespace ssh
 		keys = size;
 		// Инициализация индексов букв
 		ssh_memzero(LT, 512 * keys);
-		// Инициализация индексов слов
-		//ssh_memzero(RT, keys);
+		ssh_memzero(RT, keys + 1);
 		// Группируем слова по первой букве
 		for(int idx = 1; idx != keys + 1; idx++)
 		{

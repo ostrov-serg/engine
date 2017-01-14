@@ -4,8 +4,13 @@
 
 namespace ssh
 {
-	Arith::Arith() : low(0), buffer(0), value(0), bits_to_follow(0), in(nullptr), out(nullptr)
+	void Arith::init()
 	{
+		low = buffer = value = bits_to_follow = 0;
+		high = TOP_VALUE;
+		in = nullptr;
+		out = nullptr;
+
 		int i;
 		for(i = 0; i < 256; i++)
 		{
@@ -18,7 +23,6 @@ namespace ssh
 			cum_freq[i] = 257 - i;
 		}
 		freq[0] = 0;
-		high = TOP_VALUE;
 	}
 
 	void Arith::update(int symbol) noexcept
@@ -202,12 +206,14 @@ namespace ssh
 	{
 		LZW lzw;
 		MTF mtf;
+		
+		init();
 		if(is_compress)
 		{
-			Buffer _mtf(mtf.process(_in, true));
-			Buffer _lzw(lzw.process(_mtf, true));
-			in = _lzw;
-			return compress(_lzw.size());
+			//Buffer _mtf(mtf.process(_in, true));
+			//Buffer _lzw(lzw.process(_in, true));
+			in = _in;
+			return compress(_in.size());
 		}
 		in = _in;
 		return mtf.process(lzw.process(decompress(), false), false);

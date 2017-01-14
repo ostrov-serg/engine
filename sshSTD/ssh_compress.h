@@ -9,12 +9,13 @@ namespace ssh
 		// конструктор
 		RLE() {}
 		// обработка
-		Buffer process(const Buffer& _in, bool is_compress) { return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
+		Buffer process(const Buffer& _in, bool is_compress) { in = _in; return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
 	protected:
 		// упаковщик
 		Buffer compress(ssh_u size);
 		// распаковщик
 		Buffer decompress(ssh_u size);
+		ssh_b* in;
 	};
 
 	#define BWT_BLOCK_LENGHT		2048
@@ -130,7 +131,7 @@ namespace ssh
 	{
 	public:
 		// конструктор
-		Arith();
+		Arith() { }
 		// обработка
 		Buffer process(const Buffer& in, bool is_compress);
 	protected:
@@ -138,6 +139,8 @@ namespace ssh
 		Buffer compress(ssh_u size) noexcept;
 		// распаковка
 		Buffer decompress();
+		// инициализация среды
+		void init();
 		// Кодирование очередного символа
 		void encode_symbol(int symbol) noexcept;
 		// Вывод очередного бита сжатой информации

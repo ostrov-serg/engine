@@ -135,170 +135,47 @@ void lz77(const Buffer& buf)
 	}
 }
 
-ssh_ccs _str[9];
-long RT[20];
-long LT[11][256];
-String result[256];
-int _result[256];
-
-void PutCurrRecord(int recno)
-{
-	static int i = 0;
-	_result[i++] = recno;// _str[recno - 1];
-}
-
-// Функция обработки данных после 1-го этапа: Перегруппировываем слова, переходя от одной буквы к следующей
-void process(int level, int keys)
-{
-	// Цикл по алфавиту
-	for(int i = 0; i < 256; i++)
-	{
-		// Ищем использование i-й буквы
-		auto recno(LT[level][i]);
-		LT[level][i] = 0;
-		// Сканируем ветвь для этой буквы
-		while(recno)
-		{
-			// i-й символ используется только однажды, значит отсортированная часть массива пополнилась новым элементом
-			if(!RT[recno])
-			{
-				PutCurrRecord(recno);
-				break;
-			}
-			else
-			{
-				// В случае многократного использования i-го символа:
-				if(level == keys)
-				{
-					// Вывод всех данных на этом уровне:
-					while(recno)
-					{
-						// Добавляем текущую запись в таблицу индексов
-						PutCurrRecord(recno);
-						recno = RT[recno];
-					}
-				}
-				else
-				{
-					// Продолжать уточнять порядок слов: опускаемся на уровень вниз
-					int newlevel(level + 1);
-					while(recno)
-					{
-						auto nextrec(RT[recno]);
-						auto c(_str[recno - 1][newlevel]);
-						RT[recno] = LT[newlevel][c];
-						LT[newlevel][c] = recno;
-						recno = nextrec;
-					}
-					// Продолжаем процесс уточнения
-					process(newlevel, keys);
-				}
-			}
-		}
-	}
-}
-
-// Количество используемых ключевых полей
-void ABCsort(int keys)
-{
-	_str[0] = "carmel ";
-	_str[1] = "adela  ";
-	_str[2] = "beatrix";
-	_str[3] = "abbey  ";
-	_str[4] = "abigale";
-	_str[5] = "barbara";
-	_str[6] = "camalia";
-	_str[7] = "belinda";
-	_str[8] = "beckie ";
-
-	int N = 9;
-	// Инициализация таблицы символов
-	memset(LT, 0, 256 * keys);
-	// Этап 1 - Группируем слова по первой букве
-	for(int recno = 1; recno != N + 1; recno++)
-	{
-		auto c(_str[recno - 1][0]);
-		RT[recno] = LT[0][c];
-		LT[0][c] = recno;
-	}
-	// Запускаем процесс уточнения положения записей в списке.
-	process(0, keys);
-}
-
-
-//ssh_ccs _ccs = "RNDSRRFFN,RSRENLYYL,RSENN,,R,,,,,EYYFETT,,HENYSYTSDSESYDD,UYFS,TRDEGADEEFSRRTLTSS,FRHFYFNFED,FTYS,NGGDOONDSSSSLELNTDETNSYRESCCE TII MMLIIITHDDM  HRR       RRLWW,WWPPHUMTTHCS. AAIAMNN NUREN NNII RIIEEEIEENEERENNN  IIOUUN AHSRBHCSHHLSUSSPRRNSSIIDNBE EVDUVHSVHVMPTHGGINRSRHORWO OOOOOOOOOOO O  ROONNNAA  NCTSC.WTTTTTTTWPPTTTTTT LLTRCSLLHHTVCDLTSSBBBLL A .    ,KK SDDVTTTSHDD- HHWVRFMMWWWWFLLL  AALAACUB  IIP  IIIA   ECCAAR EFIIIIEOIOOIOOOOOIIAIIIAAIIINOTIIIIO ROEAEEAAEAAAAAAATTBNS     Y    R SS CC IIIIYCCF F      F   EPLLLPPNRYYHH HRH  SRAAMR  X   EOOOOEOOEAOOERRGGEOIAIIPA EEAOOPOPOUAAAAEOIASESMSGIIIESSCCEA,LUIUOUINS S  IST   EOOOEOOE UUUCNOUICNNIIAI E   EO   IIINRRCAAI  AFFNNIIIOOSLLNQCP  AOOOOEEEEOADTT  O  R    ENNNNTRTTNNTTN  ";
-
 int main() noexcept
 {
 	ssh_log->init(Log::TypeOutput::debug);
 
-	ABCsort(10);
-	ssh_b _str[] = "carmel adela  beatrixabbey  abigalebarbaracamaliabelindabeckie \0";
+	BWT bwt;
+	RLE rle;
+	MTF mtf;
+	Arith a1;
+	Buffer _out;
 
-	ssh_b src[] = "абракадабра\0";
-	BWT _bwt;
-	size_t n = strlen((ssh_ccs)_str);
 	File f(L"c:\\1", File::open_read);
+	Buffer _bwt(bwt.process(f.read(), true));
+	f.close();
+	Buffer _rle(rle.process(_bwt, true));
+	Buffer _mtf(mtf.process(_bwt, true));
+	Buffer _mtf_rle(rle.process(_mtf, true));
 
-	Buffer _out(_bwt.process(f.read(), true));
-	MTF _mtf;
-	Buffer _mout(_mtf.process(_out, true));
-	File f1(L"c:\\1+", File::open_write);
-	f1.write(_mout);
-	Buffer _out1(_bwt.process(_out, false));
-	File f2(L"c:\\1++", File::open_write);
-	f2.write(_out1);
-	int x = 0;
-	/*
-	ssh_b WT[11];			// word tracker
-	ssh_b LT[11][256];		// little tracker
-	SSH_MSG(L"\t1\t\t2\t\t3\t\t4\t\t5\t\t6\t\t7\t\t8\t\t9\t\r\n");
-	for(int i = 0; i < 9; i++)
-		SSH_MSG(String(_str[i]) + L"\t");
-	SSH_MSG(L"\r\n");
 
-	memset(LT, 0, 256 * 11);
-	for(int i = 0; i < 7; i++)
-	{
-		for(int j = 0; j < 9; j++)
-		{
-			//auto l(src[(i + j) % 11]);
-			auto l(_str[j][i]);
-			WT[j] = LT[i][l];
-			SSH_MSG(L"\t" + String(WT[j]) + L"\t");
-			LT[i][l] = j + 1;
-		}
-		SSH_MSG(L"\r\n");
-	}
+	f.open(L"c:\\bwt.ssh", File::create_write);
+	f.write(_bwt);
+	f.close();
 
-	SSH_MSG(L"\r\na\tb\tc\td\te\tf\tg\th\ti\tj\tk\tl\tm\tn\to\tp\tq\tr\ts\tt\tu\tv\tw\tx\ty\tz\r\n\r\n");
-	for(int i = 0; i < 11; i++)
-	{
-		String str;
-		for(int j = 'a'; j <= 'z'; j++)
-		{
-			str += String(LT[i][j]) + L"\t";
-		}
-		str += L"\r\n";
-		SSH_MSG(str);
-	}
+	f.open(L"c:\\1_bwt.ssh", File::create_write);
+	f.write(a1.process(_bwt, true));
+	f.close();
+
+	f.open(L"c:\\1_mtf.ssh", File::create_write);
+	f.write(a1.process(_mtf, true));
+	f.close();
+
+	f.open(L"c:\\1_rle.ssh", File::create_write);
+	f.write(a1.process(_rle, true));
+	f.close();
+
+	f.open(L"c:\\1_mtf_rle.ssh", File::create_write);
+	f.write(a1.process(_mtf_rle, true));
+	f.close();
 
 	ssh_unit_test();
 
-	//	asm_bwt(11, arr, src);
-
-	Arith a1;
-	File r(L"c:\\1", File::open_read);
-	Buffer out(a1.process(r.read(0), true));
-	File w(L"c:\\1+", File::create_write);
-	w.write(out);
-	Arith a2;
-	File r1(L"c:\\1+", File::open_read);
-	Buffer out1(a2.process(r1.read(0), false));
-	File w1(L"c:\\1++", File::create_write);
-	w1.write(out1);
 	return 0;
-	*/
 	/*
 	std::list<int> lst;
 	lst.push_back(1);
