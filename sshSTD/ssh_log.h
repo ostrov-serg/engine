@@ -74,7 +74,7 @@ namespace ssh
 			info,		// информация
 			assert,		// проверка
 			exception,	// исключение
-			tracer		// трасировщмк
+			tracer		// трасировщик
 		};
 		enum class TypeOutput
 		{

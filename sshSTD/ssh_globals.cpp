@@ -107,7 +107,7 @@ namespace ssh
 	{
 		if(!ssh_wcscmp(charset, cp_ansi)) return CP_ACP;
 		else if(!ssh_wcscmp(charset, cp_utf8)) return CP_UTF8;
-		SSH_LOG(Log::info, ssh_printf(L"Неизвестная кодировка %s", charset));
+		SSH_LOG(ssh_printf(L"Неизвестная кодировка %s", charset));
 		return CP_THREAD_ACP;
 	}
 

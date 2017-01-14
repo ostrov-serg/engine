@@ -6,17 +6,33 @@ extern wcslen:near
 
 ;rcx = text
 
-;	inline int ssh_rev(int x)
-;	{
-;		x = ((x & 0x55555555) << 1) | ((x >> 1) & 0x55555555);
-;		x = ((x & 0x33333333) << 2) | ((x >> 2) & 0x33333333);
-;		x = ((x & 0x0f0f0f0f) << 4) | ((x >> 4) & 0x0f0f0f0f);
-;		return (_rotr((x & 0x), 8) | (_rotl(x, 8) & 0x00ff00ff));
-;	}
-
 ssh_asm_wcsstr1 proc USES r10 r11 r12 rsi rdi
 ssh_asm_wcsstr1 endp
 
+ ; rcx	- len
+ ; rdx	- dst
+ ; r8	- src
+asm_bwt proc USES rdi
+		xor r9, r9
+		mov rdi, rdx
+		mov r10, rcx
+		xor rdx, rdx
+_loop:	xor r11, r11
+		mov r12, r9
+_loop1:	cmp r12, r10
+		cmovge r12, rdx
+		mov al, [r8 + r12]
+		stosb
+		inc r12
+		inc r11
+		cmp r11, r10
+		jb _loop1
+		xor rax, rax
+		stosb
+		inc r9
+		loop _loop
+		ret
+asm_bwt endp
 
 asm_ssh_wcslen1 proc
 		mov rdx, rcx

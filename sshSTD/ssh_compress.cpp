@@ -361,9 +361,10 @@ namespace ssh
 		return count;
 	}
 
-	Buffer MTF::compress(ssh_u size) noexcept
+	Buffer MTF::transform(ssh_u size) noexcept
 	{
 		int i;
+		ssh_b alphabit[512];
 		// создать алфавит
 		for(i = 0; i < size; i++)
 		{
@@ -372,8 +373,8 @@ namespace ssh
 		}
 		// создать буфер
 		Buffer _out(size + sz_alphabit + 2); out = _out;
-		*(ssh_w*)out = sz_alphabit; out += 2;
-		out = (ssh_b*)ssh_memcpy(out, alphabit, sz_alphabit);
+		*(ssh_w*)out = sz_alphabit;
+		out = (ssh_b*)ssh_memcpy(out + 2, alphabit, sz_alphabit);
 		// закодировать
 		for(i = 0; i < size; i++)
 		{
@@ -387,11 +388,12 @@ namespace ssh
 		return _out;
 	}
 
-	Buffer MTF::decompress(ssh_u size) noexcept
+	Buffer MTF::untransform(ssh_u size) noexcept
 	{
 		// прочитать алфавит и его размер
-		sz_alphabit = *(ssh_w*)in; in += 2;
-		ssh_memcpy(alphabit, in, sz_alphabit); in += sz_alphabit;
+		sz_alphabit = *(ssh_w*)in;
+		ssh_b* alphabit(in + 2);
+		in += sz_alphabit + 2;
 		// создать буфер
 		size -= (sz_alphabit + 2);
 		Buffer _out(size); out = _out;
@@ -400,10 +402,127 @@ namespace ssh
 		{
 			auto idx(*in++);
 			auto s(alphabit[idx]);
-			memmove(&alphabit[1], &alphabit[0], idx);
+			memmove(alphabit + 1, alphabit, idx);
 			*out++ = s;
-			alphabit[0] = s;
+			*alphabit = s;
 		}
 		return _out;
 	}
+
+	void BWT::sort(int level) noexcept
+	{
+		// Цикл по алфавиту
+		for(int i = 0; i < 256; i++)
+		{
+			// Ищем использование i-й буквы
+			auto idx(LT[level * 256 + i]);
+			LT[level * 256 + i] = 0;
+			// Сканируем ветвь для этой буквы
+			while(idx)
+			{
+				// i-й символ используется только однажды, значит отсортированная часть массива пополнилась новым элементом
+				if(!RT[idx])
+				{
+					set_val(idx);
+					break;
+				}
+				else
+				{
+					// В случае многократного использования i-го символа:
+					if(level == keys)
+					{
+						// Вывод всех данных на этом уровне:
+						while(idx)
+						{
+							// Добавляем текущую запись в таблицу индексов
+							set_val(idx);
+							idx = RT[idx];
+						}
+					}
+					else
+					{
+						// Продолжать уточнять порядок слов: опускаемся на уровень вниз
+						int newlevel(level + 1);
+						while(idx)
+						{
+							auto nextrec(RT[idx]);
+							auto c(get_val(idx, level));
+							RT[idx] = LT[newlevel * 256 + c];
+							LT[newlevel * 256 + c] = idx;
+							idx = nextrec;
+						}
+						// Продолжаем процесс уточнения
+						sort(newlevel);
+					}
+				}
+			}
+		}
+	}
+
+	void BWT::set_val(int idx) noexcept
+	{
+		if(idx == 1) idx_src = idx_lit;
+		result[idx_lit++] = get_val(idx, keys - 1);
+	}
+
+	ssh_b BWT::get_val(int level, int idx) noexcept
+	{
+		return in[((level - 1) + idx) % keys];
+	}
+
+	int BWT::transform(ssh_u size) noexcept
+	{
+		keys = (int)size;
+		result = Buffer(keys);
+		// Инициализация индексов букв
+		LT = BufferW(256 * keys);
+		ssh_memzero(LT, LT.size());
+		// Инициализация индексов слов
+		RT = BufferW(keys);
+		ssh_memzero(RT, RT.size());
+		// Этап 1 - Группируем слова по первой букве
+		for(int idx = 1; idx != keys + 1; idx++)
+		{
+			auto c(get_val(idx, 0));
+			RT[idx] = LT[c];
+			LT[c] = idx;
+		}
+		// Запускаем процесс уточнения положения записей в списке.
+		sort(0);
+		ssh_memcpy(in, result, keys);
+		return idx_src;
+	}
+
+	int BWT::untransform(ssh_u size) noexcept
+	{
+		return 0;
+	}
 }
+
+/*
+void PutCurrRecord(int recno)
+{
+static int i = 0;
+result[i++] = _str[recno - 1];
+}
+
+// Функция обработки данных после 1-го этапа: Перегруппировываем слова, переходя от одной буквы к следующей
+void process(int level, int keys)
+{
+}
+
+// Количество используемых ключевых полей
+void ABCsort(int keys)
+{
+_str[0] = "carmel ";
+_str[1] = "adela  ";
+_str[2] = "beatrix";
+_str[3] = "abbey  ";
+_str[4] = "abigale";
+_str[5] = "barbara";
+_str[6] = "camalia";
+_str[7] = "belinda";
+_str[8] = "beckie ";
+
+}
+*/

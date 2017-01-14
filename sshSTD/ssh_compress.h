@@ -1,24 +1,52 @@
 
 #pragma once
 
-#include "ssh_array.h"
-
 namespace ssh
 {
+	class SSH BWT
+	{
+	public:
+		// конструктор
+		BWT() : idx_src(-1), idx_lit(0), keys(0), in(nullptr) {}
+		// обработка
+		int process(Buffer& _in, bool is_transform) noexcept { in = _in; return (is_transform ? transform(_in.size()) : untransform(_in.size())); }
+	protected:
+		void set_val(int idx) noexcept;
+		ssh_b get_val(int level, int idx) noexcept;
+		// рекурсивная процедура сортировка
+		void sort(int level) noexcept;
+		// Процедура трансформации данных
+		int transform(ssh_u size) noexcept;
+		// Процедура восстановление данных
+		int untransform(ssh_u size) noexcept;
+		// буфер индексов слов
+		BufferW RT;
+		// буфер индексов букв
+		BufferW LT;
+		// буфер результата
+		Buffer result;
+		// количество разрядов
+		int keys;
+		// входной буфер
+		ssh_b* in;
+		// индекс исходной строки после сортировки
+		int idx_src;
+		// текущий индекс буквы
+		int idx_lit;
+	};
+	
 	class SSH MTF
 	{
 	public:
 		// конструктор
-		MTF() : in(nullptr), out(nullptr), sz_alphabit(0) { ssh_memzero(alphabit, 512); }
+		MTF() : in(nullptr), out(nullptr), sz_alphabit(0) { }
 		// обработка
-		Buffer process(const Buffer& _in, bool is_compress) { in = _in; return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
+		Buffer process(const Buffer& _in, bool is_transform) { in = _in; return (is_transform ? transform(_in.size()) : untransform(_in.size())); }
 	protected:
-		// Процедура сжатия данных
-		Buffer compress(ssh_u size) noexcept;
-		// Процедура декодирования сжатых данных
-		Buffer decompress(ssh_u size) noexcept;
-		// алфавит
-		ssh_b alphabit[512];
+		// Процедура трансформации данных
+		Buffer transform(ssh_u size) noexcept;
+		// Процедура восстановление данных
+		Buffer untransform(ssh_u size) noexcept;
 		// буферы ввода и вывода
 		ssh_b* in, *out;
 		// размер алфавита

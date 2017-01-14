@@ -13,9 +13,9 @@ public:
 			SCHEME_VAR(ttt, a, L"1", SC_BIN, nullptr)
 			SCHEME_VAR(ttt, b, L"2", SC_OCT, nullptr)
 			SCHEME_VAR(ttt, c, L"3", SC_HEX, nullptr)
-		SCHEME_END(ttt);
+			SCHEME_END(ttt);
 	}
-		ssh_w a, b, c;
+	ssh_w a, b, c;
 };
 class tp : public Serialize
 {
@@ -42,17 +42,17 @@ public:
 			SCHEME_VAR(tp, x, L"null", 0, &reflector)
 			SCHEME_VAR(tp, _ccs, L"null", 0, nullptr)
 			SCHEME_NODE_BEGIN(tp, _stk)
-				SCHEME_VAR(stk, xx, L"null", 0, nullptr)
-					SCHEME_NODE_BEGIN(stk, _stk2)
-						SCHEME_VAR(stk2, str, L"null", SC_BASE64, nullptr)
-					SCHEME_NODE_END()
-				SCHEME_VAR(stk, yy, L"null", 0, nullptr)
+			SCHEME_VAR(stk, xx, L"null", 0, nullptr)
+			SCHEME_NODE_BEGIN(stk, _stk2)
+			SCHEME_VAR(stk2, str, L"null", SC_BASE64, nullptr)
+			SCHEME_NODE_END()
+			SCHEME_VAR(stk, yy, L"null", 0, nullptr)
 			SCHEME_NODE_END()
 			SCHEME_VAR(tp, y, L"null", 0, &reflector)
 			SCHEME_VAR(tp, is, L"false", 0, nullptr)
 			SCHEME_NODE_BEGIN(tp, _t)
 			SCHEME_NODE_END()
-		SCHEME_END(tp);
+			SCHEME_END(tp);
 	}
 	int x, y;
 	const bool is = true;
@@ -123,22 +123,157 @@ extern "C"
 extern "C"
 {
 	ssh_u asm_strstr(void* ptr, ssh_u sz, ssh_u len);
+	void asm_bwt(ssh_u len, void* dst, ssh_ccs src);
 }
 void lz77(const Buffer& buf)
 {
 	ssh_b* b(buf);
 	ssh_u sz(buf.size());
-	for(ssh_u i = 0 ; i < sz; i += 8)
+	for(ssh_u i = 0; i < sz; i += 8)
 	{
 		sz -= asm_strstr(buf, sz, i);
 	}
 }
 
+ssh_ccs _str[9];
+long RT[20];
+long LT[11][256];
+String result[256];
+int _result[256];
+
+void PutCurrRecord(int recno)
+{
+	static int i = 0;
+	_result[i++] = recno;// _str[recno - 1];
+}
+
+// Функция обработки данных после 1-го этапа: Перегруппировываем слова, переходя от одной буквы к следующей
+void process(int level, int keys)
+{
+	// Цикл по алфавиту
+	for(int i = 0; i < 256; i++)
+	{
+		// Ищем использование i-й буквы
+		auto recno(LT[level][i]);
+		LT[level][i] = 0;
+		// Сканируем ветвь для этой буквы
+		while(recno)
+		{
+			// i-й символ используется только однажды, значит отсортированная часть массива пополнилась новым элементом
+			if(!RT[recno])
+			{
+				PutCurrRecord(recno);
+				break;
+			}
+			else
+			{
+				// В случае многократного использования i-го символа:
+				if(level == keys)
+				{
+					// Вывод всех данных на этом уровне:
+					while(recno)
+					{
+						// Добавляем текущую запись в таблицу индексов
+						PutCurrRecord(recno);
+						recno = RT[recno];
+					}
+				}
+				else
+				{
+					// Продолжать уточнять порядок слов: опускаемся на уровень вниз
+					int newlevel(level + 1);
+					while(recno)
+					{
+						auto nextrec(RT[recno]);
+						auto c(_str[recno - 1][newlevel]);
+						RT[recno] = LT[newlevel][c];
+						LT[newlevel][c] = recno;
+						recno = nextrec;
+					}
+					// Продолжаем процесс уточнения
+					process(newlevel, keys);
+				}
+			}
+		}
+	}
+}
+
+// Количество используемых ключевых полей
+void ABCsort(int keys)
+{
+	_str[0] = "carmel ";
+	_str[1] = "adela  ";
+	_str[2] = "beatrix";
+	_str[3] = "abbey  ";
+	_str[4] = "abigale";
+	_str[5] = "barbara";
+	_str[6] = "camalia";
+	_str[7] = "belinda";
+	_str[8] = "beckie ";
+
+	int N = 9;
+	// Инициализация таблицы символов
+	memset(LT, 0, 256 * keys);
+	// Этап 1 - Группируем слова по первой букве
+	for(int recno = 1; recno != N + 1; recno++)
+	{
+		auto c(_str[recno - 1][0]);
+		RT[recno] = LT[0][c];
+		LT[0][c] = recno;
+	}
+	// Запускаем процесс уточнения положения записей в списке.
+	process(0, keys);
+}
+
+
 int main() noexcept
 {
-	ssh_log->init();
+	ssh_log->init(Log::TypeOutput::debug);
+
+	ABCsort(10);
+	ssh_b _str[] = "carmel adela  beatrixabbey  abigalebarbaracamaliabelindabeckie \0";
+
+	ssh_b src[] = "абракадабра";
+	BWT _bwt;
+	_bwt.process(Buffer(_str, strlen((ssh_ccs)_str), false), true);
+	int x = 0;
+	/*
+	ssh_b WT[11];			// word tracker
+	ssh_b LT[11][256];		// little tracker
+	SSH_MSG(L"\t1\t\t2\t\t3\t\t4\t\t5\t\t6\t\t7\t\t8\t\t9\t\r\n");
+	for(int i = 0; i < 9; i++)
+		SSH_MSG(String(_str[i]) + L"\t");
+	SSH_MSG(L"\r\n");
+
+	memset(LT, 0, 256 * 11);
+	for(int i = 0; i < 7; i++)
+	{
+		for(int j = 0; j < 9; j++)
+		{
+			//auto l(src[(i + j) % 11]);
+			auto l(_str[j][i]);
+			WT[j] = LT[i][l];
+			SSH_MSG(L"\t" + String(WT[j]) + L"\t");
+			LT[i][l] = j + 1;
+		}
+		SSH_MSG(L"\r\n");
+	}
+
+	SSH_MSG(L"\r\na\tb\tc\td\te\tf\tg\th\ti\tj\tk\tl\tm\tn\to\tp\tq\tr\ts\tt\tu\tv\tw\tx\ty\tz\r\n\r\n");
+	for(int i = 0; i < 11; i++)
+	{
+		String str;
+		for(int j = 'a'; j <= 'z'; j++)
+		{
+			str += String(LT[i][j]) + L"\t";
+		}
+		str += L"\r\n";
+		SSH_MSG(str);
+	}
 
 	ssh_unit_test();
+
+	//	asm_bwt(11, arr, src);
 
 	Arith a1;
 	File r(L"c:\\1", File::open_read);
@@ -151,7 +286,7 @@ int main() noexcept
 	File w1(L"c:\\1++", File::create_write);
 	w1.write(out1);
 	return 0;
-
+	*/
 	/*
 	std::list<int> lst;
 	lst.push_back(1);

@@ -5,42 +5,73 @@ namespace ssh
 {
 	template<typename T> class Range;
 
-	class Buffer
+	template <typename T> class _Buffer
 	{
 	public:
 		// по умолчанию
-		Buffer() { }
+		_Buffer() : data(nullptr), sz(0), is_owner(false) { }
 		// конструктор копии
-		Buffer(const Buffer& buf, ssh_u offs = 0, ssh_u size = -1) : sz(size == -1 ? buf.size() : size), is_owner(true) { const_cast<Buffer*>(&buf)->is_owner = false; data = (sz ? buf.data + offs : nullptr); }
+		_Buffer(const _Buffer& buf, ssh_u offs = 0, ssh_u size = -1) : sz(size == -1 ? buf.size() : size), is_owner(true)
+		{
+			const_cast<_Buffer*>(&buf)->is_owner = false;
+			data = (sz ? buf.data + offs : nullptr);
+		}
 		// конструктор переноса
-		Buffer(Buffer&& buf) : data(buf.data), sz(buf.sz), is_owner(buf.is_owner) { buf.data = nullptr; buf.sz = 0; }
+		_Buffer(_Buffer&& buf) : data(buf.data), sz(buf.sz), is_owner(buf.is_owner)
+		{
+			buf.data = nullptr;
+			buf.sz = 0;
+		}
 		// создать буфер определённого размера
-		Buffer(ssh_u count) : data(new ssh_b[count]), sz(count), is_owner(true) { }
-//		Buffer(const Range<int>& wh, int bpp) : sz(wh.w * wh.h * bpp), data(new ssh_b[sz]), is_owner(true) { }
+		_Buffer(ssh_u count) : data(new T[count]), sz(count * sizeof(T)), is_owner(true) { }
+		// создать из диапазона
+		_Buffer(const Range<int>& wh, int bpp) : sz(wh.w * wh.h * bpp), data(new ssh_b[sz]), is_owner(true) { }
 		// создать из существующего неопределённого буфера
-		Buffer(ssh_b* p, ssh_u count, bool is_own = true) : data(p), sz(count), is_owner(is_own) {}
+		_Buffer(ssh_b* p, ssh_u count, bool is_own = true) : data(p), sz(count), is_owner(is_own) {}
 		// деструктор
-		~Buffer() { release(); }
+		~_Buffer() { release(); }
 		// оператор присваивание
-		const Buffer& operator = (const Buffer& buf) { release(); is_owner = true; sz = buf.sz; const_cast<Buffer*>(&buf)->is_owner = false; data = buf.data; return *this; }
+		const _Buffer& operator = (const _Buffer& buf) noexcept
+		{
+			release();
+			is_owner = true;
+			sz = buf.sz;
+			const_cast<_Buffer*>(&buf)->is_owner = false;
+			data = buf.data;
+			return *this;
+		}
 		// оператор переноса
-		const Buffer& operator = (Buffer&& buf) { release(); data = buf.data; sz = buf.sz; is_owner = buf.is_owner; buf.data = nullptr; buf.sz = 0; return *this; }
+		const _Buffer& operator = (_Buffer&& buf) noexcept
+		{
+			release();
+			data = buf.data;
+			sz = buf.sz;
+			is_owner = buf.is_owner;
+			buf.data = nullptr;
+			buf.sz = 0;
+			return *this;
+		}
 		// освобождение буфера
 		void reset() { release(); }
 		// вернуть размер
 		ssh_u size() const { return sz; }
+		// вернуть размер
+		ssh_u count() const { return sz / sizeof(T); }
 		// привидение типа
-		operator ssh_b*() const { return data; }
+		operator T*() const { return data; }
 		// интерпретация содержимого буфера
 		template<typename TYPE> TYPE to() const { return (TYPE)data; }
 	protected:
 		// реализация
-		void release() { if(is_owner) SSH_DEL(data); }
+		void release() noexcept { if(is_owner) SSH_DEL(data); }
 		// указатель на данные
-		ssh_b* data = nullptr;
+		T* data;
 		// размер данных
-		ssh_u sz = 0;
+		ssh_u sz;
 		// признак владельца
-		bool is_owner = false;
+		bool is_owner;
 	};
+
+	typedef _Buffer<ssh_b> Buffer;
+	typedef _Buffer<ssh_w> BufferW;
 }

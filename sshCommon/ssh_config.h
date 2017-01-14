@@ -57,9 +57,10 @@
 	#ifdef SSH_DLL
 		#pragma comment(lib, "sshSTDd.lib")
 	#endif
-	#define SSH_ASSERT(express, msg, ...)		if(!(express)) Log::add(Log::mAssert, __FILEW__, __LINE__, msg, #express, __VA_ARGS__);
+	#define SSH_ASSERT(express, msg, ...)		if(!(express)) Log::add(Log::assert, __FILEW__, __LINE__, msg, #express, __VA_ARGS__);
 	#define SSH_TRACE							Tracer tracer(__FUNCSIGW__);
-	#define SSH_LOG(tp, msg)					ssh_log->add(tp, __FUNCTIONW__, __FILEW__, __LINE__, msg)
+	#define SSH_LOG(msg)						ssh_log->add(Log::info, __FUNCTIONW__, __FILEW__, __LINE__, msg)
+	#define SSH_MSG(msg)						ssh_log->add_msg(msg, false)
 #endif
 
 #define MAIL_PASS				L"IfnfkjdCthutq"
