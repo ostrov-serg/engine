@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Файлы исходного кода\Compress">
+      <UniqueIdentifier>{9028ceb7-811b-42e8-8862-25f8218d8741}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -125,11 +128,23 @@
     <ClCompile Include="ssh_jpg.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
-    <ClCompile Include="ssh_compress.cpp">
-      <Filter>Файлы исходного кода</Filter>
-    </ClCompile>
     <ClCompile Include="ssh_unittest.cpp">
       <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ssh_mtf.cpp">
+      <Filter>Файлы исходного кода\Compress</Filter>
+    </ClCompile>
+    <ClCompile Include="ssh_bwt.cpp">
+      <Filter>Файлы исходного кода\Compress</Filter>
+    </ClCompile>
+    <ClCompile Include="ssh_lzw.cpp">
+      <Filter>Файлы исходного кода\Compress</Filter>
+    </ClCompile>
+    <ClCompile Include="ssh_arith.cpp">
+      <Filter>Файлы исходного кода\Compress</Filter>
+    </ClCompile>
+    <ClCompile Include="ssh_rle.cpp">
+      <Filter>Файлы исходного кода\Compress</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

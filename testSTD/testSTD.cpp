@@ -226,6 +226,8 @@ void ABCsort(int keys)
 }
 
 
+//ssh_ccs _ccs = "RNDSRRFFN,RSRENLYYL,RSENN,,R,,,,,EYYFETT,,HENYSYTSDSESYDD,UYFS,TRDEGADEEFSRRTLTSS,FRHFYFNFED,FTYS,NGGDOONDSSSSLELNTDETNSYRESCCE TII MMLIIITHDDM  HRR       RRLWW,WWPPHUMTTHCS. AAIAMNN NUREN NNII RIIEEEIEENEERENNN  IIOUUN AHSRBHCSHHLSUSSPRRNSSIIDNBE EVDUVHSVHVMPTHGGINRSRHORWO OOOOOOOOOOO O  ROONNNAA  NCTSC.WTTTTTTTWPPTTTTTT LLTRCSLLHHTVCDLTSSBBBLL A .    ,KK SDDVTTTSHDD- HHWVRFMMWWWWFLLL  AALAACUB  IIP  IIIA   ECCAAR EFIIIIEOIOOIOOOOOIIAIIIAAIIINOTIIIIO ROEAEEAAEAAAAAAATTBNS     Y    R SS CC IIIIYCCF F      F   EPLLLPPNRYYHH HRH  SRAAMR  X   EOOOOEOOEAOOERRGGEOIAIIPA EEAOOPOPOUAAAAEOIASESMSGIIIESSCCEA,LUIUOUINS S  IST   EOOOEOOE UUUCNOUICNNIIAI E   EO   IIINRRCAAI  AFFNNIIIOOSLLNQCP  AOOOOEEEEOADTT  O  R    ENNNNTRTTNNTTN  ";
+
 int main() noexcept
 {
 	ssh_log->init(Log::TypeOutput::debug);
@@ -233,9 +235,19 @@ int main() noexcept
 	ABCsort(10);
 	ssh_b _str[] = "carmel adela  beatrixabbey  abigalebarbaracamaliabelindabeckie \0";
 
-	ssh_b src[] = "абракадабра";
+	ssh_b src[] = "абракадабра\0";
 	BWT _bwt;
-	_bwt.process(Buffer(_str, strlen((ssh_ccs)_str), false), true);
+	size_t n = strlen((ssh_ccs)_str);
+	File f(L"c:\\1", File::open_read);
+
+	Buffer _out(_bwt.process(f.read(), true));
+	MTF _mtf;
+	Buffer _mout(_mtf.process(_out, true));
+	File f1(L"c:\\1+", File::open_write);
+	f1.write(_mout);
+	Buffer _out1(_bwt.process(_out, false));
+	File f2(L"c:\\1++", File::open_write);
+	f2.write(_out1);
 	int x = 0;
 	/*
 	ssh_b WT[11];			// word tracker

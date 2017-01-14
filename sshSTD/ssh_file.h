@@ -58,7 +58,7 @@ namespace ssh
 			return buf;
 		}
 		// чтение определенного размера
-		Buffer read(ssh_u size) const
+		Buffer read(ssh_u size = 0) const
 		{
 			if(!size) size = (length() - get_pos());
 			return read(Buffer(size), size);

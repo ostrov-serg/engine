@@ -74,4 +74,5 @@ namespace ssh
 
 	typedef _Buffer<ssh_b> Buffer;
 	typedef _Buffer<ssh_w> BufferW;
+	typedef _Buffer<ssh_d> BufferD;
 }

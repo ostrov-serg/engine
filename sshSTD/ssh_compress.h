@@ -3,36 +3,58 @@
 
 namespace ssh
 {
+	class SSH RLE
+	{
+	public:
+		// конструктор
+		RLE() {}
+		// обработка
+		Buffer process(const Buffer& _in, bool is_compress) { return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
+	protected:
+		// упаковщик
+		Buffer compress(ssh_u size);
+		// распаковщик
+		Buffer decompress(ssh_u size);
+	};
+
+	#define BWT_BLOCK_LENGHT		2048
+	
 	class SSH BWT
 	{
 	public:
 		// конструктор
-		BWT() : idx_src(-1), idx_lit(0), keys(0), in(nullptr) {}
+		BWT() : idx_lit(0), keys(0), in(nullptr), RT(nullptr), LT(nullptr) {}
 		// обработка
-		int process(Buffer& _in, bool is_transform) noexcept { in = _in; return (is_transform ? transform(_in.size()) : untransform(_in.size())); }
+		Buffer process(const Buffer& _in, bool is_transform) noexcept { in = _in; return (is_transform ? transform(_in.size()) : untransform(_in.size())); }
 	protected:
+		// установка текущего значения после трансформации
 		void set_val(int idx) noexcept;
+		// получение текущего значения на этапе трансформации
 		ssh_b get_val(int level, int idx) noexcept;
-		// рекурсивная процедура сортировка
+		// рекурсивная процедура сортировки
 		void sort(int level) noexcept;
+		// блочное восстановление
+		void untransform_block(int size, ssh_w* vec) noexcept;
+		// блочная трансформация
+		void transform_block(int size) noexcept;
 		// Процедура трансформации данных
-		int transform(ssh_u size) noexcept;
+		Buffer transform(ssh_u size) noexcept;
 		// Процедура восстановление данных
-		int untransform(ssh_u size) noexcept;
+		Buffer untransform(ssh_u size) noexcept;
 		// буфер индексов слов
-		BufferW RT;
+		ssh_w* RT;
 		// буфер индексов букв
-		BufferW LT;
-		// буфер результата
-		Buffer result;
+		ssh_w* LT;
 		// количество разрядов
-		int keys;
+		ssh_w keys;
 		// входной буфер
 		ssh_b* in;
-		// индекс исходной строки после сортировки
-		int idx_src;
+		// указатель на буфер индексов
+		ssh_b* _index;
+		// указатель на текущий блок трансформации
+		ssh_b* _result;
 		// текущий индекс буквы
-		int idx_lit;
+		ssh_w idx_lit;
 	};
 	
 	class SSH MTF
@@ -143,16 +165,16 @@ namespace ssh
 		ssh_b* in, *out;
 	private:
 		// Количество битов в регистре
-		static const int BITS_IN_REGISTER = 16;
+		static const int BITS_IN_REGISTER	= 16;
 		// Максимально возможное значение в регистре
-		static const int TOP_VALUE = ((1 << BITS_IN_REGISTER) - 1);
+		static const int TOP_VALUE			= ((1 << BITS_IN_REGISTER) - 1);
 		// Диапазоны
-		static const int FIRST_QTR = (TOP_VALUE / 4 + 1);
-		static const int HALF = (2 * FIRST_QTR);
-		static const int THIRD_QTR = (3 * FIRST_QTR);
-		static const int NO_OF_CHARS = 256;
-		static const int EOF_SYMBOL = (NO_OF_CHARS + 1);
-		static const int NO_OF_SYMBOLS = (NO_OF_CHARS + 1);
+		static const int FIRST_QTR			= (TOP_VALUE / 4 + 1);
+		static const int HALF				= (2 * FIRST_QTR);
+		static const int THIRD_QTR			= (3 * FIRST_QTR);
+		static const int NO_OF_CHARS		= 256;
+		static const int EOF_SYMBOL			= (NO_OF_CHARS + 1);
+		static const int NO_OF_SYMBOLS		= (NO_OF_CHARS + 1);
 		// Порог частоты для масштабирования
 		static const int MAX_FREQUENCY = 2047;
 	};

@@ -142,16 +142,20 @@
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ssh_compress.cpp" />
+    <ClCompile Include="ssh_bwt.cpp" />
+    <ClCompile Include="ssh_arith.cpp" />
     <ClCompile Include="ssh_gamepad.cpp" />
     <ClCompile Include="ssh_globals.cpp" />
     <ClCompile Include="ssh_jpg.cpp" />
     <ClCompile Include="ssh_log.cpp" />
+    <ClCompile Include="ssh_lzw.cpp" />
     <ClCompile Include="ssh_math.cpp" />
     <ClCompile Include="ssh_mem.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="ssh_mtf.cpp" />
+    <ClCompile Include="ssh_rle.cpp" />
     <ClCompile Include="ssh_srlz.cpp" />
     <ClCompile Include="ssh_str.cpp" />
     <ClCompile Include="ssh_time.cpp" />
