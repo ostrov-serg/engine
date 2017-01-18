@@ -7,7 +7,7 @@ namespace ssh
 	{
 	public:
 		// конструктор
-		RLE() {}
+		RLE() : in(nullptr) {}
 		// обработка
 		Buffer process(const Buffer& _in, bool is_compress) { in = _in; return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
 	protected:
@@ -15,10 +15,11 @@ namespace ssh
 		Buffer compress(ssh_u size);
 		// распаковщик
 		Buffer decompress(ssh_u size);
+		// исходный буфер
 		ssh_b* in;
 	};
 
-	#define BWT_BLOCK_LENGHT		2048
+	#define SSH_BWT_BLOCK_LENGHT		2048
 	
 	class SSH BWT
 	{
@@ -37,7 +38,7 @@ namespace ssh
 		// блочное восстановление
 		void untransform_block(int size, ssh_w* vec) noexcept;
 		// блочная трансформация
-		void transform_block(int size) noexcept;
+		void transform_block(int size, bool is_txt = true) noexcept;
 		// Процедура трансформации данных
 		Buffer transform(ssh_u size) noexcept;
 		// Процедура восстановление данных
@@ -133,7 +134,7 @@ namespace ssh
 		// конструктор
 		Arith() { }
 		// обработка
-		Buffer process(const Buffer& in, bool is_compress);
+		Buffer process(const Buffer& _in, bool is_compress) { in = _in; return (is_compress ? compress(_in.size()) : decompress()); }
 	protected:
 		// упаковка
 		Buffer compress(ssh_u size) noexcept;
@@ -181,4 +182,13 @@ namespace ssh
 		// Порог частоты для масштабирования
 		static const int MAX_FREQUENCY = 2047;
 	};
+
+	#define SSH_COMPRESS_MTF		0x01
+	#define SSH_COMPRESS_RLE		0x02
+	#define SSH_COMPRESS_LZW		0x04
+	#define SSH_COMPRESS_ARI		0x08
+	#define SSH_COMPRESS_HFM		0x10
+
+	Buffer ssh_compress(const Buffer& in, int opt);
+	Buffer ssh_decompress(const Buffer& in);
 }

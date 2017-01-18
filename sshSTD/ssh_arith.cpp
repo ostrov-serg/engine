@@ -201,21 +201,4 @@ namespace ssh
 		}
 		return _out;
 	}
-
-	Buffer Arith::process(const Buffer& _in, bool is_compress)
-	{
-		LZW lzw;
-		MTF mtf;
-		
-		init();
-		if(is_compress)
-		{
-			//Buffer _mtf(mtf.process(_in, true));
-			//Buffer _lzw(lzw.process(_in, true));
-			in = _in;
-			return compress(_in.size());
-		}
-		in = _in;
-		return mtf.process(lzw.process(decompress(), false), false);
-	}
 }

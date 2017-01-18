@@ -146,6 +146,9 @@
     <ClCompile Include="ssh_rle.cpp">
       <Filter>Файлы исходного кода\Compress</Filter>
     </ClCompile>
+    <ClCompile Include="ssh_compress.cpp">
+      <Filter>Файлы исходного кода\Compress</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NatvisFile.natvis" />

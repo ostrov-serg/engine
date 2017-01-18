@@ -144,6 +144,7 @@
   <ItemGroup>
     <ClCompile Include="ssh_bwt.cpp" />
     <ClCompile Include="ssh_arith.cpp" />
+    <ClCompile Include="ssh_compress.cpp" />
     <ClCompile Include="ssh_gamepad.cpp" />
     <ClCompile Include="ssh_globals.cpp" />
     <ClCompile Include="ssh_jpg.cpp" />
