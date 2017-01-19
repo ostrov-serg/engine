@@ -6,7 +6,7 @@ namespace ssh
 {
 	Buffer RLE::compress(ssh_u size) noexcept
 	{
-		Buffer _out(size * 2); out = _out; out++;
+		Buffer _out(size * 2); out = _out;
 		ssh_b* _in(in + size); *_in = 0xff;
 
 		while(in < _in)
@@ -35,14 +35,15 @@ namespace ssh
 			}
 			if(ll) { *tmp = ll; if(is1) *tmp |= 0x80; }
 		}
-		auto l(out - _out);
-		*_out = (ssh_b)((size / l) + 1);
+		auto l(out - _out + 1);
+		*out = (ssh_b)((size / l) + 1);
 		return Buffer(_out, 0, l);
 	}
 
 	Buffer RLE::decompress(ssh_u size) noexcept
 	{
-		Buffer _out(size * *in++); out = _out; size--;
+		size--;
+		Buffer _out(size * in[size]); out = _out;
 		while(size--)
 		{
 			auto l(*in++);

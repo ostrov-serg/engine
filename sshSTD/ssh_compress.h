@@ -136,26 +136,26 @@ namespace ssh
 		// конструктор
 		Arith() { }
 		// обработка
-		Buffer process(const Buffer& _in, bool is_compress) { in = _in; init(); return (is_compress ? compress(_in.size()) : decompress()); }
+		Buffer process(const Buffer& _in, bool is_compress) noexcept { in = _in; init(); return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
 	protected:
 		// упаковка
 		Buffer compress(ssh_u size) noexcept;
 		// распаковка
-		Buffer decompress();
+		Buffer decompress(ssh_u size) noexcept;
 		// инициализация среды
-		void init();
+		void init() noexcept;
 		// Кодирование очередного символа
 		void encode_symbol(int symbol) noexcept;
 		// Вывод очередного бита сжатой информации
 		void output(int bit) noexcept;
 		// Обновление модели очередным символом
 		void update(int symbol) noexcept;
-		// Вывод указанного бита и отложенных ранее
+		// Процедура переноса найденных битов
 		void output_plus(int bit) noexcept;
 		// Ввод очередного бита сжатой информации
-		int input(int& size);
+		int input() noexcept;
 		// Декодирование очередного символа
-		int decode_symbol(int& size);
+		int decode_symbol() noexcept;
 		// Таблицы перекодировки
 		ssh_b index_to_char[257];
 		int char_to_index[256];
@@ -172,17 +172,17 @@ namespace ssh
 	private:
 		// Количество битов в регистре
 		static const int BITS_IN_REGISTER	= 16;
-		// Максимально возможное значение в регистре
+		// Максимально возможное значение в регистре (65535)
 		static const int TOP_VALUE			= ((1 << BITS_IN_REGISTER) - 1);
 		// Диапазоны
-		static const int FIRST_QTR			= (TOP_VALUE / 4 + 1);
-		static const int HALF				= (2 * FIRST_QTR);
-		static const int THIRD_QTR			= (3 * FIRST_QTR);
+		static const int FIRST_QTR			= (TOP_VALUE / 4 + 1);	// 16384
+		static const int HALF				= (2 * FIRST_QTR);		// 32768
+		static const int THIRD_QTR			= (3 * FIRST_QTR);		// 49152
 		static const int NO_OF_CHARS		= 256;
-		static const int EOF_SYMBOL			= (NO_OF_CHARS + 1);
-		static const int NO_OF_SYMBOLS		= (NO_OF_CHARS + 1);
+		static const int EOF_SYMBOL			= (NO_OF_CHARS + 1);	// 257
+		static const int NO_OF_SYMBOLS		= (NO_OF_CHARS + 1);	// 257
 		// Порог частоты для масштабирования
-		static const int MAX_FREQUENCY = 2047;
+		static const int MAX_FREQUENCY		= 2047;
 	};
 
 	class SSH Haffman

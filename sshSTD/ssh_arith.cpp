@@ -4,7 +4,7 @@
 
 namespace ssh
 {
-	void Arith::init()
+	void Arith::init() noexcept
 	{
 		low = buffer = value = bits_to_follow = 0;
 		high = TOP_VALUE;
@@ -67,14 +67,13 @@ namespace ssh
 		}
 	}
 
-	int Arith::input(int& size)
+	int Arith::input() noexcept
 	{
 		int t;
 
 		if(!bits_to_go)
 		{
 			buffer = *in++;
-			if(!--size) SSH_THROW(L"Некорректные входные данные при распаковке Арифметического кодирования!");
 			bits_to_go = 8;
 		}
 		t = buffer & 1;
@@ -95,9 +94,10 @@ namespace ssh
 
 	void Arith::encode_symbol(int symbol) noexcept
 	{
-		long range;
+		// Сколько битов сбрасывать
+		bits_to_follow = 0;
 		// пересчет значений границ
-		range = (long)(high - low) + 1;
+		auto range((high - low) + 1);
 		high = low + (range * cum_freq[symbol - 1]) / cum_freq[0] - 1;
 		low = low + (range * cum_freq[symbol]) / cum_freq[0];
 		// выдвигание очередных битов
@@ -118,19 +118,18 @@ namespace ssh
 			}
 			else break;
 			// сдвиг влево с втягиванием очередного бита
-			low = 2 * low;
-			high = 2 * high + 1;
+			low += low;
+			high += high + 1;
 		}
 	}
 
-	int Arith::decode_symbol(int& size)
+	int Arith::decode_symbol() noexcept
 	{
-		long range;
-		int cum, symbol;
+		int symbol;
 		// определение текущего масштаба частот
-		range = (long)(high - low) + 1;
+		auto range((high - low) + 1);
 		// масштабирование значения в регистре кода
-		cum = (int)((((long)(value - low) + 1) * cum_freq[0] - 1) / range);
+		int cum((int)((((long)(value - low) + 1) * cum_freq[0] - 1) / range));
 		// поиск соответствующего символа в таблице частот
 		for(symbol = 1; cum_freq[symbol] > cum; symbol++);
 		// пересчет границ
@@ -154,23 +153,21 @@ namespace ssh
 			}
 			else break;
 			// сдвиг влево с втягиванием очередного бита
-			low = 2 * low;
-			high = 2 * high + 1;
-			value = 2 * value + input(size);
+			low += low;
+			high += high + 1;
+			value += value + input();
 		}
 		return symbol;
 	}
 
 	Buffer Arith::compress(ssh_u size) noexcept
 	{
-		int i;
-		
-		Buffer _out(size * 2 + sizeof(int)); out = _out; *(int*)out = (int)size;
-		ssh_b* _out1(out); out += sizeof(int);
+		Buffer _out(size * 2 + 1); out = _out;
 
 		bits_to_go = 8;
-		for(i = 0 ; i < size; i++)
+		for(ssh_u i = 0 ; i < size; i++)
 		{
+			// Находим индекс символа
 			int symbol(char_to_index[*in++]);
 			encode_symbol(symbol);
 			update(symbol);
@@ -180,24 +177,28 @@ namespace ssh
 		bits_to_follow++;
 		output_plus(low >= FIRST_QTR);
 		*out++ = (buffer >> bits_to_go);
+		// расчитать соотношение размеров
+		auto l((out + 1) - _out);
+		*out = (ssh_b)((size / l) + 1);
 		// вернуть буффер
-		return Buffer(_out, 0, out - _out1);
+		return Buffer(_out, 0, l);
 	}
 
-	Buffer Arith::decompress()
+	Buffer Arith::decompress(ssh_u size) noexcept
 	{
 		int symbol;
-		
-		int size(*(int*)in);
-		Buffer _out(size); in += sizeof(int); out = _out;
+
+		size--;
+		Buffer _out(size * in[size]); out = _out;
 
 		bits_to_go = 0;
-		for(int i = 1; i <= BITS_IN_REGISTER; i++) value = 2 * value + input(size);
-		while((symbol = decode_symbol(size)) != EOF_SYMBOL)
+		for(int i = 1; i <= BITS_IN_REGISTER; i++) value = 2 * value + input();
+		while((symbol = decode_symbol()) != EOF_SYMBOL)
 		{
 			*out++ = index_to_char[symbol];
 			update(symbol);
 		}
-		return _out;
+		// вернуть буффер
+		return Buffer(_out, 0, out - _out);
 	}
 }

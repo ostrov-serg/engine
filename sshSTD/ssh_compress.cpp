@@ -43,8 +43,11 @@ namespace ssh
 		MTF mtf;
 		RLE rle;
 		Arith ari;
-		Buffer out(in, 0, in.size() - 1);
-		int opt(in[in.size() - 1]);
+
+		auto size(in.size() - 1);
+		Buffer out(in, 0, size);
+
+		int opt(in[size]);
 		if(opt & SSH_COMPRESS_ARI) out = ari.process(out, false);
 		if(opt & SSH_COMPRESS_RLE) out = rle.process(out, false);
 		out = mtf.process(out, false);
