@@ -2,6 +2,12 @@
 #include "stdafx.h"
 #include "ssh_compress.h"
 
+extern "C"
+{
+	void asm_ssh_bwt_transform(void* _this, int size);
+	void asm_ssh_bwt_untransform(void* _this, int size, void* vec);
+}
+
 namespace ssh
 {
 	void BWT::sort(int level) noexcept
@@ -10,16 +16,16 @@ namespace ssh
 		for(int i = 0; i < 256; i++)
 		{
 			// »щем использование i-й буквы
-			auto idx(LT[level * 256 + i]);
-			LT[level * 256 + i] = 0;
+			auto idx(LT[i]);
+			LT[i] = 0;
 			// —канируем ветвь дл€ этой буквы
-			while(idx)
+			if(idx)
 			{
 				// i-й символ используетс€ только однажды, значит отсортированна€ часть массива пополнилась новым элементом
-				if(!RT[idx])
+				if(RT[idx] == 0)
 				{
 					set_val(idx);
-					break;
+					//	break;
 				}
 				else
 				{
@@ -27,28 +33,29 @@ namespace ssh
 					if(level >= (keys - 1))
 					{
 						// ¬ывод всех данных на этом уровне:
-						while(idx)
+						do
 						{
 							// ƒобавл€ем текущую запись в таблицу индексов
 							set_val(idx);
 							idx = RT[idx];
-						}
-						break;
+						} while(idx);
 					}
 					else
 					{
 						// ѕродолжать уточн€ть пор€док слов: опускаемс€ на уровень вниз
-						int newlevel(level + 1);
-						while(idx)
+						LT += 256;
+						ssh_memzero(LT, 512);
+						do
 						{
 							auto nextrec(RT[idx]);
-							auto c(get_val(idx, level));
-							RT[idx] = LT[newlevel * 256 + c];
-							LT[newlevel * 256 + c] = idx;
+							auto c(get_val(idx + level));
+							RT[idx] = LT[c];
+							LT[c] = idx;
 							idx = nextrec;
-						}
+						} while(idx);
 						// ѕродолжаем процесс уточнени€
-						sort(newlevel);
+						sort(level + 1);
+						LT -= 256;
 					}
 				}
 			}
@@ -62,66 +69,35 @@ namespace ssh
 			*(ssh_w*)_index = idx_lit;
 			_index += 2;
 		}
-		*_result++ = get_val(idx, keys - 1);
-		idx_lit++;
+		_result[idx_lit++] = get_val(idx + keys - 1);
 	}
 
-	ssh_b BWT::get_val(int level, int idx) noexcept
+	ssh_b BWT::get_val(int idx) noexcept
 	{
-		return in[((level - 1) + idx) % keys];
+		return in[(idx - 1) % keys];
 	}
 
 	void BWT::transform_block(int size, bool is_txt) noexcept
 	{
-		// проверить на однотипные элементы
-		ssh_b c(*in);
-		for(int i = 1; i < size; i++)
+		idx_lit = 0;
+		keys = size;
+		// »нициализаци€ индексов букв
+		ssh_memzero(LT, 512);
+		// √руппируем слова по первой букве
+		ssh_b is(0);
+		for(int idx = 1; idx < (keys + 1); idx++)
 		{
-			if(c != in[i])
-			{
-				idx_lit = 0;
-				keys = size;
-				// »нициализаци€ индексов букв
-				ssh_memzero(LT, 512 * keys);
-//				ssh_memzero(RT, keys + 1);
-				// √руппируем слова по первой букве
-				for(int idx = 1; idx < (keys + 1); idx++)
-				{
-					auto c(get_val(idx, 0));
-					RT[idx] = LT[c];
-					LT[c] = idx;
-				}
-				// «апускаем процесс уточнени€ положени€ записей в списке
-				sort(0);
-				break;
-			}
+			ssh_b c(in[idx - 1]);
+			// проверить на однотипные элементы
+			is |= (c != *in);
+			_result[idx - 1] = c;
+			RT[idx] = LT[c];
+			LT[c] = idx;
 		}
+		// «апускаем процесс уточнени€ положени€ записей в списке
+		if(is) sort(0);
 		in += size;
-	}
-
-	Buffer BWT::transform(ssh_u size) noexcept
-	{
-		// расчитать количество блоков
-		int blk((int)(size / SSH_BWT_BLOCK_LENGHT));
-		int count(blk + (size && (SSH_BWT_BLOCK_LENGHT - 1)));
-		// выдел€ем пам€ть под блоки + исходные индексы
-		Buffer result(size + count * 2 + 2); _index = result; _result = _index + count * 2 + 2;
-		*(ssh_w*)_index = count; _index += 2;
-		// трансформаци€ по блокам
-		if(blk)
-		{
-			BufferW l(256 * SSH_BWT_BLOCK_LENGHT); LT = l;
-			BufferW r(SSH_BWT_BLOCK_LENGHT + 1); RT = r;
-			for(int i = 0; i < blk; i++)
-				transform_block(SSH_BWT_BLOCK_LENGHT);
-		}
-		if((blk = (size & (SSH_BWT_BLOCK_LENGHT - 1))))
-		{
-			BufferW l(256 * blk); LT = l;
-			BufferW r(blk + 1); RT = r;
-			transform_block(blk);
-		}
-		return result;
+		_result += size;
 	}
 
 	void BWT::untransform_block(int size, ssh_w* vec) noexcept
@@ -140,7 +116,10 @@ namespace ssh
 			count[i] = sum - count[i];
 		}
 		for(i = 0; i < size; i++)
-			vec[count[in[i]]++] = i;
+		{
+			int idx(count[in[i]]++);
+			vec[idx] = i;
+		}
 		// запускаем процесс восстановление в соответствии с вектором
 		for(i = 0; i < size; i++)
 		{
@@ -149,6 +128,30 @@ namespace ssh
 		}
 		in += size;
 	}
+
+	Buffer BWT::transform(ssh_u size) noexcept
+	{
+		// расчитать количество блоков
+		int blk((int)(size / SSH_BWT_BLOCK_LENGHT));
+		int count(blk + (size && (SSH_BWT_BLOCK_LENGHT - 1)));
+		// выдел€ем пам€ть под блоки + исходные индексы
+		Buffer result(size + count * 2 + 2); _index = result; _result = _index + count * 2 + 2;
+		*(ssh_w*)_index = count; _index += 2;
+		// трансформаци€ по блокам
+		BufferW l(256 * SSH_BWT_BLOCK_LENGHT); LT = l;
+		BufferW r(SSH_BWT_BLOCK_LENGHT + 1); RT = r;
+		if(blk)
+		{
+			for(int i = 0; i < blk; i++)
+				transform_block(SSH_BWT_BLOCK_LENGHT);
+			//asm_ssh_bwt_transform(this, SSH_BWT_BLOCK_LENGHT);
+		}
+		if((blk = (size & (SSH_BWT_BLOCK_LENGHT - 1))))
+			transform_block(blk);
+		//asm_ssh_bwt_transform(this, blk);
+		return result;
+	}
+
 	Buffer BWT::untransform(ssh_u size) noexcept
 	{
 		// извлекаем количество блоков
@@ -158,17 +161,20 @@ namespace ssh
 		Buffer result(size); _index = in + 2; _result = result; in = _index + count * 2;
 		// восстановление по блокам
 		int blk((int)(size / SSH_BWT_BLOCK_LENGHT));
+		BufferW vec(SSH_BWT_BLOCK_LENGHT);
 		if(blk)
 		{
-			BufferW vec(SSH_BWT_BLOCK_LENGHT);
 			for(int i = 0; i < blk; i++)
 				untransform_block(SSH_BWT_BLOCK_LENGHT, vec);
+			//asm_ssh_bwt_untransform(this, SSH_BWT_BLOCK_LENGHT, vec);
 		}
 		if((blk = (size & (SSH_BWT_BLOCK_LENGHT - 1))))
-		{
-			BufferW vec(blk);
 			untransform_block(blk, vec);
-		}
+		//asm_ssh_bwt_untransform(this, blk, vec);
 		return result;
 	}
 }
+
+/*
+*/
+

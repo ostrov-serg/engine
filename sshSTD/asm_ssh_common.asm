@@ -1,4 +1,39 @@
 
+BWT struct
+		; буфер индексов слов
+		_RT		dq ?
+		; буфер индексов букв
+		_LT		dq ?
+		; указатель на буфер индексов
+		_index	dq ?
+		; указатель на текущий блок трансформации
+		_result	dq ?
+		; входной буфер
+		_in		dq ?
+		; количество разрядов
+;		keys	dw ?
+		; текущий индекс буквы
+;		idx_lit	dw ?
+BWT ends
+
+bwt_get_val macro i1, i2
+		lea rax, [i1 + i2 - 1]
+		xor rdx, rdx
+		div r13
+		movzx rax, byte ptr [rdx + rbp]
+endm
+
+bwt_set_val macro
+LOCAL _no
+		cmp r10, 1
+		jnz _no
+		mov [rbx], r12w
+		add rbx, 2
+_no:	bwt_get_val r10, r14
+		mov [rsi + r12], al
+		inc r12
+endm
+
 extern malloc:near
 extern MultiByteToWideChar:near
 
@@ -778,5 +813,135 @@ _str1:	clc
 		ret
 OPTION EPILOGUE:EPILOGUEDEF
 asm_ssh_parse_xml endp
+
+; rcx - this
+; rdx - size
+asm_ssh_bwt_transform proc USES rbx rbp rsi rdi r11 r12 r13 r14 r15
+		mov r8, [rcx].BWT._RT
+		mov r9, [rcx].BWT._LT
+		mov rbx, [rcx].BWT._index
+		mov rsi, [rcx].BWT._result
+		mov rbp, [rcx].BWT._in
+		add [rcx].BWT._in, rdx			; in += size
+		add [rcx].BWT._result, rdx		; _result += size
+		xor r12, r12					; idx_lit
+		mov r13, rdx					; keys
+		lea r14, [r13 - 1]
+		mov rdi, r9
+		mov rcx, 64
+		xor rax, rax
+		rep stosq						; ssh_memzero(LT, 512);
+		xor r11, r11
+		xor rdx, rdx					; idx = 0
+@@:		mov al, [rbp + rdx]				; c = in[idx]
+		mov [rsi + rdx], al				; _result[idx] = c;
+		lea rcx, [rdx + 1]
+		xchg cx, [r9 + rax * 2]			; LT[c] = idx;
+		mov [r8 + rdx * 2 + 2],	cx		; RT[idx] = LT[c]
+		cmp al, [rbp]
+		setnz al
+		or r11b, al
+		inc rdx
+		cmp rdx, r13
+		jl @b
+		test r11, r11
+		jz @f
+		xor r11, r11					; level
+		call asm_ssh_bwt_sort
+@@:		ret
+asm_ssh_bwt_transform endp
+
+; rcx - this
+; rdx - size
+; r8 - vec
+asm_ssh_bwt_untransform proc
+LOCAL @@count[256]:DWORD
+		mov r10, [rcx].BWT._in
+		mov r11, [rcx].BWT._result
+		mov r9, [rcx].BWT._index
+		add [rcx].BWT._index, 2
+		add [rcx].BWT._in, rdx
+		lea rdi, @@count
+		mov rcx, 128
+		xor rax, rax
+		rep stosq								; ssh_memzero(count, 256 * 4);
+		xor rcx, rcx
+@@:		movzx rax, byte ptr [r10 + rcx]			; tmp = in[i]
+		inc dword ptr [rsp + rax * 4]			; count[tmp]++
+		inc rcx
+		cmp rcx, rdx
+		jb @b
+		xor r12, r12							; sum = 0
+		xor rcx, rcx
+@@:		movsxd rax, dword ptr [rsp + rcx * 4]
+		add r12, rax
+		sub rax, r12
+		neg rax
+		mov [rsp + rcx * 4], eax
+		inc rcx
+		cmp ch, 1
+		jnz @b
+		xor rcx, rcx
+@@:		movzx rax, byte ptr [r10 + rcx]			; tmp = in[i]
+		movzx r12, word ptr [rsp + rax * 4]		; tmp = in[i
+		mov [r8 + r12 * 2], cx
+		inc dword ptr [rsp + rax * 4]			; count[tmp]++
+		inc rcx
+		cmp rcx, rdx
+		jb @b
+		movzx r12, word ptr [r9]
+		xor rcx, rcx
+@@:		movzx r12, word ptr [r8 + r12 * 2]
+		mov al, [r10 + r12]
+		mov [r11], al
+		inc r11
+		inc rcx
+		cmp rcx, rdx
+		jb @b
+		ret
+asm_ssh_bwt_untransform endp
+
+; rdx - level
+asm_ssh_bwt_sort proc
+		xor r15, r15						; i = 0
+_loop:	inc r15
+		cmp r15, 256
+		jg _exit
+		lea rax, [r9 + r15 * 2 - 2]
+		movzx r10, word ptr [rax]				; auto idx(LT[i]);
+		mov word ptr [rax], 0					; LT[i] = 0;
+		test r10, r10
+		jz _loop
+		cmp word ptr [r8 + r10 * 2], 0			; RT[idx] == 0 ?
+		jnz @f
+		bwt_set_val
+		jmp _loop
+@@:		cmp r11, r14
+		jb _next
+@@:		bwt_set_val
+		movzx r10, word ptr [r8 + r10 * 2]		; idx = RT[idx]
+		test r10, r10
+		jnz @b
+		jmp _loop
+_next:	mov rcx, 64
+		add r9, 512
+		mov rdi, r9
+		xor rax, rax
+		rep stosq
+@@:		mov rcx, r10
+		bwt_get_val r10, r11					; auto c(get_val(idx, level));
+		xchg r10w, [r9 + rax * 2]				; swap(idx, LT[c]);
+		xchg r10w, [r8 + rcx * 2]
+		test r10, r10
+		jnz @b
+		inc r11
+		push r15
+		call asm_ssh_bwt_sort
+		pop r15
+		sub r9, 512
+		dec r11
+		jmp _loop
+_exit:	ret
+asm_ssh_bwt_sort endp
 
 end

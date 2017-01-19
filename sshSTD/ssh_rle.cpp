@@ -4,60 +4,61 @@
 
 namespace ssh
 {
-	Buffer RLE::compress(ssh_u size)
+	Buffer RLE::compress(ssh_u size) noexcept
 	{
-		int l1, l2;
-		Buffer out(size * 2);
-		ssh_b* _out(out), *tmp, *_in(in + size);
+		Buffer _out(size * 2); out = _out; out++;
+		ssh_b* _in(in + size);
+
 		while(in < _in)
 		{
-			l1 = l2 = 1;
-			tmp = _out++;
-			//*_out++ = 0;
+			auto c1(*in);
+			auto c2(*++in);
+			int is1(c1 == c2);
+			auto l(0);
+			auto tmp(out++);
+			*out++ = c1;
 			while(in < _in)
 			{
-				auto c(*in++);
-				if(c != *in)
+				c1 = c2;
+				c2 = *++in;
+				int is2(c1 == c2);
+				l++;
+				if(is1 != is2 || l > 127)
 				{
-					*_out++ = c;
-					if(l1 > 2)
-					{
-						*tmp = (l1 - 2) | 0x80;
-						break;
-					}
-					else if(l2 > 127)
-					{
-						*tmp = l2 - 1;
-						break;
-					}
-					l1 = 1;
-					l2++;
-					continue;
+					l--;
+					if(is1) l |= 0x80, out = tmp + 2; else in--;
+					*tmp = l;
+					break;
 				}
-				else
-				{
-					l1++;
-					if(l1 > 2 && l2 > 1)
-					{
-						*tmp = l2 - 2;
-						in -= l1 - 1;
-						break;
-					}
-					else if(l1 > 128)
-					{
-						*tmp = (l1 - 2) | 0x80;
-						*_out++ = c;
-						break;
-					}
-				}
+				*out++ = c1;
 			}
 		}
-
-		return Buffer(out, 0, _out - out);
+		ssh_u l(out - _out);
+		*_out = (ssh_b)((size / l) + 1);
+		return Buffer(_out, 0, l);
 	}
 
-	Buffer RLE::decompress(ssh_u size)
+	Buffer RLE::decompress(ssh_u size) noexcept
 	{
-		return Buffer();
+		Buffer _out(size * *in++); out = _out; size--;
+		while(size--)
+		{
+			auto l(*in++);
+			if(l & 0x80)
+			{
+				l = (l & 0x7f) + 2;
+				memset(out, *in++, l);
+				out += l;
+				size--;
+			}
+			else
+			{
+				l++;
+				out = (ssh_b*)ssh_memcpy(out, in, l);
+				in += l;
+				size -= l;
+			}
+		}
+		return Buffer(_out, 0, out - _out);
 	}
 }

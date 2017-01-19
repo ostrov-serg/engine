@@ -146,9 +146,11 @@ int main() noexcept
 	Buffer _out;
 
 	File f(L"c:\\1", File::open_read);
+	Buffer _rle(rle.process(f.read(), true));
+	_rle = rle.process(_rle, false);
 	Buffer _bwt(bwt.process(f.read(), true));
+	_bwt = bwt.process(_bwt, false);
 	f.close();
-	Buffer _rle(rle.process(_bwt, true));
 	Buffer _mtf(mtf.process(_bwt, true));
 	Buffer _mtf_rle(rle.process(_mtf, true));
 

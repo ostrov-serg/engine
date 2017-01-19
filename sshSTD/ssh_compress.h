@@ -1,22 +1,24 @@
 
 #pragma once
 
+#include "ssh_array.h"
+
 namespace ssh
 {
 	class SSH RLE
 	{
 	public:
 		// конструктор
-		RLE() : in(nullptr) {}
+		RLE() : in(nullptr), out(nullptr) {}
 		// обработка
 		Buffer process(const Buffer& _in, bool is_compress) { in = _in; return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
 	protected:
 		// упаковщик
-		Buffer compress(ssh_u size);
+		Buffer compress(ssh_u size) noexcept;
 		// распаковщик
-		Buffer decompress(ssh_u size);
-		// исходный буфер
-		ssh_b* in;
+		Buffer decompress(ssh_u size) noexcept;
+		// буферы временный, ввода и вывода
+		ssh_b* in, *out;
 	};
 
 	#define SSH_BWT_BLOCK_LENGHT		2048
@@ -25,14 +27,14 @@ namespace ssh
 	{
 	public:
 		// конструктор
-		BWT() : idx_lit(0), keys(0), in(nullptr), RT(nullptr), LT(nullptr) {}
+		BWT() : in(nullptr), RT(nullptr), LT(nullptr) {}
 		// обработка
 		Buffer process(const Buffer& _in, bool is_transform) noexcept { in = _in; return (is_transform ? transform(_in.size()) : untransform(_in.size())); }
 	protected:
 		// установка текущего значения после трансформации
 		void set_val(int idx) noexcept;
 		// получение текущего значения на этапе трансформации
-		ssh_b get_val(int level, int idx) noexcept;
+		ssh_b get_val(int idx) noexcept;
 		// рекурсивная процедура сортировки
 		void sort(int level) noexcept;
 		// блочное восстановление
@@ -47,14 +49,14 @@ namespace ssh
 		ssh_w* RT;
 		// буфер индексов букв
 		ssh_w* LT;
-		// количество разрядов
-		ssh_w keys;
-		// входной буфер
-		ssh_b* in;
 		// указатель на буфер индексов
 		ssh_b* _index;
 		// указатель на текущий блок трансформации
 		ssh_b* _result;
+		// входной буфер
+		ssh_b* in;
+		// количество разрядов
+		ssh_w keys;
 		// текущий индекс буквы
 		ssh_w idx_lit;
 	};
@@ -181,6 +183,65 @@ namespace ssh
 		static const int NO_OF_SYMBOLS		= (NO_OF_CHARS + 1);
 		// Порог частоты для масштабирования
 		static const int MAX_FREQUENCY = 2047;
+	};
+
+	class SSH Haffman
+	{
+	public:
+#pragma pack(push, 1)
+		struct node;
+		struct value
+		{
+			value() : len(0) {}
+			union
+			{
+				node* ref = nullptr;
+				ssh_u val;
+			};
+			ssh_w len;
+			// запись бит
+			void write(ssh_b** p, int& shift) noexcept;
+		};
+		struct node
+		{
+			SSH_NEW_DECL(node, 128);
+			node() : l(nullptr), r(nullptr), val(nullptr), freq(0) {}
+			node(node* _l, node* _r, int f) : l(_l), r(_r), freq(f), val(nullptr) {}
+			int freq;
+			value* val;
+			node* l;
+			node* r;
+		};
+#pragma pack(pop)
+		// конструктор
+		Haffman() : head(nullptr), in(nullptr), out(nullptr) {}
+		// деструктор
+		~Haffman() { head->reset(); }
+		// обработка
+		Buffer process(const Buffer& in, bool is_compress) noexcept;
+	protected:
+		// упаковка
+		Buffer compress(ssh_u size) noexcept;
+		// распаковка
+		Buffer decompress() noexcept;
+		// сформировать дерево
+		void make_tree(int size) noexcept;
+		// отображение диагностики
+		void print_haff(Haffman::node* n, int tabs = 1, bool is_tree = true);
+		// запись дерева
+		void store_tree() noexcept;
+		// чтение дерева
+		void restore_tree() noexcept;
+		// чтение бит
+		value* read(long val) noexcept;
+		// корень дерева
+		node* head;
+		// значения
+		value vals[256];
+		// дерево узлов
+		Array<node*> nodes;
+		// буферы ввода и вывода
+		ssh_b* in, *out;
 	};
 
 	#define SSH_COMPRESS_MTF		0x01
