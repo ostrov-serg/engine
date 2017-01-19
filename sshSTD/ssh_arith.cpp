@@ -8,7 +8,6 @@ namespace ssh
 	{
 		low = buffer = value = bits_to_follow = 0;
 		high = TOP_VALUE;
-		in = nullptr;
 		out = nullptr;
 
 		int i;

@@ -76,7 +76,6 @@ namespace ssh
 
 	void Log::init(TypeOutput _out)
 	{
-		shutdown();
 		try
 		{
 			common.init(_out);

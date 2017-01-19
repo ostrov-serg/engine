@@ -11,13 +11,13 @@ namespace ssh
 		// конструктор
 		RLE() : in(nullptr), out(nullptr) {}
 		// обработка
-		Buffer process(const Buffer& _in, bool is_compress) { in = _in; return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
+		Buffer process(const Buffer& _in, bool is_compress) noexcept { in = _in; return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
 	protected:
 		// упаковщик
 		Buffer compress(ssh_u size) noexcept;
 		// распаковщик
 		Buffer decompress(ssh_u size) noexcept;
-		// буферы временный, ввода и вывода
+		// буферы ввода и вывода
 		ssh_b* in, *out;
 	};
 
@@ -36,7 +36,7 @@ namespace ssh
 		// получение текущего значения на этапе трансформации
 		ssh_b get_val(int idx) noexcept;
 		// рекурсивная процедура сортировки
-		void sort(int level) noexcept;
+		void sort() noexcept;
 		// блочное восстановление
 		void untransform_block(int size, ssh_w* vec) noexcept;
 		// блочная трансформация
@@ -136,7 +136,7 @@ namespace ssh
 		// конструктор
 		Arith() { }
 		// обработка
-		Buffer process(const Buffer& _in, bool is_compress) { in = _in; return (is_compress ? compress(_in.size()) : decompress()); }
+		Buffer process(const Buffer& _in, bool is_compress) { in = _in; init(); return (is_compress ? compress(_in.size()) : decompress()); }
 	protected:
 		// упаковка
 		Buffer compress(ssh_u size) noexcept;
@@ -214,12 +214,13 @@ namespace ssh
 		};
 #pragma pack(pop)
 		// конструктор
-		Haffman() : head(nullptr), in(nullptr), out(nullptr) {}
+		Haffman() {}
 		// деструктор
 		~Haffman() { head->reset(); }
 		// обработка
 		Buffer process(const Buffer& in, bool is_compress) noexcept;
 	protected:
+		void init() noexcept;
 		// упаковка
 		Buffer compress(ssh_u size) noexcept;
 		// распаковка
@@ -228,9 +229,9 @@ namespace ssh
 		void make_tree(int size) noexcept;
 		// отображение диагностики
 		void print_haff(Haffman::node* n, int tabs = 1, bool is_tree = true);
-		// запись дерева
+		// сохранение дерева
 		void store_tree() noexcept;
-		// чтение дерева
+		// восстановление дерева
 		void restore_tree() noexcept;
 		// чтение бит
 		value* read(long val) noexcept;
@@ -244,12 +245,10 @@ namespace ssh
 		ssh_b* in, *out;
 	};
 
-	#define SSH_COMPRESS_MTF		0x01
-	#define SSH_COMPRESS_RLE		0x02
-	#define SSH_COMPRESS_LZW		0x04
-	#define SSH_COMPRESS_ARI		0x08
-	#define SSH_COMPRESS_HFM		0x10
-
-	Buffer ssh_compress(const Buffer& in, int opt);
-	Buffer ssh_decompress(const Buffer& in);
+	#define SSH_COMPRESS_RLE		0x01
+	#define SSH_COMPRESS_LZW		0x02
+	#define SSH_COMPRESS_ARI		0x04
+	
+	Buffer SSH ssh_compress(const Buffer& in);
+	Buffer SSH ssh_decompress(const Buffer& in);
 }

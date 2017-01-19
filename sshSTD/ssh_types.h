@@ -139,7 +139,7 @@ namespace ssh
 		// количество установленных
 		ssh_u total_set() const { return __popcnt64(value); }
 		// "развернуть" биты
-		ssh_u reverse() const { return ssh_rev((int)(value >> 32)) | ((ssh_u)(ssh_rev((int)value)) << 32); }
+		ssh_u reverse() const { return ssh_rev_bits((int)(value >> 32)) | ((ssh_u)(ssh_rev_bits((int)value)) << 32); }
 		// значение
 		ssh_l value;
 	};

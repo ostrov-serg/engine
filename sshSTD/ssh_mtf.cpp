@@ -7,13 +7,14 @@ namespace ssh
 	Buffer MTF::transform(ssh_u size) noexcept
 	{
 		int i;
-		ssh_b alphabit[512];
-		ssh_memzero(alphabit, 512);
+		ssh_b alphabit[256];
+		ssh_b count[256];
+		ssh_memzero(count, 256);
 		// создать алфавит
 		for(i = 0; i < size; i++)
 		{
 			auto l(in[i]);
-			if(!alphabit[l + 256]) alphabit[sz_alphabit++] = l, alphabit[in[i] + 256] = 1;
+			if(!count[l]) alphabit[sz_alphabit++] = l, count[l] = 1;
 		}
 		// создать буфер
 		Buffer _out(size + sz_alphabit + 2); out = _out;
@@ -25,7 +26,7 @@ namespace ssh
 			auto l(*in++);
 			ssh_b idx(0);
 			while(alphabit[idx] != l) { idx++; }
-			memmove(&alphabit[1], &alphabit[0], idx);
+			if(idx) memmove(&alphabit[1], &alphabit[0], idx);
 			alphabit[0] = l;
 			*out++ = idx;
 		}

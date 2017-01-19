@@ -138,43 +138,17 @@ void lz77(const Buffer& buf)
 int main() noexcept
 {
 	ssh_log->init(Log::TypeOutput::debug);
-
-	BWT bwt;
-	RLE rle;
-	MTF mtf;
-	Arith a1;
-	Buffer _out;
-
 	File f(L"c:\\1", File::open_read);
-	Buffer _rle(rle.process(f.read(), true));
-	_rle = rle.process(_rle, false);
-	Buffer _bwt(bwt.process(f.read(), true));
-	_bwt = bwt.process(_bwt, false);
+	RLE rle;
+	//Buffer r(rle.process(f.read(), true));
+	Buffer out(ssh_compress(f.read()));
+	File ff(L"c:\\1.ssh", File::create_write);
+	ff.write(out);
 	f.close();
-	Buffer _mtf(mtf.process(_bwt, true));
-	Buffer _mtf_rle(rle.process(_mtf, true));
-
-
-	f.open(L"c:\\bwt.ssh", File::create_write);
-	f.write(_bwt);
-	f.close();
-
-	f.open(L"c:\\1_bwt.ssh", File::create_write);
-	f.write(a1.process(_bwt, true));
-	f.close();
-
-	f.open(L"c:\\1_mtf.ssh", File::create_write);
-	f.write(a1.process(_mtf, true));
-	f.close();
-
-	f.open(L"c:\\1_rle.ssh", File::create_write);
-	f.write(a1.process(_rle, true));
-	f.close();
-
-	f.open(L"c:\\1_mtf_rle.ssh", File::create_write);
-	f.write(a1.process(_mtf_rle, true));
-	f.close();
-
+	ff.close();
+	ff.open(L"c:\\1+", File::create_write);
+	ff.write(ssh_decompress(out));
+	ff.close();
 	ssh_unit_test();
 
 	return 0;

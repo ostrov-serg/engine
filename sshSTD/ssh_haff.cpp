@@ -43,17 +43,25 @@ namespace ssh
 		if(n->r) make_code(n->r, (val >> 1) | 0x8000000000000000, len + 1);
 	}
 
+	void Haffman::init() noexcept
+	{
+		nodes.reset();
+		if(head)
+		{
+			head->reset();
+			head = nullptr;
+		}
+		in = out = nullptr;
+		ssh_memzero(vals, sizeof(vals));
+	}
+		
 	Buffer Haffman::process(const Buffer& _in, bool is_compress) noexcept
 	{
-		LZW lzw;
-		if(is_compress)
-		{
-			Buffer _lzw(lzw.process(_in, true));
-			in = _lzw;
-			return compress(_lzw.size());
-		}
+		init();
 		in = _in;
-		return lzw.process(decompress(), false);
+		if(is_compress)
+			return compress(_in.size());
+		return decompress();
 	}
 
 	void Haffman::make_tree(int size) noexcept

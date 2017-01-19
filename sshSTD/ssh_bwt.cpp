@@ -10,23 +10,21 @@ extern "C"
 
 namespace ssh
 {
-	void BWT::sort(int level) noexcept
+	static int idx;
+	static int level;
+	void BWT::sort() noexcept
 	{
 		// Цикл по алфавиту
 		for(int i = 0; i < 256; i++)
 		{
 			// Ищем использование i-й буквы
-			auto idx(LT[i]);
+			idx = LT[i];
 			LT[i] = 0;
 			// Сканируем ветвь для этой буквы
 			if(idx)
 			{
 				// i-й символ используется только однажды, значит отсортированная часть массива пополнилась новым элементом
-				if(RT[idx] == 0)
-				{
-					set_val(idx);
-					//	break;
-				}
+				if(RT[idx] == 0) set_val(idx);
 				else
 				{
 					// В случае многократного использования i-го символа:
@@ -54,7 +52,9 @@ namespace ssh
 							idx = nextrec;
 						} while(idx);
 						// Продолжаем процесс уточнения
-						sort(level + 1);
+						level++;
+						sort();
+						level--;
 						LT -= 256;
 					}
 				}
@@ -79,6 +79,7 @@ namespace ssh
 
 	void BWT::transform_block(int size, bool is_txt) noexcept
 	{
+		level = 0;
 		idx_lit = 0;
 		keys = size;
 		// Инициализация индексов букв
@@ -95,7 +96,7 @@ namespace ssh
 			LT[c] = idx;
 		}
 		// Запускаем процесс уточнения положения записей в списке
-		if(is) sort(0);
+		if(is) sort();
 		in += size;
 		_result += size;
 	}
@@ -116,10 +117,7 @@ namespace ssh
 			count[i] = sum - count[i];
 		}
 		for(i = 0; i < size; i++)
-		{
-			int idx(count[in[i]]++);
-			vec[idx] = i;
-		}
+			vec[count[in[i]]++] = i;
 		// запускаем процесс восстановление в соответствии с вектором
 		for(i = 0; i < size; i++)
 		{
@@ -144,11 +142,9 @@ namespace ssh
 		{
 			for(int i = 0; i < blk; i++)
 				transform_block(SSH_BWT_BLOCK_LENGHT);
-			//asm_ssh_bwt_transform(this, SSH_BWT_BLOCK_LENGHT);
 		}
 		if((blk = (size & (SSH_BWT_BLOCK_LENGHT - 1))))
 			transform_block(blk);
-		//asm_ssh_bwt_transform(this, blk);
 		return result;
 	}
 
@@ -174,7 +170,3 @@ namespace ssh
 		return result;
 	}
 }
-
-/*
-*/
-

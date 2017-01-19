@@ -73,6 +73,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>ssh_def.def</ModuleDefinitionFile>
       <ImportLibrary>e:\Разработка\lib\$(TargetName).lib</ImportLibrary>
+      <HeapReserveSize>1</HeapReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

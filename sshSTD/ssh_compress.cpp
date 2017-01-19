@@ -4,14 +4,51 @@
 
 namespace ssh
 {
-	Buffer ssh_compress(const Buffer& in, int opt)
+	Buffer ssh_compress(const Buffer& in)
 	{
-		return in;
+		BWT bwt;
+		MTF mtf;
+		RLE rle;
+		Arith ari;
+		Buffer _bwt(bwt.process(in, true));
+		Buffer _mtf(mtf.process(_bwt, true));
+		Buffer _rle(rle.process(_mtf, true));// rle
+		Buffer _ari1(ari.process(_rle, true));// rle|ari
+		Buffer _ari2(ari.process(_mtf, true));// ari
+		ssh_b* out(_rle);
+		int opt(SSH_COMPRESS_RLE);
+		auto sz(_rle.size());
+		if(sz > _ari1.size())
+		{
+			out = _ari1;
+			opt = SSH_COMPRESS_RLE | SSH_COMPRESS_ARI;
+			sz = _ari1.size();
+		}
+		if(sz > _ari2.size())
+		{
+			out = _ari2;
+			opt = SSH_COMPRESS_ARI;
+			sz = _ari2.size();
+		}
+		Buffer buf(sz + 1);
+		ssh_b* _buf(buf);
+		_buf[sz] = opt;
+		ssh_memcpy(_buf, out, sz);
+		return buf;
 	}
 	
 	Buffer ssh_decompress(const Buffer& in)
 	{
-		return in;
+		BWT bwt;
+		MTF mtf;
+		RLE rle;
+		Arith ari;
+		Buffer out(in, 0, in.size() - 1);
+		int opt(in[in.size() - 1]);
+		if(opt & SSH_COMPRESS_ARI) out = ari.process(out, false);
+		if(opt & SSH_COMPRESS_RLE) out = rle.process(out, false);
+		out = mtf.process(out, false);
+		return bwt.process(out, false);
 	}
 
 }
