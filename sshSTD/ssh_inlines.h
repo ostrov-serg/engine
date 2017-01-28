@@ -41,8 +41,8 @@ namespace ssh
 
 	// указатели на процессорно - зависимые функции
 	extern __ssh_rand			SSH ssh_rand;
-	extern __asm_ssh_wcsstr		SSH asm_ssh_wcsstr;
-	extern __asm_ssh_wcscmp		SSH asm_ssh_wcscmp;
+	extern __asm_ssh_wcsstr		SSH ssh_wcsstr;
+	extern __asm_ssh_wcscmp		SSH ssh_wcscmp;
 	extern	__ssh_hash			SSH ssh_hash;
 
 	enum class Radix { _dec, _bin, _oct, _hex, _dbl, _flt, _bool };
@@ -53,65 +53,64 @@ namespace ssh
 		NONE, MMX, SSE, SSE2, SSE3, SSSE3, SSE4_1, SSE4_2, PCLMULQDQ, FMA, CMPXCHG16B, MOVBE, POPCNT, AES, AVX, RDRAND, CMOV, BMI1, AVX2, BMI2, AVX512F, RDSEED, AVX512PF, AVX512ER, AVX512CD, HALF
 	};
 
+	static lconv* ssh_lc(nullptr);
 	static CpuCaps cpuCaps((CpuCaps)asm_ssh_capability());
 
 	// глобальные встроенные функции
 	inline bool ssh_is_null(ssh_cws str) { return (!str || !str[0]); }
 	inline bool ssh_is_digit(ssh_cws str) { return (*str >= L'0' && *str <= L'9'); }
 	inline ssh_b ssh_cpu_caps(CpuCaps caps) { return _bittest64((const ssh_l*)&cpuCaps, (ssh_u)caps); }
-
+	inline auto ssh_set_locale(ssh_ccs loc = "") { return setlocale(LC_ALL, loc); }
+	inline auto ssh_locale() { if(!ssh_lc) ssh_lc = localeconv(); return ssh_lc; }
+	
 	inline ssh_u ssh_sse_wcslen(ssh_cws _wcs)
 	{
 		int res(0), ret(0);
-		do
+		if(_wcs)
 		{
-			__m128i _1(_mm_lddqu_si128((__m128i*)(_wcs)));
-			res = _mm_cmpistri(_1, _1, 0b00010001);
-			ret += res;
-			_wcs += res;
-		} while(res == 8);
+			do
+			{
+				__m128i _1(_mm_lddqu_si128((__m128i*)(_wcs)));
+				res = _mm_cmpistri(_1, _1, 0b00010001);
+				ret += res;
+				_wcs += res;
+			} while(res == 8);
+		}
 		return ret;
 	}
 
 	inline ssh_u ssh_wcslen(ssh_cws _wcs)
 	{
-		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return wcslen(_wcs);
-		return ssh_sse_wcslen(_wcs);
+		if(_wcs)
+		{
+			if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return wcslen(_wcs);
+			return ssh_sse_wcslen(_wcs);
+		}
+		return 0;
 	}
 	
 	inline ssh_ws* ssh_wcschr(ssh_cws _wcs, ssh_ws _ws)
 	{
-		if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return (ssh_ws*)wcschr(_wcs, _ws);
-		__m128i _1(_mm_cvtsi32_si128((int)_ws)), _2;
-		int res, is;
-		do
+		int res, is(true);
+		if(_wcs)
 		{
-			_2 = _mm_lddqu_si128((__m128i*)_wcs);
-			res = _mm_cmpistri(_1, _2, 0b00000001);
-			is = _mm_cmpistrz(_1, _2, 0b00000001);
-			_wcs += res;
-		} while(res == 8 && !is);
+			if(!ssh_cpu_caps(CpuCaps::SSE4_2)) return (ssh_ws*)wcschr(_wcs, _ws);
+			__m128i _1(_mm_cvtsi32_si128((int)_ws)), _2;
+			do
+			{
+				_2 = _mm_lddqu_si128((__m128i*)_wcs);
+				res = _mm_cmpistri(_1, _2, 0b00000001);
+				is = _mm_cmpistrz(_1, _2, 0b00000001);
+				_wcs += res;
+			} while(res == 8 && !is);
+		}
 		return (ssh_ws*)(is ? nullptr : _wcs);
 	}
 
-	inline int ssh_wcscmp(ssh_cws _s1, ssh_cws _s2)
+	inline void* ssh_memset(void* ptr, int set, ssh_u count)
 	{
-		return asm_ssh_wcscmp(_s1, _s2);
-	}
-
-	inline ssh_ws* ssh_wcsstr(ssh_ws* _s1, ssh_cws _s2)
-	{
-		return asm_ssh_wcsstr(_s1, _s2);
-	}
-
-	inline void* ssh_memset(void* ptr, ssh_u set, ssh_u count)
-	{
-		ssh_b* _ptr((ssh_b*)ptr);
-		if(count >= 8) { __stosq((ssh_u*)_ptr, set, count / 8); _ptr += (count / 8) * 8; count &= 7; }
-		if(count >= 4) { *(ssh_d*)_ptr = (ssh_d)set; _ptr += 4; count &= 3; set >>= 32; }
-		if(count >= 2) { *(ssh_w*)_ptr = (ssh_w)set; _ptr += 2; count &= 1; set >>= 16; }
-		if(count >= 1) { *(ssh_b*)_ptr = (ssh_b)set; _ptr++; }
-		return _ptr;
+		if(ptr) ptr = (ssh_b*)(memset((void*)ptr, set, count)) + count;
+		return ptr;
 	}
 
 	inline void* ssh_memzero(void* ptr, ssh_u count)
@@ -121,13 +120,8 @@ namespace ssh
 
 	inline void* ssh_memcpy(void* dst, const void* src, ssh_u count)
 	{
-		ssh_b* _dst((ssh_b*)dst);
-		ssh_b* _src((ssh_b*)src);
-		if(count >= 8) { __movsq((ssh_u*)_dst, (ssh_u*)_src, count / 8); _dst += (count / 8) * 8; _src += (count / 8) * 8; count &= 7; }
-		if(count >= 4) { __movsd((ssh_d*)_dst, (ssh_d*)_src, 1); _dst += 4; _src += 4; count &= 3; }
-		if(count >= 2) { __movsw((ssh_w*)_dst, (ssh_w*)_src, 1); _dst += 2; _src += 2; count &= 1; }
-		if(count >= 1) { __movsb((ssh_b*)_dst, (ssh_b*)_src, 1); _dst++; }
-		return _dst;
+		if(dst && src) dst = (ssh_b*)(memcpy((void*)dst, src, count)) + count;
+		return dst;
 	}
 	// реверс бит
 	inline int ssh_rev_bits(int x)
@@ -239,4 +233,12 @@ namespace ssh
 		BlockFix* arrs = nullptr;
 		int count = 0;
 	};
+
+	template <typename T, bool> struct release_node { static void release(const T& t) { static_assert(false, "release_node invalid!"); } };
+	template <typename T> struct release_node < T, false > { static void release(const T& t) { t.~T(); } static T dummy() { return T(); } };
+	template <typename T> struct release_node < T, true > { static void release(const T& t) { delete t; } static T dummy() { return nullptr; } };
+
+	#define SSH_RELEASE_NODE(T, V)	release_node<T, SSH_IS_PTR(T)>::release(V)
+	#define SSH_DUMMY(T)			release_node<T, SSH_IS_PTR(T)>::dummy()
+
 }

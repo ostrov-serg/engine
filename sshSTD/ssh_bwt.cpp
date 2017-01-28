@@ -4,7 +4,7 @@
 
 extern "C"
 {
-	void asm_ssh_bwt_transform(void* _this, int size);
+	void asm_ssh_bwt_transform(void* _this, int size, int max_block);
 	void asm_ssh_bwt_untransform(void* _this, int size, void* vec);
 }
 
@@ -42,7 +42,6 @@ namespace ssh
 					{
 						// Продолжать уточнять порядок слов: опускаемся на уровень вниз
 						LT += 256;
-						ssh_memzero(LT, 512);
 						do
 						{
 							auto nextrec(RT[idx]);
@@ -69,12 +68,12 @@ namespace ssh
 			*(ssh_w*)_index = idx_lit;
 			_index += 2;
 		}
-		_result[idx_lit++] = get_val(idx + keys - 1);
+		_result[idx_lit++] = get_val(idx + 0);
 	}
 
 	ssh_b BWT::get_val(int idx) noexcept
 	{
-		return in[(idx - 1) % keys];
+		return in[(idx - 1) & (SSH_BWT_BLOCK_LENGHT - 1)];
 	}
 
 	void BWT::transform_block(int size, bool is_txt) noexcept
@@ -83,10 +82,11 @@ namespace ssh
 		idx_lit = 0;
 		keys = size;
 		// Инициализация индексов букв
-		ssh_memzero(LT, 512);
+		ssh_memzero(LT, size * 512);
+		//memset(RT, '$' , SSH_BWT_BLOCK_LENGHT * 2);
 		// Группируем слова по первой букве
 		ssh_b is(0);
-		for(int idx = 1; idx < (keys + 1); idx++)
+		for(int idx = 1; idx < (size + 1); idx++)
 		{
 			ssh_b c(in[idx - 1]);
 			// проверить на однотипные элементы
@@ -133,18 +133,23 @@ namespace ssh
 		int blk((int)(size / SSH_BWT_BLOCK_LENGHT));
 		int count(blk + (size && (SSH_BWT_BLOCK_LENGHT - 1)));
 		// выделяем память под блоки + исходные индексы
-		Buffer result(size + count * 2 + 2); _index = result; _result = _index + count * 2 + 2;
+		Buffer result(size + count * 2 + 2);
+		_index = result; _result = _index + count * 2 + 2;
 		*(ssh_w*)_index = count; _index += 2;
 		// трансформация по блокам
 		BufferW l(256 * SSH_BWT_BLOCK_LENGHT); LT = l;
-		BufferW r(SSH_BWT_BLOCK_LENGHT + 1); RT = r;
+		BufferW r(SSH_BWT_BLOCK_LENGHT + 1); RT = r; 
 		if(blk)
 		{
 			for(int i = 0; i < blk; i++)
-				transform_block(SSH_BWT_BLOCK_LENGHT);
+				asm_ssh_bwt_transform(this, SSH_BWT_BLOCK_LENGHT, SSH_BWT_BLOCK_LENGHT);
+			//transform_block(SSH_BWT_BLOCK_LENGHT);
 		}
 		if((blk = (size & (SSH_BWT_BLOCK_LENGHT - 1))))
-			transform_block(blk);
+		{
+			asm_ssh_bwt_transform(this, blk, SSH_BWT_BLOCK_LENGHT);
+//			transform_block(blk);
+		}
 		return result;
 	}
 

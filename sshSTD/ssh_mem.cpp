@@ -65,7 +65,7 @@ namespace ssh
 		_set_purecall_handler(ssh_purecall_handler);
 		_set_invalid_parameter_handler(ssh_invalid_parameter_handler);
 		_set_new_handler(ssh_new_handler);
-//		_set_security_error_handler(ssh_security_handler);
+		//_set_security_error_handler(ssh_security_handler);
 		signal(SIGABRT, ssh_signal_handler);
 		signal(SIGINT, ssh_signal_handler);
 		signal(SIGTERM, ssh_signal_handler);
@@ -108,15 +108,15 @@ namespace ssh
 			case ExceptTypes::PURE_CALL: caption = L"Вызов чистой виртуальной функции. "; break;
 			case ExceptTypes::SECURITY_ERROR: caption = L"Переполнение буфера. "; break;
 			case ExceptTypes::NEW_OPERATOR_ERROR: caption = L"Не удалось выделить память оператором new. "; break;
-			case ExceptTypes::INVALID_PARAMETER_ERROR: caption = L"Недопустимый параметр CRT функции, при выполнении операции "; caption += msg_ex; caption += L". "; break;
+			case ExceptTypes::INVALID_PARAMETER_ERROR: caption = L"Недопустимый параметр CRT функции, при выполнении операции " + String(msg_ex); caption += L". "; break;
 		}
-		String msg(ssh_printf(	L"Контекст на момент возбуждения исключения: \r\nrip: %016I64x\tflags: %08b\r\n"
+		String msg(ssh_printf(	L"\r\nКонтекст на момент возбуждения исключения: \r\n\r\nrip: %016I64x\tflags: %08b\r\n"
 								L"rax: %016I64x\trcx: %016I64x\trdx: %016I64x\trbx: %016I64x\trbp: %016I64x\trsp: %016I64x\trsi: %016I64x\trdi: %016I64x\r\n"
 								L"r8:  %016I64x\tr9:  %016I64x\tr10: %016I64x\tr11: %016I64x\tr12: %016I64x\tr13: %016I64x\tr14: %016I64x\tr15: %016I64x\r\n"
 								L"xmm0:  %016I64x%016I64x\txmm1:  %016I64x%016I64x\txmm2:  %016I64x%016I64x\txmm3:  %016I64x%016I64x\r\n"
 								L"xmm4:  %016I64x%016I64x\txmm5:  %016I64x%016I64x\txmm6:  %016I64x%016I64x\txmm7:  %016I64x%016I64x\r\n"
 								L"xmm8:  %016I64x%016I64x\txmm9:  %016I64x%016I64x\txmm10: %016I64x%016I64x\txmm11: %016I64x%016I64x\r\n"
-								L"xmm12: %016I64x%016I64x\txmm13: %016I64x%016I64x\txmm14: %016I64x%016I64x\txmm15: %016I64x%016I64x",
+								L"xmm12: %016I64x%016I64x\txmm13: %016I64x%016I64x\txmm14: %016I64x%016I64x\txmm15: %016I64x%016I64x\r\n",
 				exc->ExceptionRecord->ExceptionAddress, exc->ContextRecord->EFlags,
 				exc->ContextRecord->Rax, exc->ContextRecord->Rcx, exc->ContextRecord->Rdx, exc->ContextRecord->Rbx,
 				exc->ContextRecord->Rbp, exc->ContextRecord->Rsp, exc->ContextRecord->Rsi, exc->ContextRecord->Rdi,
@@ -138,7 +138,7 @@ namespace ssh
 				exc->ContextRecord->Xmm13.Low, exc->ContextRecord->Xmm13.High,
 				exc->ContextRecord->Xmm14.Low, exc->ContextRecord->Xmm14.High,
 				exc->ContextRecord->Xmm15.Low, exc->ContextRecord->Xmm15.High));
-		ssh_log->add(Log::exception, fn, fl, ln, caption + msg, false);
+		ssh_log->add(Log::exception, fn, fl, ln, L"\r\n\r\n" + caption + msg, false);
 		return true;
 	}
 
@@ -179,7 +179,7 @@ namespace ssh
 		if(is_enabled)
 		{
 #ifdef _DEBUG
-			ssh_memset(p + sizeof(NodeMem), 0x2052454755424544, sz);
+			ssh_memset8(p + sizeof(NodeMem), 0x2052454755424544, sz);
 #endif
 			// добавить статистику
 			count_alloc++;
@@ -219,7 +219,7 @@ namespace ssh
 				if(np) np->next = nn;
 				if(nd == root) root = nn;
 #ifdef _DEBUG
-				ssh_memset(p + sizeof(NodeMem), 0x2020594547524553, sz);
+				ssh_memset8(p + sizeof(NodeMem), 0x2020594547524553, sz);
 #endif
 			}
 			// освобождаем память

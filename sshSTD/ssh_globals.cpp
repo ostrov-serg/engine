@@ -31,6 +31,8 @@ namespace ssh
 	Base* Base::root(nullptr);
 	RTTI* RTTI::root(nullptr);
 
+	SSH lconv ssh_stk_locale;
+
 	static int ssh_AVX_hash(ssh_cws _cws)
 	{
 		int hsh(0);
@@ -61,6 +63,33 @@ namespace ssh
 		return begin + (_genRnd % ((end - begin) + 1));
 	}
 
+	void* ssh_memset8(void* ptr, ssh_u set, ssh_u count)
+	{
+		ssh_b* _ptr((ssh_b*)ptr);
+		if(count >= 8) { __stosq((ssh_u*)_ptr, set, count / 8); _ptr += (count / 8) * 8; count &= 7; }
+		if(count >= 4) { *(ssh_d*)_ptr = (ssh_d)set; _ptr += 4; count &= 3; set >>= 32; }
+		if(count >= 2) { *(ssh_w*)_ptr = (ssh_w)set; _ptr += 2; count &= 1; set >>= 16; }
+		if(count >= 1) { *(ssh_b*)_ptr = (ssh_b)set; _ptr++; }
+		return _ptr;
+	}
+
+	void* ssh_memcpy8(void* dst, const void* src, ssh_u count)
+	{
+		ssh_b* _dst((ssh_b*)dst);
+		ssh_b* _src((ssh_b*)src);
+		if(count >= 8) { __movsq((ssh_u*)_dst, (ssh_u*)_src, count / 8); _dst += (count / 8) * 8; _src += (count / 8) * 8; count &= 7; }
+		if(count >= 4) { __movsd((ssh_d*)_dst, (ssh_d*)_src, 1); _dst += 4; _src += 4; count &= 3; }
+		if(count >= 2) { __movsw((ssh_w*)_dst, (ssh_w*)_src, 1); _dst += 2; _src += 2; count &= 1; }
+		if(count >= 1) { __movsb((ssh_b*)_dst, (ssh_b*)_src, 1); _dst++; }
+		return _dst;
+	}
+
+	ssh_u SSH ssh_time_counter(ssh_u old_value)
+	{
+		LARGE_INTEGER value;
+		if(!QueryPerformanceCounter(&value)) return 0;
+		return (value.QuadPart - old_value);
+	}
 	Buffer SSH ssh_base64(const String& str)
 	{
 		ssh_u len_buf(0);
@@ -780,18 +809,19 @@ namespace ssh
 	__ssh_rand				SSH ssh_rand(ssh_SSE_rand);
 	__ssh_hash				SSH ssh_hash(ssh_SSE_hash);
 	
-	__asm_ssh_wcsstr		SSH asm_ssh_wcsstr(nullptr);
-	__asm_ssh_wcscmp		SSH asm_ssh_wcscmp(nullptr);
+	__asm_ssh_wcsstr		SSH ssh_wcsstr(nullptr);
+	__asm_ssh_wcscmp		SSH ssh_wcscmp(nullptr);
 
 	static void ssh_init_libs()
 	{
+		ssh_set_locale();
 		ssh_cws _dll(ssh_cpu_caps(CpuCaps::AVX) ? L"sshAVX.dll" : L"sshSSE.dll");
 		// инициализировать процессорно-зависимые функции
 		ssh_rand = (__ssh_rand)(ssh_cpu_caps(CpuCaps::RDRAND) ? ssh_AVX_rand : ssh_SSE_rand);
 		ssh_hash = (__ssh_hash)(ssh_cpu_caps(CpuCaps::SSE4_2) ? (__ssh_hash)ssh_dll_proc(L"sshSSE.dll", "asm_ssh_get_hash", 0) : ssh_AVX_hash);
 
-		asm_ssh_wcsstr = (__asm_ssh_wcsstr)ssh_dll_proc(_dll, "asm_ssh_wcsstr", 0);
-		asm_ssh_wcscmp = (__asm_ssh_wcscmp)ssh_dll_proc(_dll, "asm_ssh_wcscmp", 0);
+		ssh_wcsstr = (__asm_ssh_wcsstr)ssh_dll_proc(_dll, "asm_ssh_wcsstr", 0);
+		ssh_wcscmp = (__asm_ssh_wcscmp)ssh_dll_proc(_dll, "asm_ssh_wcscmp", 0);
 		
 		// инициализировать функции стандартных библиотек - sshREGX, sshCNV
 		ssh_cnv_open = (__cnv_open)ssh_dll_proc(L"sshCNV.dll", "cnv_open");

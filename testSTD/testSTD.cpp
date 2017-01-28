@@ -135,13 +135,28 @@ void lz77(const Buffer& buf)
 	}
 }
 
+void get_sz(ssh_u* sz)
+{
+
+}
 int main() noexcept
 {
 	ssh_log->init(Log::TypeOutput::debug);
+
+	vector<int> vec;
+	String str(L"sergey");
+	memcpy_s(nullptr, 10, nullptr, 10);
+	auto l = ssh_wcslen(nullptr);
+	String str1 = str + L"11";
+	str1.substr(-1, 2);
+	Range<> r;
+	get_sz(r);
+	SIZE* sz = r;
 	File f(L"c:\\1", File::open_read);
 	RLE rle;
 	//Buffer r(rle.process(f.read(), true));
 	Buffer out(ssh_compress(f.read()));
+	return 0;
 	File ff(L"c:\\1.ssh", File::create_write);
 	ff.write(out);
 	f.close();

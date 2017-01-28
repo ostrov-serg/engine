@@ -7,11 +7,8 @@ namespace ssh
 	String::String(ssh_cws cws, ssh_l len)
 	{
 		init();
-		if(cws)
-		{
-			ssh_l t(ssh_wcslen(cws));
-			make(cws, (len < 0 || len >= t) ? t : len);
-		}
+		ssh_l t(ssh_wcslen(cws));
+		make(cws, (len < 0 || len >= t) ? t : len);
 	}
 
 	String::String(ssh_ccs ccs, ssh_l len)
@@ -21,7 +18,8 @@ namespace ssh
 		{
 			ssh_l t(strlen(ccs));
 			if(len < 0 || len >= t) len = t;
-			*this = ssh_convert(cp_ansi, Buffer((ssh_b*)ccs, len, false), 0);
+			mbstowcs(alloc(len, false), ccs, len);
+			update();
 		}
 	}
 
@@ -75,10 +73,10 @@ namespace ssh
 		return _str.str;
 	}
 
-	String String::substr(ssh_l idx, ssh_l len) const
+	String String::substr(ssh_u idx, ssh_l len) const
 	{
-		ssh_l l(length());
-		if(idx <= l && idx >= 0)
+		auto l(length());
+		if(idx <= l)
 		{
 			if(len < 0) len = l;
 			if((idx + len) > l) len = (l - idx);
@@ -90,45 +88,35 @@ namespace ssh
 	String String::add(ssh_cws wcs1, ssh_l len1, ssh_cws wcs2, ssh_l len2)
 	{
 		String ret(L'\0', len1 + len2);
-		if(wcs1) ssh_memcpy(ret.buffer(), wcs1, len1 * 2);
-		if(wcs2) ssh_memcpy(ret.buffer() + len1, wcs2, len2 * 2);
+		ssh_memcpy(ssh_memcpy(ret.buffer(), wcs1, len1 * 2), wcs2, len2 * 2);
+		ret.update();
 		return ret;
 	}
 
 	void String::_replace(ssh_cws _old, ssh_cws _new)
 	{
-		ssh_l nOld(ssh_wcslen(_old)), nNew(ssh_wcslen(_new)), nLen(length()), nCount(0);
-		ssh_l nDstOffs(0), nSrcOffs(0), nDiff, l;
-		ssh_ws* f(buffer()), *_buf(f), *buf;
+		auto l_old(ssh_wcslen(_old)), l_new(ssh_wcslen(_new)), nCount(0ULL);
+		auto b_old(buffer()), b_new(b_old), buf(b_old);
 		// расчитать новый размер
-		while((f = ssh_wcsstr(f, _old))) nCount++, f += nOld;
-		nDiff = nNew - nOld;
-		if(nNew > nOld) nDstOffs = nDiff; else nSrcOffs = -nDiff;
-		l = nDiff * nCount;
-		// проверка на вместительность буфера
-		if(l)
+		while((buf = ssh_wcsstr(buf, _old))) nCount++, buf += l_old;
+		if(nCount)
 		{
-			// запомнить значение buf[sz]
-			ssh_ws _ws(_buf[nLen + l]);
-			_buf = alloc(nLen + l, true);
-			_buf[nLen + l] = _ws;
-		}
-		buf = _buf;
-		// непосредственно замена
-		while((f = ssh_wcsstr(_buf, _old)))
-		{
-			l = (nLen - ((f + nSrcOffs) - buf)) + 1;
-			memmove(f + nDstOffs, f + nSrcOffs, l * 2);
-			ssh_memcpy(f, _new, nNew * 2);
-			_buf = f + nNew;
-			nLen += nDiff;
+			// выделяем память под новый буфер
+			String ret(L'\0', length() + (l_new - l_old) * nCount); b_new = ret.buffer();
+			// непосредственно замена
+			while((buf = ssh_wcsstr(b_old, _old)))
+			{
+				b_new = (ssh_ws*)ssh_memcpy(ssh_memcpy(b_new, b_old, (buf - b_old) * 2), _new, l_new * 2);
+				b_old = buf + l_old;
+			}
+			wcscpy(b_new, b_old);
+			*this = ret;
 		}
 	}
 
 	const String& String::replace(ssh_cws _old, ssh_cws _new)
 	{
 		_replace(_old, _new);
-		update();
 		return *this;
 	}
 
@@ -142,9 +130,9 @@ namespace ssh
 
 	const String& String::remove(ssh_cws wcs)
 	{
-		ssh_l nWcs(ssh_wcslen(wcs)), nLen(length());
+		auto nWcs(ssh_wcslen(wcs)), nLen(length());
 		ssh_ws* f(buffer()), *_buf(f);
-		while((f = ssh_wcsstr(f, wcs))) { nLen -= nWcs; memcpy(f, f + nWcs, ((nLen - (f - _buf)) + 1) * 2); }
+		while((f = ssh_wcsstr(f, wcs))) { nLen -= nWcs; ssh_memcpy(f, f + nWcs, ((nLen - (f - _buf)) + 1) * 2); }
 		_str.len = (int)nLen;
 		update();
 		return *this;
@@ -160,10 +148,10 @@ namespace ssh
 		return *this;
 	}
 
-	const String& String::remove(ssh_l idx, ssh_l len)
+	const String& String::remove(ssh_u idx, ssh_l len)
 	{
-		ssh_l l(length());
-		if(idx < l && idx >= 0)
+		auto l(length());
+		if(idx < l)
 		{
 			if(len < 0) len = l;
 			if((idx + len) > l) len = (l - idx);
@@ -176,10 +164,10 @@ namespace ssh
 		return *this;
 	}
 
-	const String& String::insert(ssh_l idx, ssh_cws wcs)
+	const String& String::insert(ssh_u idx, ssh_cws wcs)
 	{
-		ssh_l len(length()), nWcs(ssh_wcslen(wcs));
-		if(idx >= 0 && idx < len && alloc(len + nWcs, true))
+		auto len(length()), nWcs(ssh_wcslen(wcs));
+		if(idx < len && alloc(len + nWcs, true))
 		{
 			ssh_ws* _buf(buffer());
 			memmove(_buf + idx + nWcs, _buf + idx, ((len - idx) + 1) * 2);
@@ -189,10 +177,10 @@ namespace ssh
 		return *this;
 	}
 
-	const String& String::insert(ssh_l idx, ssh_ws ws)
+	const String& String::insert(ssh_u idx, ssh_ws ws)
 	{
-		ssh_l len(length());
-		if(idx >= 0 && idx < len && alloc(len + 1, true))
+		auto len(length());
+		if(idx < len && alloc(len + 1, true))
 		{
 			ssh_ws* _buf(buffer());
 			memmove(_buf + idx + 1, _buf + idx, ((len - idx) + 1) * 2);
@@ -205,8 +193,11 @@ namespace ssh
 	const String& String::replace(ssh_cws* _old, ssh_cws _new)
 	{
 		ssh_l idx(0);
-		while(_old[idx]) { _replace(_old[idx++], _new); _new += (ssh_wcslen(_new) + 1); }
-		update();
+		while(_old[idx])
+		{
+			_replace(_old[idx++], _new);
+			_new += (ssh_wcslen(_new) + 1);
+		}
 		return *this;
 	}
 

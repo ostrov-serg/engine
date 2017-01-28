@@ -1,4 +1,3 @@
-
 BWT struct
 		; буфер индексов слов
 		_RT		dq ?
@@ -10,17 +9,11 @@ BWT struct
 		_result	dq ?
 		; входной буфер
 		_in		dq ?
-		; количество разрядов
-;		keys	dw ?
-		; текущий индекс буквы
-;		idx_lit	dw ?
 BWT ends
 
-bwt_get_val macro i1, i2
-		lea rax, [i1 + i2 - 1]
-		xor rdx, rdx
-		div r13
-		movzx rax, byte ptr [rdx + rbp]
+bwt_get_val macro
+		and rax, 2047
+		movzx rax, byte ptr [rax + rdi]
 endm
 
 bwt_set_val macro
@@ -28,8 +21,8 @@ LOCAL _no
 		cmp r10, 1
 		jnz _no
 		mov [rbx], r12w
-		add rbx, 2
-_no:	bwt_get_val r10, r14
+_no:	lea rax, [r10 - 1]
+		bwt_get_val
 		mov [rsi + r12], al
 		inc r12
 endm
@@ -816,36 +809,38 @@ asm_ssh_parse_xml endp
 
 ; rcx - this
 ; rdx - size
-asm_ssh_bwt_transform proc USES rbx rbp rsi rdi r11 r12 r13 r14 r15
+asm_ssh_bwt_transform proc USES rbx rsi rdi r12 r13 r14
 		mov r8, [rcx].BWT._RT
 		mov r9, [rcx].BWT._LT
 		mov rbx, [rcx].BWT._index
 		mov rsi, [rcx].BWT._result
-		mov rbp, [rcx].BWT._in
+		mov r10, [rcx].BWT._in
 		add [rcx].BWT._in, rdx			; in += size
 		add [rcx].BWT._result, rdx		; _result += size
+		add [rcx].BWT._index, 2			; _index += 2
 		xor r12, r12					; idx_lit
-		mov r13, rdx					; keys
-		lea r14, [r13 - 1]
+		mov r14, rdx
 		mov rdi, r9
-		mov rcx, 64
+		imul rcx, rdx, 64
 		xor rax, rax
-		rep stosq						; ssh_memzero(LT, 512);
+		rep stosq						; ssh_memzero(LT, keys * 512);
+		mov rdi, r10
 		xor r11, r11
-		xor rdx, rdx					; idx = 0
-@@:		mov al, [rbp + rdx]				; c = in[idx]
-		mov [rsi + rdx], al				; _result[idx] = c;
-		lea rcx, [rdx + 1]
+		xor r10, r10					; idx = 0
+@@:		mov al, [rdi + r10]				; c = in[idx]
+		mov [rsi + r10], al				; _result[idx] = c;
+		lea rcx, [r10 + 1]
 		xchg cx, [r9 + rax * 2]			; LT[c] = idx;
-		mov [r8 + rdx * 2 + 2],	cx		; RT[idx] = LT[c]
-		cmp al, [rbp]
+		mov [r8 + r10 * 2 + 2],	cx		; RT[idx] = LT[c]
+		cmp al, [rdi]
 		setnz al
 		or r11b, al
-		inc rdx
-		cmp rdx, r13
+		inc r10
+		cmp r10, rdx
 		jl @b
 		test r11, r11
 		jz @f
+		dec rdx							; keys - 1
 		xor r11, r11					; level
 		call asm_ssh_bwt_sort
 @@:		ret
@@ -903,45 +898,46 @@ asm_ssh_bwt_untransform endp
 
 ; rdx - level
 asm_ssh_bwt_sort proc
-		xor r15, r15						; i = 0
-_loop:	inc r15
-		cmp r15, 256
-		jg _exit
-		lea rax, [r9 + r15 * 2 - 2]
-		movzx r10, word ptr [rax]				; auto idx(LT[i]);
-		mov word ptr [rax], 0					; LT[i] = 0;
+		xor r13, r13
+_loop:	cmp r13, 512
+		jge _exit
+		movzx r10, word ptr [r9 + r13]			; auto idx(LT[i]);
+		mov word ptr [r9 + r13], 0				; LT[i] = 0;
+		add r13, 2
 		test r10, r10
 		jz _loop
 		cmp word ptr [r8 + r10 * 2], 0			; RT[idx] == 0 ?
 		jnz @f
 		bwt_set_val
 		jmp _loop
-@@:		cmp r11, r14
+@@:		cmp r11, rdx
 		jb _next
 @@:		bwt_set_val
 		movzx r10, word ptr [r8 + r10 * 2]		; idx = RT[idx]
 		test r10, r10
 		jnz @b
 		jmp _loop
-_next:	mov rcx, 64
-		add r9, 512
-		mov rdi, r9
-		xor rax, rax
-		rep stosq
+_next:	add r9, 512
 @@:		mov rcx, r10
-		bwt_get_val r10, r11					; auto c(get_val(idx, level));
+		lea rax, [r10 + r11 - 1]
+		bwt_get_val								; auto c(get_val(idx, level));
 		xchg r10w, [r9 + rax * 2]				; swap(idx, LT[c]);
 		xchg r10w, [r8 + rcx * 2]
 		test r10, r10
 		jnz @b
 		inc r11
-		push r15
+		push r13
 		call asm_ssh_bwt_sort
-		pop r15
+		pop r13
 		sub r9, 512
 		dec r11
 		jmp _loop
 _exit:	ret
 asm_ssh_bwt_sort endp
+
+; (void* _this, ssh_u size);
+ssh_asm_encode_ari proc
+		ret
+ssh_asm_encode_ari endp
 
 end

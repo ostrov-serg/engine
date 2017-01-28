@@ -7,19 +7,8 @@ namespace ssh
 	Buffer MTF::transform(ssh_u size) noexcept
 	{
 		int i;
-		ssh_b alphabit[256];
-		ssh_b count[256];
-		ssh_memzero(count, 256);
-		// создать алфавит
-		for(i = 0; i < size; i++)
-		{
-			auto l(in[i]);
-			if(!count[l]) alphabit[sz_alphabit++] = l, count[l] = 1;
-		}
 		// создать буфер
-		Buffer _out(size + sz_alphabit + 2); out = _out;
-		*(ssh_w*)out = sz_alphabit;
-		out = (ssh_b*)ssh_memcpy(out + 2, alphabit, sz_alphabit);
+		Buffer _out(size); out = _out;
 		// закодировать
 		for(i = 0; i < size; i++)
 		{
@@ -35,12 +24,7 @@ namespace ssh
 
 	Buffer MTF::untransform(ssh_u size) noexcept
 	{
-		// прочитать алфавит и его размер
-		sz_alphabit = *(ssh_w*)in;
-		ssh_b* alphabit(in + 2);
-		in += sz_alphabit + 2;
 		// создать буфер
-		size -= (sz_alphabit + 2);
 		Buffer _out(size); out = _out;
 		// раскодировать
 		while(size--)
@@ -52,5 +36,12 @@ namespace ssh
 			*alphabit = s;
 		}
 		return _out;
+	}
+
+	Buffer MTF::process(const Buffer& _in, bool is_transform) noexcept
+	{
+		for(int i = 0; i < 256; i++) alphabit[i] = i;
+		in = _in;
+		return is_transform ? transform(_in.size()) : untransform(_in.size());
 	}
 }

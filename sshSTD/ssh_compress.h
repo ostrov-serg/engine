@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "ssh_array.h"
-
 namespace ssh
 {
 	class SSH RLE
@@ -64,10 +62,8 @@ namespace ssh
 	class SSH MTF
 	{
 	public:
-		// конструктор
-		MTF() : in(nullptr), out(nullptr), sz_alphabit(0) { }
 		// обработка
-		Buffer process(const Buffer& _in, bool is_transform) { in = _in; return (is_transform ? transform(_in.size()) : untransform(_in.size())); }
+		Buffer process(const Buffer& _in, bool is_transform) noexcept;
 	protected:
 		// Процедура трансформации данных
 		Buffer transform(ssh_u size) noexcept;
@@ -75,8 +71,8 @@ namespace ssh
 		Buffer untransform(ssh_u size) noexcept;
 		// буферы ввода и вывода
 		ssh_b* in, *out;
-		// размер алфавита
-		ssh_w sz_alphabit;
+		// алфавит
+		ssh_b alphabit[256];
 	};
 	
 	class SSH LZW
@@ -133,25 +129,21 @@ namespace ssh
 	class SSH Arith
 	{
 	public:
-		// конструктор
-		Arith() { }
 		// обработка
-		Buffer process(const Buffer& _in, bool is_compress) noexcept { in = _in; init(); return (is_compress ? compress(_in.size()) : decompress(_in.size())); }
+		Buffer process(const Buffer& _in, bool is_compress) noexcept;
 	protected:
 		// упаковка
 		Buffer compress(ssh_u size) noexcept;
 		// распаковка
 		Buffer decompress(ssh_u size) noexcept;
-		// инициализация среды
-		void init() noexcept;
 		// Кодирование очередного символа
 		void encode_symbol(int symbol) noexcept;
 		// Вывод очередного бита сжатой информации
-		void output(int bit) noexcept;
+		void output(ssh_b bit) noexcept;
 		// Обновление модели очередным символом
 		void update(int symbol) noexcept;
 		// Процедура переноса найденных битов
-		void output_plus(int bit) noexcept;
+		void output_plus(ssh_b bit) noexcept;
 		// Ввод очередного бита сжатой информации
 		int input() noexcept;
 		// Декодирование очередного символа
@@ -166,8 +158,7 @@ namespace ssh
 		long low, high, value;
 		// Поддержка побитовых операций
 		long bits_to_follow;
-		int buffer, bits_to_go;
-		// входной и выходной буферы
+		// буферы ввода и вывода
 		ssh_b* in, *out;
 	private:
 		// Количество битов в регистре
@@ -182,67 +173,7 @@ namespace ssh
 		static const int EOF_SYMBOL			= (NO_OF_CHARS + 1);	// 257
 		static const int NO_OF_SYMBOLS		= (NO_OF_CHARS + 1);	// 257
 		// Порог частоты для масштабирования
-		static const int MAX_FREQUENCY		= 2047;
-	};
-
-	class SSH Haffman
-	{
-	public:
-#pragma pack(push, 1)
-		struct node;
-		struct value
-		{
-			value() : len(0) {}
-			union
-			{
-				node* ref = nullptr;
-				ssh_u val;
-			};
-			ssh_w len;
-			// запись бит
-			void write(ssh_b** p, int& shift) noexcept;
-		};
-		struct node
-		{
-			SSH_NEW_DECL(node, 128);
-			node() : l(nullptr), r(nullptr), val(nullptr), freq(0) {}
-			node(node* _l, node* _r, int f) : l(_l), r(_r), freq(f), val(nullptr) {}
-			int freq;
-			value* val;
-			node* l;
-			node* r;
-		};
-#pragma pack(pop)
-		// конструктор
-		Haffman() {}
-		// деструктор
-		~Haffman() { head->reset(); }
-		// обработка
-		Buffer process(const Buffer& in, bool is_compress) noexcept;
-	protected:
-		void init() noexcept;
-		// упаковка
-		Buffer compress(ssh_u size) noexcept;
-		// распаковка
-		Buffer decompress() noexcept;
-		// сформировать дерево
-		void make_tree(int size) noexcept;
-		// отображение диагностики
-		void print_haff(Haffman::node* n, int tabs = 1, bool is_tree = true);
-		// сохранение дерева
-		void store_tree() noexcept;
-		// восстановление дерева
-		void restore_tree() noexcept;
-		// чтение бит
-		value* read(long val) noexcept;
-		// корень дерева
-		node* head;
-		// значения
-		value vals[256];
-		// дерево узлов
-		Array<node*> nodes;
-		// буферы ввода и вывода
-		ssh_b* in, *out;
+		static const int MAX_FREQUENCY		= 16383;
 	};
 
 	#define SSH_COMPRESS_RLE		0x01

@@ -10,7 +10,15 @@ namespace ssh
 		MTF mtf;
 		RLE rle;
 		Arith ari;
-		Buffer _bwt(bwt.process(in, true));
+		ssh_u val(ssh_time_counter(0));
+		for(int i = 0; i < 100; i++)
+		{
+			Buffer _bwt(bwt.process(in, true));
+		}
+		val = ssh_time_counter(val) / 100;
+		SSH_MSG(String(val));
+		return Buffer();
+		/*
 		Buffer _mtf(mtf.process(_bwt, true));
 		Buffer _rle(rle.process(_mtf, true));// rle
 		Buffer _ari1(ari.process(_rle, true));// rle|ari
@@ -35,6 +43,7 @@ namespace ssh
 		_buf[sz] = opt;
 		ssh_memcpy(_buf, out, sz);
 		return buf;
+		*/
 	}
 	
 	Buffer ssh_decompress(const Buffer& in)

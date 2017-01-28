@@ -57,7 +57,10 @@ namespace ssh
 	SSH float* ssh_mtx_vec3(const float* m, const float* v);
 	SSH float* ssh_mtx_vec4(const float* m, const float* v);
 	SSH float* ssh_mtx_mtx(const float* m1, const float* m2);
+	SSH void* ssh_memset8(void* ptr, ssh_u set, ssh_u count);
+	SSH void* ssh_memcpy8(void* dst, const void* src, ssh_u count);
 
+	ssh_u SSH ssh_time_counter(ssh_u old_value);
 	ssh_u SSH ssh_system_values(SystemInfo type);
 	ssh_u SSH ssh_dll_proc(ssh_cws dll, ssh_ccs proc, ssh_cws suffix = L"d");
 	ssh_u SSH ssh_offset_line(const String& text, ssh_l ln);
@@ -85,6 +88,7 @@ namespace ssh
 	GUID   SSH ssh_make_guid(ssh_cws src);
 	Buffer SSH ssh_base64(const String& str);
 	Buffer SSH ssh_convert(ssh_cws charset, const String& str);
+
 	void SSH ssh_make_path(const String& path);
 	void SSH ssh_remove_comments(String* lst, ssh_u count, bool is_simple);//
 	bool SSH ssh_is_wrong_lex(const String& str, ssh_cws errLexs = nullptr);
