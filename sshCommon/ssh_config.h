@@ -29,6 +29,11 @@
 
 #include <Xinput.h>
 
+#include <vector>
+#include <list>
+#include <map>
+#include <set>
+
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "libeay32.lib")
 #pragma comment(lib, "ssleay32.lib")

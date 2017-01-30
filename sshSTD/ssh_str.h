@@ -3,12 +3,10 @@
 
 namespace ssh
 {
-	#define SSH_BUFFER_LENGTH			18
-	#define str_enable_if std::enable_if_t < std::is_arithmetic<T>::value, T>
-
 	class SSH String
 	{
 		friend class Base;
+		static const int SSH_BUFFER_LENGTH = 18;
 	public:
 		// конструкторы
 		String() { init(); }
@@ -91,6 +89,10 @@ namespace ssh
 		String left(ssh_u idx) const { return substr(0, idx); }
 		String right(ssh_u idx) const { return substr(length() - idx); }
 		ssh_cws str() const { return ( _str.len_buf > SSH_BUFFER_LENGTH ? _str.ptr : _str.str); }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 	protected:
 #pragma pack(push, 1)
 		struct STRING_BUFFER

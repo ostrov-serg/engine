@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+<Type Name="ssh::String">
+	<DisplayString Condition="_str.len_buf &gt; SSH_BUFFER_LENGTH">{_str.ptr,su}</DisplayString>
+	<DisplayString Condition="_str.len_buf &lt;= SSH_BUFFER_LENGTH">{_str.str,su}</DisplayString>
+		<Expand>
+			<Item Name="[длина]" ExcludeView="simple">_str.len</Item> 
+			<Item Name="[буфер]" ExcludeView="simple">_str.len_buf</Item> 
+			<Item Name="[хэш]" ExcludeView="simple">_str.hash,x</Item> 
+				<ArrayItems>
+					<Size>_str.len</Size> 
+					<ValuePointer Condition="_str.len_buf &gt; SSH_BUFFER_LENGTH">_str.ptr</ValuePointer>
+					<ValuePointer Condition="_str.len_buf &lt;= SSH_BUFFER_LENGTH">_str.str</ValuePointer>
+				</ArrayItems>
+		</Expand>
+</Type>
+<Type Name="ssh::_Buffer &lt; unsigned char &gt; ">
+	<DisplayString>{data,s}, {sz,d}, {is_owner}</DisplayString>
+	<Expand>
+		<ArrayItems>
+		<Size>sz</Size> 
+				<ValuePointer>data</ValuePointer>
+		</ArrayItems>
+	</Expand>
+</Type>
+<Type Name="ssh::_Buffer &lt; unsigned short &gt; ">
+	<DisplayString>{data,su}, {sz / 2,d}, {is_owner}</DisplayString>
+	<Expand>
+		<ArrayItems>
+		<Size>sz / 2</Size> 
+				<ValuePointer>data</ValuePointer>
+		</ArrayItems>
+	</Expand>
+</Type>
+<Type Name="ssh::_Buffer &lt; unsigned long &gt; ">
+	<DisplayString>{data}, {sz / 4,d}, {is_owner}</DisplayString>
+	<Expand>
+		<ArrayItems>
+		<Size>sz / 4</Size> 
+				<ValuePointer>data</ValuePointer>
+		</ArrayItems>
+	</Expand>
+</Type>
+<!-- File
+		Gamepad Keyboard Mouse
+		angle Bbox Color Dual_quat Half Mtx Obox Plane Quat Ray Sphere Vec2 Vec3 Vec4 
+		Time
+		Bar Bits Box Pts Range
+		Xml
+		BWT MTF Arith RLE LZW
+		Regx
+-->
+</AutoVisualizer>

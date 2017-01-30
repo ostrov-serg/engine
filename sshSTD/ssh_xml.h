@@ -79,6 +79,10 @@ namespace ssh
 			if(!index) return tree.get_node_name(h, name);
 			return tree.get_node_index(h->fchild, index);
 		}
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 	protected:
 		// декодировка
 		String encode(const Buffer& buf);

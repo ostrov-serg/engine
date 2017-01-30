@@ -88,11 +88,15 @@ namespace ssh
 		// вернуть реальную позицию
 		const Pts<int>& get_pos() const { return position; }
 		// вернуть разницу между новой и старой позицией
-		Pts<int> get_sub_pos() const { return (position - old_position); }
+		auto get_sub_pos() const { return (position - old_position); }
 		// вернуть старую позицию
-		Pts<int> get_old_pos() const { return old_position; }
+		auto get_old_pos() const { return old_position; }
 		// вернуть позицию
-		Pts<int> get_hot_pos() const { return Pts<int>(current ? position + current->hot : position); }
+		auto get_hot_pos() const { return Pts<int>(current ? position + current->hot : position); }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 	protected:
 		// позиция
 		Pts<int> position;
@@ -137,9 +141,13 @@ namespace ssh
 		void set_capture(ssh_u h) { hcapture = h; }
 		// проверить на захват
 		bool is_capture(ssh_u h) const { return (h == hcapture || hcapture == 0); }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 	protected:
 		// конструктор
-		Keyboard() { SSH_MEMZERO(keys, sizeof(keys)); }
+		Keyboard() { ssh_memzero(keys, sizeof(keys)); }
 		// массив статусов всех кнопок
 		bool keys[256];
 		// текущий символ
@@ -231,6 +239,10 @@ namespace ssh
 		void update();
 		// установка скорости вибрации
 		void vibration(ssh_d idx, Side side, ssh_w speed) const;
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 	protected:
 		// конструктор
 		Gamepad::Gamepad() { if(ssh_xin_enable) ssh_xin_enable(true); }

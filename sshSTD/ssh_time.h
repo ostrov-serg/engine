@@ -38,6 +38,10 @@ namespace ssh
 		int	weekOfYear() const;
 		String fmt(String str) const;
 		static Time current() { return Time(::time(nullptr)); }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 	};
 
 	inline String operator ""_t(ssh_cws _wcs, ssh_u sz)

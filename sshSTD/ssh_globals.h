@@ -50,8 +50,6 @@ namespace ssh
 		PROG_FOLDER, WORK_FOLDER, TEMP_FOLDER, USER_FOLDER, PROG_NAME, USER_NAME, COMP_NAME, CUSTOM, PLATFORM, TOTAL_MEMORY, PHYSICAL_MEMORY, CPU_SPEED
 	};
 
-	void SSH ssh_unit_test();
-
 	SSH float* ssh_vec3_mtx(const float* v, const float* m);
 	SSH float* ssh_vec4_mtx(const float* v, const float* m);
 	SSH float* ssh_mtx_vec3(const float* m, const float* v);
@@ -91,11 +89,16 @@ namespace ssh
 
 	void SSH ssh_make_path(const String& path);
 	void SSH ssh_remove_comments(String* lst, ssh_u count, bool is_simple);//
+#ifdef _DEBUG
+   // тест
+	void SSH ssh_unit_test();
+#endif
 	bool SSH ssh_is_wrong_lex(const String& str, ssh_cws errLexs = nullptr);
 	bool SSH ssh_dlg_sel_folder(ssh_cws title, String& folder, HWND hWnd);
 	bool SSH ssh_make_wnd(const DESC_WND& desc, bool is_show_wnd);//
 	// разбить строку на элементы
-	template <typename T> void ssh_explode(ssh_cws split, const String& src, T* dst, ssh_u count, const T& def, const EnumReflector* stk = nullptr, Radix R = Radix::_dec)
+	template <typename T, typename = std::enable_if_t < std::is_arithmetic<T>::value, T>>
+	void ssh_explode(ssh_cws split, const String& src, T* dst, ssh_u count, const T& def, const EnumReflector* stk = nullptr, Radix R = Radix::_dec)
 	{
 		ssh_ws* _wcs(src.buffer()), *t(_wcs);
 		ssh_u j(ssh_wcslen(split));
@@ -128,7 +131,8 @@ namespace ssh
 		while(count--) *dst++ = def;
 	}
 	// соединить элементы в строку
-	template <typename T> String ssh_implode(ssh_cws split, T* src, ssh_u count, ssh_cws def, const EnumReflector* stk = nullptr, bool is_enum = false, Radix R = Radix::_dec)
+	template <typename T, typename = std::enable_if_t < std::is_arithmetic<T>::value, T>>
+	String ssh_implode(ssh_cws split, T* src, ssh_u count, ssh_cws def, const EnumReflector* stk = nullptr, bool is_enum = false, Radix R = Radix::_dec)
 	{
 		String ret, _tmp;
 
@@ -147,7 +151,8 @@ namespace ssh
 		return ret;
 	}
 	// сформировать строку байт в hex счислении
-	template <typename T > String ssh_make_hex_string(T* p, ssh_u count, String& txt, bool is_w, bool is_cont)
+	template <typename T, typename = std::enable_if_t<std::is_integral<T>::value, T>>
+	String ssh_make_hex_string(T* p, ssh_u count, String& txt, bool is_w, bool is_cont)
 	{
 		String bytes(L'\0', count * (sizeof(T) * 2 + 1)), _spc(L" ");
 		ssh_ws* _ws(bytes.buffer());

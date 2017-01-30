@@ -25,9 +25,9 @@ namespace ssh
 		// создать буфер определённого размера
 		_Buffer(ssh_u count) : data(new T[count]), sz(count * sizeof(T)), is_owner(true) { }
 		// создать из диапазона
-		_Buffer(const Range<int>& wh, int bpp) : sz(wh.w * wh.h * bpp), data(new ssh_b[sz]), is_owner(true) { }
+		_Buffer(const Range<int>& wh, int bpp) : sz(wh.w * wh.h * bpp), data(new T[sz]), is_owner(true) { }
 		// создать из существующего неопределённого буфера
-		_Buffer(ssh_b* p, ssh_u count, bool is_own = true) : data(p), sz(count), is_owner(is_own) {}
+		_Buffer(T* p, ssh_u count, bool is_own = true) : data(p), sz(count * sizeof(T)), is_owner(is_own) {}
 		// деструктор
 		~_Buffer() { release(); }
 		// оператор присваивание
@@ -61,6 +61,10 @@ namespace ssh
 		operator T*() const { return data; }
 		// интерпретация содержимого буфера
 		template<typename TYPE> TYPE to() const { return (TYPE)data; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 	protected:
 		// реализация
 		void release() noexcept { if(is_owner) SSH_DEL(data); }

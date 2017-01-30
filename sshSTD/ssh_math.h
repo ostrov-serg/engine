@@ -44,142 +44,155 @@ namespace ssh
 		return f - ssh_trunc(f);
 	}
 
-	class plane;
-	class color;
-	class mtx;
-	class vec2;
-	class vec3;
-	class vec4;
-	class quat;
-	class ray;
-	class sphere;
-	class bbox;
-	class obox;
+	class Plane;
+	class Color;
+	class Mtx;
+	class Vec2;
+	class Vec3;
+	class Vec4;
+	class Quat;
+	class Ray;
+	class Sphere;
+	class Bbox;
+	class Obox;
 
-	class SSH vec2
+	class SSH Vec2
 	{
 	public:
 		// конструкторы
-		vec2() : x(0.0f), y(0.0f) {}
-		vec2(float x, float y) : x(x), y(y) {}
-		vec2(float* f) { x = f[0]; y = f[1]; }
-		vec2(const vec2& v) : x(v.x), y(v.y) {}
+		Vec2() : x(0.0f), y(0.0f) {}
+		Vec2(float x, float y) : x(x), y(y) {}
+		Vec2(float* f) { x = f[0]; y = f[1]; }
+		Vec2(const Vec2& v) : x(v.x), y(v.y) {}
 		// операции
 		// унарные
-		const vec2& operator + () const { return *this; }
-		vec2 operator - () const { return vec2(-x, -y); }
+		const Vec2& operator + () const { return *this; }
+		Vec2 operator - () const { return Vec2(-x, -y); }
 		// бинарные
-		vec2 operator + (const vec2& v) const { return vec2(x + v.x, y + v.y); }
-		vec2 operator + (float f) const { return vec2(x + f, y + f); }
-		vec2 operator - (const vec2& v) const { return vec2(x - v.x, y - v.y); }
-		vec2 operator - (float f) const { return vec2(x - f, y - f); }
-		vec2 operator * (const vec2& v) const { return vec2(x * v.x, y * v.y); }
-		vec2 operator * (float f) const { return vec2(x * f, y * f); }
-		vec2 operator / (const vec2& v) const { return vec2(x / v.x, y / v.y); }
-		vec2 operator / (float f) const { f = 1.0f / f; return vec2(x * f, y * f); }
-		const vec2& operator += (const vec2& v) { x += v.x; y += v.y; return *this; }
-		const vec2& operator += (float f) { x += f; y += f; return *this; }
-		const vec2& operator -= (const vec2& v) { x -= v.x; y -= v.y; return *this; }
-		const vec2& operator -= (float f) { x -= f; y -= f; return *this; }
-		const vec2& operator *= (const vec2& v) { x *= v.x; y *= v.y; return *this; }
-		const vec2& operator *= (float f) { x *= f; y *= f; return *this; }
-		const vec2& operator /= (const vec2& v) { x /= v.x; y /= v.y; return *this; }
-		const vec2& operator /= (float f) { f = 1.0f / f; x *= f; y *= f; return *this; }
-		friend vec2 operator + (float f, const vec2& v) { return vec2(f + v.x, f + v.y); }
-		friend vec2 operator - (float f, const vec2& v) { return vec2(f - v.x, f - v.y); }
-		friend vec2 operator * (float f, const vec2& v) { return vec2(f * v.x, f * v.y); }
-		friend vec2 operator / (float f, const vec2& v) { return vec2(f / v.x, f / v.y); }
+		Vec2 operator + (const Vec2& v) const { return Vec2(x + v.x, y + v.y); }
+		Vec2 operator + (float f) const { return Vec2(x + f, y + f); }
+		Vec2 operator - (const Vec2& v) const { return Vec2(x - v.x, y - v.y); }
+		Vec2 operator - (float f) const { return Vec2(x - f, y - f); }
+		Vec2 operator * (const Vec2& v) const { return Vec2(x * v.x, y * v.y); }
+		Vec2 operator * (float f) const { return Vec2(x * f, y * f); }
+		Vec2 operator / (const Vec2& v) const { return Vec2(x / v.x, y / v.y); }
+		Vec2 operator / (float f) const { f = 1.0f / f; return Vec2(x * f, y * f); }
+		auto operator += (const Vec2& v) { x += v.x; y += v.y; return *this; }
+		auto operator += (float f) { x += f; y += f; return *this; }
+		auto operator -= (const Vec2& v) { x -= v.x; y -= v.y; return *this; }
+		auto operator -= (float f) { x -= f; y -= f; return *this; }
+		auto operator *= (const Vec2& v) { x *= v.x; y *= v.y; return *this; }
+		auto operator *= (float f) { x *= f; y *= f; return *this; }
+		auto operator /= (const Vec2& v) { x /= v.x; y /= v.y; return *this; }
+		auto operator /= (float f) { f = 1.0f / f; x *= f; y *= f; return *this; }
+		friend Vec2 operator + (float f, const Vec2& v) { return Vec2(f + v.x, f + v.y); }
+		friend Vec2 operator - (float f, const Vec2& v) { return Vec2(f - v.x, f - v.y); }
+		friend Vec2 operator * (float f, const Vec2& v) { return Vec2(f * v.x, f * v.y); }
+		friend Vec2 operator / (float f, const Vec2& v) { return Vec2(f / v.x, f / v.y); }
 		// логические
-		bool operator == (const vec2& v) const { return ((fabs(x - v.x) + fabs(y - v.y)) < SSH_EPSILON); }
-		bool operator != (const vec2& v) const { return !(operator == (v)); }
-		//		float operator[](ssh_u idx) const {return (idx < 2 ? flt[idx] : 0.0f);}
-				// присваивание
-		const vec2& operator = (const vec2& v) { x = v.x; y = v.y; return *this; }
-		const vec2& operator = (float f) { x = f; y = f; return *this; }
+		bool operator == (const Vec2& v) const { return ((fabs(x - v.x) + fabs(y - v.y)) < SSH_EPSILON); }
+		bool operator != (const Vec2& v) const { return !(operator == (v)); }
+		float operator[](ssh_u idx) const { return flt[idx]; }
+		// присваивание
+		const Vec2& operator = (const Vec2& v) { x = v.x; y = v.y; return *this; }
+		const Vec2& operator = (float f) { x = f; y = f; return *this; }
 		// специальные
 		float length() const { return sqrt(x * x + y * y); }
 		float lengthSq() const { return x * x + y * y; }
-		float dot(const vec2& v) const { return x * v.x + y * v.y; }
-		float cross(const vec2& v) const { return x * v.y - y * v.x; }
+		float dot(const Vec2& v) const { return x * v.x + y * v.y; }
+		float cross(const Vec2& v) const { return x * v.y - y * v.x; }
 		bool is_identity() const { return (lengthSq() < SSH_EPSILON2); }
-		const vec2& normalize() { float l(length()); l = (l > SSH_EPSILON ? 1.0f / l : 0.0f); x *= l; y *= l; return *this; }
-		const vec2& ceil() { x = ssh_ceil(x); y = ssh_ceil(y); return *this; }
-		const vec2& floor() { x = ssh_floor(x); y = ssh_floor(y); return *this; }
-		vec2 middle(const vec2& v) const { return vec2((x + v.x) / 2.0f, (y + v.y) / 2.0f); }
-		vec2 reflect(const vec2& v) const { return vec2(*this - (2.0f * dot(v) * v)); }
+		auto normalize() { float l(length()); l = (l > SSH_EPSILON ? 1.0f / l : 0.0f); x *= l; y *= l; return *this; }
+		auto ceil() { x = ssh_ceil(x); y = ssh_ceil(y); return *this; }
+		auto floor() { x = ssh_floor(x); y = ssh_floor(y); return *this; }
+		Vec2 middle(const Vec2& v) const { return Vec2((x + v.x) / 2.0f, (y + v.y) / 2.0f); }
+		Vec2 reflect(const Vec2& v) const { return Vec2(*this - (2.0f * dot(v) * v)); }
 		// приведение типа
-		operator const float*() const { return (const float*)&x; }
-		operator float*() const { return (float*)&x; }
+		operator float*() const { return (float*)flt; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		// члены
-		float x;
-		float y;
+		union
+		{
+			struct
+			{
+				float x;
+				float y;
+			};
+			float flt[2];
+		};
 	};
 
-	class SSH vec3
+	class SSH Vec3
 	{
 	public:
 		// конструкторы
-		vec3() : x(0.0f), y(0.0f), z(0.0f) {}
-		vec3(float f) : x(f), y(f), z(f) {}
-		vec3(float X, float Y, float Z) : x(X), y(Y), z(Z) {}
-		vec3(float* f) { x = f[0]; y = f[1]; z = f[2]; }
-		vec3(const vec2& v) : x(v.x), y(v.y), z(0.0f) {}
-		vec3(const vec3& v) : x(v.x), y(v.y), z(v.z) {}
+		Vec3() : x(0.0f), y(0.0f), z(0.0f) {}
+		Vec3(float f) : x(f), y(f), z(f) {}
+		Vec3(float X, float Y, float Z) : x(X), y(Y), z(Z) {}
+		Vec3(float* f) { x = f[0]; y = f[1]; z = f[2]; }
+		Vec3(const Vec2& v) : x(v.x), y(v.y), z(0.0f) {}
+		Vec3(const Vec3& v) : x(v.x), y(v.y), z(v.z) {}
 		// операции
 		// унарные
-		const vec3& operator + () const { return *this; }
-		vec3 operator - () const { return vec3(-x, -y, -z); }
+		auto operator + () const { return *this; }
+		Vec3 operator - () const { return Vec3(-x, -y, -z); }
 		// бинарные
-		vec3 operator + (const vec3& v) const { return vec3(x + v.x, y + v.y, z + v.z); }
-		vec3 operator + (float f) const { return vec3(x + f, y + f, z + f); }
-		vec3 operator - (const vec3& v) const { return vec3(x - v.x, y - v.y, z - v.z); }
-		vec3 operator - (float f) const { return vec3(x - f, y - f, z - f); }
-		vec3 operator * (const vec3& v) const { return vec3(x * v.x, y * v.y, z * v.z); }
-		vec3 operator * (const mtx& m) const;
-		vec3 operator * (float f) const { return vec3(x * f, y * f, z * f); }
-		vec3 operator / (const vec3& v) const { return vec3(x / v.x, y / v.y, z / v.z); }
-		vec3 operator / (float f) const { f = 1.0f / f; return vec3(x * f, y * f, z * f); }
-		const vec3& operator += (const vec3& v) { x += v.x; y += v.y; z += v.z; return *this; }
-		const vec3& operator += (float f) { x += f; y += f; z += f; return *this; }
-		const vec3& operator -= (const vec3& v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
-		const vec3& operator -= (float f) { x -= f; y -= f; z -= f; return *this; }
-		const vec3& operator *= (const vec3& v) { x *= v.x; y *= v.y; z *= v.z; return *this; }
-		const vec3& operator *= (const mtx& m);
-		const vec3& operator *= (float f) { x *= f; y *= f; z *= f; return *this; }
-		const vec3& operator /= (const vec3& v) { x /= v.x; y /= v.y; z /= v.z; return *this; }
-		const vec3& operator /= (float f) { f = 1.0f / f; x *= f; y *= f; z *= f; return *this; }
-		friend vec3 operator + (float f, const vec3& v) { return vec3(f + v.x, f + v.y, f + v.z); }
-		friend vec3 operator - (float f, const vec3& v) { return vec3(f - v.x, f - v.y, f - v.z); }
-		friend vec3 operator * (float f, const vec3& v) { return vec3(f * v.x, f * v.y, f * v.z); }
-		friend vec3 operator / (float f, const vec3& v) { return vec3(f / v.x, f / v.y, f / v.z); }
-		friend vec3 operator * (const mtx& m, const vec3& v);
-		friend vec3 operator * (const quat& q, const vec3& v);
+		Vec3 operator + (const Vec3& v) const { return Vec3(x + v.x, y + v.y, z + v.z); }
+		Vec3 operator + (float f) const { return Vec3(x + f, y + f, z + f); }
+		Vec3 operator - (const Vec3& v) const { return Vec3(x - v.x, y - v.y, z - v.z); }
+		Vec3 operator - (float f) const { return Vec3(x - f, y - f, z - f); }
+		Vec3 operator * (const Vec3& v) const { return Vec3(x * v.x, y * v.y, z * v.z); }
+		Vec3 operator * (const Mtx& m) const;
+		Vec3 operator * (float f) const { return Vec3(x * f, y * f, z * f); }
+		Vec3 operator / (const Vec3& v) const { return Vec3(x / v.x, y / v.y, z / v.z); }
+		Vec3 operator / (float f) const { f = 1.0f / f; return Vec3(x * f, y * f, z * f); }
+		auto operator += (const Vec3& v) { x += v.x; y += v.y; z += v.z; return *this; }
+		auto operator += (float f) { x += f; y += f; z += f; return *this; }
+		auto operator -= (const Vec3& v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
+		auto operator -= (float f) { x -= f; y -= f; z -= f; return *this; }
+		auto operator *= (const Vec3& v) { x *= v.x; y *= v.y; z *= v.z; return *this; }
+		const Vec3& operator *= (const Mtx& m);
+		auto operator *= (float f) { x *= f; y *= f; z *= f; return *this; }
+		auto operator /= (const Vec3& v) { x /= v.x; y /= v.y; z /= v.z; return *this; }
+		auto operator /= (float f) { f = 1.0f / f; x *= f; y *= f; z *= f; return *this; }
+		friend Vec3 operator + (float f, const Vec3& v) { return Vec3(f + v.x, f + v.y, f + v.z); }
+		friend Vec3 operator - (float f, const Vec3& v) { return Vec3(f - v.x, f - v.y, f - v.z); }
+		friend Vec3 operator * (float f, const Vec3& v) { return Vec3(f * v.x, f * v.y, f * v.z); }
+		friend Vec3 operator / (float f, const Vec3& v) { return Vec3(f / v.x, f / v.y, f / v.z); }
+		friend Vec3 operator * (const Mtx& m, const Vec3& v);
+		friend Vec3 operator * (const Quat& q, const Vec3& v);
 		// логические
-		bool operator == (const vec3& v) const { return ((fabs(x - v.x) + fabs(y - v.y) + fabs(z - v.z)) < SSH_EPSILON); }
-		bool operator != (const vec3& v) const { return (!operator == (v)); }
-		bool operator > (const vec3& v) const { return (x > v.x && y > v.y && z > v.z); }
-		bool operator < (const vec3& v) const { return (x < v.x && y < v.y && z < v.z); }
+		bool operator == (const Vec3& v) const { return ((fabs(x - v.x) + fabs(y - v.y) + fabs(z - v.z)) < SSH_EPSILON); }
+		bool operator != (const Vec3& v) const { return (!operator == (v)); }
+		bool operator > (const Vec3& v) const { return (x > v.x && y > v.y && z > v.z); }
+		bool operator < (const Vec3& v) const { return (x < v.x && y < v.y && z < v.z); }
 		// присваивание
-		const vec3& operator = (const vec3& v) { x = v.x; y = v.y; z = v.z; return *this; }
-		const vec3& operator = (float f) { x = f; y = f; z = f; return *this; }
-		float operator[](ssh_u idx) const { return (idx < 3 ? flt[idx] : 0.0f); }
+		auto operator = (const Vec3& v) { x = v.x; y = v.y; z = v.z; return *this; }
+		auto operator = (float f) { x = f; y = f; z = f; return *this; }
+		float operator[](ssh_u idx) const { return flt[idx]; }
 		// специальные
 		float length() const { return sqrt(x * x + y * y + z * z); }
 		float lengthSq() const { return x * x + y * y + z * z; }
-		float dot(const vec3& v) const { return x * v.x + y * v.y + z * v.z; }
+		float dot(const Vec3& v) const { return x * v.x + y * v.y + z * v.z; }
 		bool is_identity() const { return (lengthSq() < SSH_EPSILON2); }
-		const vec3& normalize() { float l(length()); l = (l > SSH_EPSILON ? 1.0f / l : 0.0f); x *= l; y *= l; z *= l; return *this; }
-		const vec3& floor(const vec3& v) { if(v.x < x) x = v.x; if(v.y < y) y = v.y; if(v.z < z) z = v.z; return *this; }
-		const vec3& ceil(const vec3& v) { if(v.x > x) x = v.x; if(v.y > y) y = v.y; if(v.z > z) z = v.z; return *this; }
-		const vec3& set(float X, float Y, float Z) { x = X; y = Y; z = Z; return *this; }
-		const vec3& floor() { x = ssh_floor(x); y = ssh_floor(y); z = ssh_floor(z); return *this; }
-		vec3 cross(const vec3& v) const { return vec3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x); }
-		vec3 middle(const vec3& v) const { return vec3((x + v.x) / 2.0f, (y + v.y) / 2.0f, (z + v.z) / 2.0f); }
-		vec3 reflect(const vec3& v) const { return vec3(*this - (2.0f * dot(v) * v)); }
-		vec3 lerp(const vec3& v, float t) const { float s = 1.0f - t; return vec3(x * s + t * v.x, y * s + t * v.y, z * s + t * v.z); }
+		auto normalize() { float l(length()); l = (l > SSH_EPSILON ? 1.0f / l : 0.0f); x *= l; y *= l; z *= l; return *this; }
+		auto floor(const Vec3& v) { if(v.x < x) x = v.x; if(v.y < y) y = v.y; if(v.z < z) z = v.z; return *this; }
+		auto ceil(const Vec3& v) { if(v.x > x) x = v.x; if(v.y > y) y = v.y; if(v.z > z) z = v.z; return *this; }
+		auto set(float X, float Y, float Z) { x = X; y = Y; z = Z; return *this; }
+		auto floor() { x = ssh_floor(x); y = ssh_floor(y); z = ssh_floor(z); return *this; }
+		Vec3 cross(const Vec3& v) const { return Vec3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x); }
+		Vec3 middle(const Vec3& v) const { return Vec3((x + v.x) / 2.0f, (y + v.y) / 2.0f, (z + v.z) / 2.0f); }
+		Vec3 reflect(const Vec3& v) const { return Vec3(*this - (2.0f * dot(v) * v)); }
+		Vec3 lerp(const Vec3& v, float t) const { float s = 1.0f - t; return Vec3(x * s + t * v.x, y * s + t * v.y, z * s + t * v.z); }
 		// приведение типа
-		operator const float*() const { return (const float*)&x; }
-		operator float*() const { return (float*)&x; }
+		operator float*() const { return (float*)flt; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		// члены
 		union
 		{
@@ -188,68 +201,71 @@ namespace ssh
 		};
 	};
 
-	__declspec(align(16)) class SSH vec4
+	__declspec(align(16)) class SSH Vec4
 	{
 	public:
 		// конструкторы
-		vec4() { identity(); }
-		vec4(float f) : x(f), y(f), z(f), w(f) {}
-		vec4(float X, float Y, float Z, float W) : x(X), y(Y), z(Z), w(W) {}// 0 - vector 1 - point
-		vec4(float* f) { x = f[0]; y = f[1]; z = f[2]; w = f[3]; }
-		vec4(const vec2& v) : x(v.x), y(v.y), z(1.0f), w(0.0f) {}
-		vec4(const vec3& v) : x(v.x), y(v.y), z(v.z), w(0.0f) {}
-		vec4(const vec4& v) : x(v.x), y(v.y), z(v.z), w(v.w) {}
+		Vec4() { identity(); }
+		Vec4(float f) : x(f), y(f), z(f), w(f) {}
+		Vec4(float X, float Y, float Z, float W) : x(X), y(Y), z(Z), w(W) {}// 0 - vector 1 - point
+		Vec4(float* f) { x = f[0]; y = f[1]; z = f[2]; w = f[3]; }
+		Vec4(const Vec2& v) : x(v.x), y(v.y), z(1.0f), w(0.0f) {}
+		Vec4(const Vec3& v) : x(v.x), y(v.y), z(v.z), w(0.0f) {}
+		Vec4(const Vec4& v) : x(v.x), y(v.y), z(v.z), w(v.w) {}
 		// операции
 		// унарные
-		const vec4& operator + () const { return *this; }
-		vec4 operator - () const { return vec4(-x, -y, -z, -w); }
+		const Vec4& operator + () const { return *this; }
+		Vec4 operator - () const { return Vec4(-x, -y, -z, -w); }
 		// бинарные
-		vec4 operator + (const vec4& v) const { return vec4(x + v.x, y + v.y, z + v.z, w + v.w); }
-		vec4 operator + (float f) const { return vec4(x + f, y + f, z + f, w + f); }
-		vec4 operator - (const vec4& v) const { return vec4(x - v.x, y - v.y, z - v.z, w - v.w); }
-		vec4 operator - (float f) const { return vec4(x - f, y - f, z - f, w - f); }
-		vec4 operator * (const vec4& v) const { return vec4(x * v.x, y * v.y, z * v.z, w * v.w); }
-		vec4 operator * (const mtx& m) const;
-		vec4 operator * (float f) const { return vec4(x * f, y * f, z * f, w * f); }
-		vec4 operator / (const vec4& v) const { return vec4(x / v.x, y / v.y, z / v.z, w / v.w); }
-		vec4 operator / (float f) const { f = 1.0f / f; return vec4(x * f, y * f, z * f, w * f); }
-		const vec4& operator += (const vec4& v) { x += v.x; y += v.y; z += v.z; w += v.w; return *this; }
-		const vec4& operator += (float f) { x += f; y += f; z += f; w += f; return *this; }
-		const vec4& operator -= (const vec4& v) { x -= v.x; y -= v.y; z -= v.z; w -= v.w; return *this; }
-		const vec4& operator -= (float f) { x -= f; y -= f; z -= f; w -= f; return *this; }
-		const vec4& operator *= (const vec4& v) { x *= v.x; y *= v.y; z *= v.z; w *= v.w; return *this; }
-		const vec4& operator *= (const mtx& m);
-		const vec4& operator *= (float f) { x *= f; y *= f; z *= f; w *= f; return *this; }
-		const vec4& operator /= (const vec4& v) { x /= v.x; y /= v.y; z /= v.z; w /= v.w; return *this; }
-		const vec4& operator /= (float f) { f = 1.0f / f; x *= f; y *= f; z *= f; w *= f; return *this; }
-		friend vec4 operator + (float f, const vec4& v) { return vec4(f + v.x, f + v.y, f + v.z, f + v.w); }
-		friend vec4 operator - (float f, const vec4& v) { return vec4(f - v.x, f - v.y, f - v.z, f - v.w); }
-		friend vec4 operator * (float f, const vec4& v) { return vec4(f * v.x, f * v.y, f * v.z, f * v.w); }
-		friend vec4 operator * (const mtx& m, const vec4& v);
-		friend vec4 operator / (float f, const vec4& v) { return vec4(f / v.x, f / v.y, f / v.z, f / v.w); }
+		Vec4 operator + (const Vec4& v) const { return Vec4(x + v.x, y + v.y, z + v.z, w + v.w); }
+		Vec4 operator + (float f) const { return Vec4(x + f, y + f, z + f, w + f); }
+		Vec4 operator - (const Vec4& v) const { return Vec4(x - v.x, y - v.y, z - v.z, w - v.w); }
+		Vec4 operator - (float f) const { return Vec4(x - f, y - f, z - f, w - f); }
+		Vec4 operator * (const Vec4& v) const { return Vec4(x * v.x, y * v.y, z * v.z, w * v.w); }
+		Vec4 operator * (const Mtx& m) const;
+		Vec4 operator * (float f) const { return Vec4(x * f, y * f, z * f, w * f); }
+		Vec4 operator / (const Vec4& v) const { return Vec4(x / v.x, y / v.y, z / v.z, w / v.w); }
+		Vec4 operator / (float f) const { f = 1.0f / f; return Vec4(x * f, y * f, z * f, w * f); }
+		auto operator += (const Vec4& v) { x += v.x; y += v.y; z += v.z; w += v.w; return *this; }
+		auto operator += (float f) { x += f; y += f; z += f; w += f; return *this; }
+		auto operator -= (const Vec4& v) { x -= v.x; y -= v.y; z -= v.z; w -= v.w; return *this; }
+		auto operator -= (float f) { x -= f; y -= f; z -= f; w -= f; return *this; }
+		auto operator *= (const Vec4& v) { x *= v.x; y *= v.y; z *= v.z; w *= v.w; return *this; }
+		const Vec4& operator *= (const Mtx& m);
+		auto operator *= (float f) { x *= f; y *= f; z *= f; w *= f; return *this; }
+		auto operator /= (const Vec4& v) { x /= v.x; y /= v.y; z /= v.z; w /= v.w; return *this; }
+		auto operator /= (float f) { f = 1.0f / f; x *= f; y *= f; z *= f; w *= f; return *this; }
+		friend Vec4 operator + (float f, const Vec4& v) { return Vec4(f + v.x, f + v.y, f + v.z, f + v.w); }
+		friend Vec4 operator - (float f, const Vec4& v) { return Vec4(f - v.x, f - v.y, f - v.z, f - v.w); }
+		friend Vec4 operator * (float f, const Vec4& v) { return Vec4(f * v.x, f * v.y, f * v.z, f * v.w); }
+		friend Vec4 operator * (const Mtx& m, const Vec4& v);
+		friend Vec4 operator / (float f, const Vec4& v) { return Vec4(f / v.x, f / v.y, f / v.z, f / v.w); }
 		// логические
-		bool operator == (const vec4& v) const { return ((fabs(x - v.x) + fabs(y - v.y) + fabs(z - v.z) + fabs(w - v.w)) < SSH_EPSILON); }
-		bool operator != (const vec4& v) const { return !(operator == (v)); }
+		bool operator == (const Vec4& v) const { return ((fabs(x - v.x) + fabs(y - v.y) + fabs(z - v.z) + fabs(w - v.w)) < SSH_EPSILON); }
+		bool operator != (const Vec4& v) const { return !(operator == (v)); }
 		// присваивание
-		const vec4& operator = (const vec4& v) { x = v.x; y = v.y; z = v.z; w = v.w; return *this; }
-		const vec4& operator = (float f) { x = f; y = f; z = f; w = 0.0f; return *this; }
-		float operator[](ssh_u idx) const { return (idx < 4 ? flt[idx] : 0.0f); }
+		auto operator = (const Vec4& v) { x = v.x; y = v.y; z = v.z; w = v.w; return *this; }
+		auto operator = (float f) { x = f; y = f; z = f; w = 0.0f; return *this; }
+		float operator[](ssh_u idx) const { return flt[idx]; }
 		// специальные
 		void identity() { x = y = z = w = 0.0f; }
 		float length() const { return sqrt(x * x + y * y + z * z + w * w); }
 		float lengthSq() const { return x * x + y * y + z * z + w * w; }
-		float dot(const vec4& v) const { return x * v.x + y * v.y + z * v.z + w * v.w; }
+		float dot(const Vec4& v) const { return x * v.x + y * v.y + z * v.z + w * v.w; }
 		bool is_identity() const { return(lengthSq() < SSH_EPSILON2); }
-		const vec4& normalize() { float l(length()); l = (l > SSH_EPSILON ? 1.0f / l : 0.0f); x *= l; y *= l; z *= l; w *= l; return *this; }
-		const vec4& floor(const vec4& v) { if(v.x < x) x = v.x; if(v.y < y) y = v.y; if(v.z < z) z = v.z; w = 0.0f; return *this; }
-		const vec4& ceil(const vec4& v) { if(v.x > x) x = v.x; if(v.y > y) y = v.y; if(v.z > z) z = v.z; w = 0.0f; return *this; }
-		const vec4& set(float X, float Y, float Z, float W) { x = X; y = Y; z = Z; w = W; return *this; }
-		vec4 cross(const vec4& v) const { return vec4(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x, w); }
-		vec4 middle(const vec4& v) const { return vec4((x + v.x) / 2.0f, (y + v.y) / 2.0f, (z + v.z) / 2.0f, w); }
-		vec4 reflect(const vec4& v) const { return vec4(*this - (2.0f * dot(v) * v)); }
+		auto normalize() { float l(length()); l = (l > SSH_EPSILON ? 1.0f / l : 0.0f); x *= l; y *= l; z *= l; w *= l; return *this; }
+		auto floor(const Vec4& v) { if(v.x < x) x = v.x; if(v.y < y) y = v.y; if(v.z < z) z = v.z; w = 0.0f; return *this; }
+		auto ceil(const Vec4& v) { if(v.x > x) x = v.x; if(v.y > y) y = v.y; if(v.z > z) z = v.z; w = 0.0f; return *this; }
+		auto set(float X, float Y, float Z, float W) { x = X; y = Y; z = Z; w = W; return *this; }
+		Vec4 cross(const Vec4& v) const { return Vec4(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x, w); }
+		Vec4 middle(const Vec4& v) const { return Vec4((x + v.x) / 2.0f, (y + v.y) / 2.0f, (z + v.z) / 2.0f, w); }
+		Vec4 reflect(const Vec4& v) const { return Vec4(*this - (2.0f * dot(v) * v)); }
 		// приведение типа
-		operator const float*() const { return (const float*)&x; }
-		operator float*() const { return (float*)&x; }
+		operator float*() const { return (float*)flt; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		// члены
 		union
 		{
@@ -259,181 +275,184 @@ namespace ssh
 		};
 	};
 
-	__declspec(align(16)) class SSH mtx
+	__declspec(align(16)) class SSH Mtx
 	{
 	public:
 		// конструкторы
-		mtx() { identity(); }
-		mtx(float _f11, float _f12, float _f13, float _f14, float _f21, float _f22, float _f23, float _f24, float _f31, float _f32, float _f33, float _f34, float _f41, float _f42, float _f43, float _f44);
-		mtx(__m128 _1, __m128 _2, __m128 _3, __m128 _4) { xmm[0] = _1; xmm[1] = _2; xmm[2] = _3; xmm[3] = _4; }
-		mtx(float* mm) { ssh_memcpy(*this, mm, sizeof(mtx)); }
-		mtx(const mtx& mm) { *this = mm; }
-		mtx(const mtx& trans, const mtx& rotx, const mtx& roty, const mtx& rotz) { *this = rotx * roty; *this *= rotz * trans; }
-		mtx(const quat& q) { fromQuat(q); }
+		Mtx() { identity(); }
+		Mtx(float _f11, float _f12, float _f13, float _f14, float _f21, float _f22, float _f23, float _f24, float _f31, float _f32, float _f33, float _f34, float _f41, float _f42, float _f43, float _f44);
+		Mtx(__m128 _1, __m128 _2, __m128 _3, __m128 _4) { xmm[0] = _1; xmm[1] = _2; xmm[2] = _3; xmm[3] = _4; }
+		Mtx(float* mm) { ssh_memcpy(*this, mm, sizeof(Mtx)); }
+		Mtx(const Mtx& mm) { *this = mm; }
+		Mtx(const Mtx& trans, const Mtx& rotx, const Mtx& roty, const Mtx& rotz) { *this = rotx * roty; *this *= rotz * trans; }
+		Mtx(const Quat& q) { fromQuat(q); }
 		// операции
-		const mtx& operator + () const { return *this; }
+		const Mtx& operator + () const { return *this; }
 		// бинарные
-		mtx operator - () const { return mtx(-_11, -_12, -_13, -_14, -_21, -_22, -_23, -_24, -_31, -_32, -_33, -_34, -_41, -_42, -_43, -_44); }
-		mtx operator + (float f) const
+		Mtx operator - () const { return Mtx(-_11, -_12, -_13, -_14, -_21, -_22, -_23, -_24, -_31, -_32, -_33, -_34, -_41, -_42, -_43, -_44); }
+		Mtx operator + (float f) const
 		{
 			__m128 a(_mm_set_ss(f)); a = _mm_shuffle_ps(a, a, 0);
-			return mtx(_mm_add_ps(xmm[0], a), _mm_add_ps(xmm[1], a), _mm_add_ps(xmm[2], a), _mm_add_ps(xmm[3], a));
+			return Mtx(_mm_add_ps(xmm[0], a), _mm_add_ps(xmm[1], a), _mm_add_ps(xmm[2], a), _mm_add_ps(xmm[3], a));
 		}
-		mtx operator - (float f) const
+		Mtx operator - (float f) const
 		{
 			__m128 a(_mm_set_ss(f)); a = _mm_shuffle_ps(a, a, 0);
-			return mtx(_mm_sub_ps(xmm[0], a), _mm_sub_ps(xmm[1], a), _mm_sub_ps(xmm[2], a), _mm_sub_ps(xmm[3], a));
+			return Mtx(_mm_sub_ps(xmm[0], a), _mm_sub_ps(xmm[1], a), _mm_sub_ps(xmm[2], a), _mm_sub_ps(xmm[3], a));
 		}
-		mtx operator * (float f) const
+		Mtx operator * (float f) const
 		{
 			__m128 a(_mm_set_ss(f)); a = _mm_shuffle_ps(a, a, 0);
-			return mtx(_mm_mul_ps(xmm[0], a), _mm_mul_ps(xmm[1], a), _mm_mul_ps(xmm[2], a), _mm_mul_ps(xmm[3], a));
+			return Mtx(_mm_mul_ps(xmm[0], a), _mm_mul_ps(xmm[1], a), _mm_mul_ps(xmm[2], a), _mm_mul_ps(xmm[3], a));
 		}
-		mtx operator / (float f) const
+		Mtx operator / (float f) const
 		{
 			__m128 a(_mm_rcp_ss(_mm_set_ss(f))); a = _mm_shuffle_ps(a, a, 0);
-			return mtx(_mm_mul_ps(xmm[0], a), _mm_mul_ps(xmm[1], a), _mm_mul_ps(xmm[2], a), _mm_mul_ps(xmm[3], a));
+			return Mtx(_mm_mul_ps(xmm[0], a), _mm_mul_ps(xmm[1], a), _mm_mul_ps(xmm[2], a), _mm_mul_ps(xmm[3], a));
 		}
-		mtx operator + (const mtx& m) const
+		Mtx operator + (const Mtx& m) const
 		{
-			return mtx(_mm_add_ps(xmm[0], m.xmm[0]), _mm_add_ps(xmm[1], m.xmm[1]), _mm_add_ps(xmm[2], m.xmm[2]), _mm_add_ps(xmm[3], m.xmm[3]));
+			return Mtx(_mm_add_ps(xmm[0], m.xmm[0]), _mm_add_ps(xmm[1], m.xmm[1]), _mm_add_ps(xmm[2], m.xmm[2]), _mm_add_ps(xmm[3], m.xmm[3]));
 		}
-		mtx operator - (const mtx& m) const
+		Mtx operator - (const Mtx& m) const
 		{
-			return mtx(_mm_sub_ps(xmm[0], m.xmm[0]), _mm_sub_ps(xmm[1], m.xmm[1]), _mm_sub_ps(xmm[2], m.xmm[2]), _mm_sub_ps(xmm[3], m.xmm[3]));
+			return Mtx(_mm_sub_ps(xmm[0], m.xmm[0]), _mm_sub_ps(xmm[1], m.xmm[1]), _mm_sub_ps(xmm[2], m.xmm[2]), _mm_sub_ps(xmm[3], m.xmm[3]));
 		}
-		mtx operator / (const mtx& m) const
+		Mtx operator / (const Mtx& m) const
 		{
-			return mtx(_mm_div_ps(xmm[0], m.xmm[0]), _mm_div_ps(xmm[1], m.xmm[1]), _mm_div_ps(xmm[2], m.xmm[2]), _mm_div_ps(xmm[3], m.xmm[3]));
+			return Mtx(_mm_div_ps(xmm[0], m.xmm[0]), _mm_div_ps(xmm[1], m.xmm[1]), _mm_div_ps(xmm[2], m.xmm[2]), _mm_div_ps(xmm[3], m.xmm[3]));
 		}
-		const mtx& operator += (float f)
+		auto operator += (float f)
 		{
 			__m128 a(_mm_set_ss(f)); a = _mm_shuffle_ps(a, a, 0);
 			xmm[0] = _mm_add_ps(xmm[0], a); xmm[1] = _mm_add_ps(xmm[1], a);
 			xmm[2] = _mm_add_ps(xmm[2], a); xmm[3] = _mm_add_ps(xmm[3], a);
 			return *this;
 		}
-		const mtx& operator -= (float f)
+		auto operator -= (float f)
 		{
 			__m128 a(_mm_set_ss(f)); a = _mm_shuffle_ps(a, a, 0);
 			xmm[0] = _mm_sub_ps(xmm[0], a); xmm[1] = _mm_sub_ps(xmm[1], a);
 			xmm[2] = _mm_sub_ps(xmm[2], a); xmm[3] = _mm_sub_ps(xmm[3], a);
 			return *this;
 		}
-		const mtx& operator *= (float f)
+		auto operator *= (float f)
 		{
 			__m128 a(_mm_set_ss(f)); a = _mm_shuffle_ps(a, a, 0);
 			xmm[0] = _mm_mul_ps(xmm[0], a); xmm[1] = _mm_mul_ps(xmm[1], a);
 			xmm[2] = _mm_mul_ps(xmm[2], a); xmm[3] = _mm_mul_ps(xmm[3], a);
 			return *this;
 		}
-		const mtx& operator /= (float f)
+		auto operator /= (float f)
 		{
 			__m128 a(_mm_rcp_ss(_mm_set_ss(f))); a = _mm_shuffle_ps(a, a, 0);
 			xmm[0] = _mm_mul_ps(xmm[0], a); xmm[1] = _mm_mul_ps(xmm[1], a);
 			xmm[2] = _mm_mul_ps(xmm[2], a); xmm[3] = _mm_mul_ps(xmm[3], a);
 			return *this;
 		}
-		const mtx& operator += (const mtx& m)
+		auto operator += (const Mtx& m)
 		{
 			xmm[0] = _mm_add_ps(xmm[0], m.xmm[0]); xmm[1] = _mm_add_ps(xmm[1], m.xmm[1]);
 			xmm[2] = _mm_add_ps(xmm[2], m.xmm[2]); xmm[3] = _mm_add_ps(xmm[3], m.xmm[3]);
 			return *this;
 		}
-		const mtx& operator -= (const mtx& m)
+		auto operator -= (const Mtx& m)
 		{
 			xmm[0] = _mm_sub_ps(xmm[0], m.xmm[0]); xmm[1] = _mm_sub_ps(xmm[1], m.xmm[1]);
 			xmm[2] = _mm_sub_ps(xmm[2], m.xmm[2]); xmm[3] = _mm_sub_ps(xmm[3], m.xmm[3]);
 			return *this;
 		}
-		const mtx& operator /= (const mtx& m)
+		auto operator /= (const Mtx& m)
 		{
 			xmm[0] = _mm_div_ps(xmm[0], m.xmm[0]); xmm[1] = _mm_div_ps(xmm[1], m.xmm[1]);
 			xmm[2] = _mm_div_ps(xmm[2], m.xmm[2]); xmm[3] = _mm_div_ps(xmm[3], m.xmm[3]);
 			return *this;
 		}
-		mtx operator * (const mtx& m) const
+		Mtx operator * (const Mtx& m) const
 		{
-			return mtx(ssh_mtx_mtx(*this, m));
+			return Mtx(ssh_mtx_mtx(*this, m));
 		}
-		const mtx& operator *= (const mtx& m)
+		const Mtx& operator *= (const Mtx& m)
 		{
 			return (*this = ssh_mtx_mtx(*this, m));
 		}
-		friend mtx operator + (float f, const mtx& m)
+		friend Mtx operator + (float f, const Mtx& m)
 		{
 			__m128 a(_mm_set_ss(f)); a = _mm_shuffle_ps(a, a, 0);
-			return mtx(_mm_add_ps(a, m.xmm[0]), _mm_add_ps(a, m.xmm[1]), _mm_add_ps(a, m.xmm[2]), _mm_add_ps(a, m.xmm[3]));
+			return Mtx(_mm_add_ps(a, m.xmm[0]), _mm_add_ps(a, m.xmm[1]), _mm_add_ps(a, m.xmm[2]), _mm_add_ps(a, m.xmm[3]));
 		}
-		friend mtx operator - (float f, const mtx& m)
+		friend Mtx operator - (float f, const Mtx& m)
 		{
 			__m128 a(_mm_set_ss(f)); a = _mm_shuffle_ps(a, a, 0);
-			return mtx(_mm_sub_ps(a, m.xmm[0]), _mm_sub_ps(a, m.xmm[1]), _mm_sub_ps(a, m.xmm[2]), _mm_sub_ps(a, m.xmm[3]));
+			return Mtx(_mm_sub_ps(a, m.xmm[0]), _mm_sub_ps(a, m.xmm[1]), _mm_sub_ps(a, m.xmm[2]), _mm_sub_ps(a, m.xmm[3]));
 		}
-		friend mtx operator * (float f, const mtx& m)
+		friend Mtx operator * (float f, const Mtx& m)
 		{
 			__m128 a(_mm_set_ss(f)); a = _mm_shuffle_ps(a, a, 0);
-			return mtx(_mm_mul_ps(a, m.xmm[0]), _mm_mul_ps(a, m.xmm[1]), _mm_mul_ps(a, m.xmm[2]), _mm_mul_ps(a, m.xmm[3]));
+			return Mtx(_mm_mul_ps(a, m.xmm[0]), _mm_mul_ps(a, m.xmm[1]), _mm_mul_ps(a, m.xmm[2]), _mm_mul_ps(a, m.xmm[3]));
 		}
-		friend mtx operator / (float f, const mtx& m)
+		friend Mtx operator / (float f, const Mtx& m)
 		{
 			__m128 a(_mm_rcp_ss(_mm_set_ss(f))); a = _mm_shuffle_ps(a, a, 0);
-			return mtx(_mm_mul_ps(a, m.xmm[0]), _mm_mul_ps(a, m.xmm[1]), _mm_mul_ps(a, m.xmm[2]), _mm_mul_ps(a, m.xmm[3]));
+			return Mtx(_mm_mul_ps(a, m.xmm[0]), _mm_mul_ps(a, m.xmm[1]), _mm_mul_ps(a, m.xmm[2]), _mm_mul_ps(a, m.xmm[3]));
 		}
-		const mtx& operator = (const mtx& m) { ssh_memcpy((void*)this, (void*)&m, sizeof(mtx)); return *this; }
-		float operator [] (ssh_u idx) const { return (idx < 16 ? m[idx] : 0.0f); }
-		bool operator == (const mtx& m) { return (memcmp(*this, &m, sizeof(mtx)) == 0); }
-		bool operator != (const mtx& m) { return !(operator == (m)); }
-		float MINOR(const mtx& m, int r0, int r1, int r2, int c0, int c1, int c2) const;
+		const Mtx& operator = (const Mtx& m) { ssh_memcpy((void*)this, (void*)&m, sizeof(Mtx)); return *this; }
+		float operator [] (ssh_u idx) const { return m[idx]; }
+		bool operator == (const Mtx& m) { return (memcmp(*this, &m, sizeof(Mtx)) == 0); }
+		bool operator != (const Mtx& m) { return !(operator == (m)); }
+		float MINOR(const Mtx& m, int r0, int r1, int r2, int c0, int c1, int c2) const;
 		// определитель
 		float determinant() const;
-		mtx adjoint() const;
+		Mtx adjoint() const;
 		// инвертировать
-		const mtx& inverse() { *this = mtx(adjoint() * (1.0f / determinant())); return *this; }
+		auto inverse() { *this = Mtx(adjoint() * (1.0f / determinant())); return *this; }
 		// матрица вида
-		const mtx& view(const vec3& pos, const vec3& at, const vec3& up);
+		const Mtx& view(const Vec3& pos, const Vec3& at, const Vec3& up);
 		// теневая
-		const mtx& shadow(const vec4& l, const plane& pln);
+		const Mtx& shadow(const Vec4& l, const Plane& pln);
 		// из кватерниона
-		const mtx& fromQuat(const quat& q);
+		const Mtx& fromQuat(const Quat& q);
 		// мировая матрица
-		const mtx& world(const vec3& position, const vec3& scale, const quat& orientation);
+		const Mtx& world(const Vec3& position, const Vec3& scale, const Quat& orientation);
 		// отражения
-		const mtx& reflect(const plane& pl);
+		const Mtx& reflect(const Plane& pl);
 		// ортографическая матрица
-		const mtx& ortho(float w, float h, float zn, float zf);
+		const Mtx& ortho(float w, float h, float zn, float zf);
 		// перспективная матрица
-		const mtx& perspective(float w, float h, float zn, float zf);
+		const Mtx& perspective(float w, float h, float zn, float zf);
 		// перспективная матрица из угла камеры
-		const mtx& perspectiveFov(float fovy, float aspect, float zn, float zf);
+		const Mtx& perspectiveFov(float fovy, float aspect, float zn, float zf);
 		// перевернуть
-		const mtx& transpose() { *this = mtx(_11, _21, _31, _41, _12, _22, _32, _42, _13, _23, _33, _43, _14, _24, _34, _44); return *this; }
+		const Mtx& transpose() { *this = Mtx(_11, _21, _31, _41, _12, _22, _32, _42, _13, _23, _33, _43, _14, _24, _34, _44); return *this; }
 		// единичная
-		const mtx& identity() { SSH_MEMZERO(this, sizeof(mtx)); _11 = 1.0f; _22 = 1.0f; _33 = 1.0f; _44 = 1.0f; return *this; }
+		const Mtx& identity() { ssh_memzero(this, sizeof(Mtx)); _11 = 1.0f; _22 = 1.0f; _33 = 1.0f; _44 = 1.0f; return *this; }
 		// матрица позиции
-		const mtx& make_translate(const vec3& v) { identity(); _41 = v.x; 	_42 = v.y; _43 = v.z; return *this; }
+		auto make_translate(const Vec3& v) { identity(); _41 = v.x; _42 = v.y; _43 = v.z; return *this; }
 		// матрица масштабирования
-		const mtx& make_scale(const vec3& v) { identity(); _11 = v.x; 	_22 = v.y; 	_33 = v.z; return *this; }
+		auto make_scale(const Vec3& v) { identity(); _11 = v.x; _22 = v.y; 	_33 = v.z; return *this; }
 		// создать матрицу поворота из углов Эйлера
-		const mtx& set_rotateEuler(float yaw, float pitch, float roll);
+		const Mtx& set_rotateEuler(float yaw, float pitch, float roll);
 		// из произвольной оси и угла
-		const mtx& set_rotateAngleAxis(const vec3& v, float angle);
+		const Mtx& set_rotateAngleAxis(const Vec3& v, float angle);
 		// установить позицию
-		const mtx& set_translate(const vec3& v) { _41 = v.x; _42 = v.y; _43 = v.z; return *this; }
+		auto set_translate(const Vec3& v) { _41 = v.x; _42 = v.y; _43 = v.z; return *this; }
 		// установить масштаб
-		const mtx& set_scale(const vec3& v) { _11 = v.x; _22 = v.y; _33 = v.z; return *this; }
+		auto set_scale(const Vec3& v) { _11 = v.x; _22 = v.y; _33 = v.z; return *this; }
 		// убрать позицию
-		const mtx& no_trans() { _41 = 0.0f; _42 = 0.0f; _43 = 0.0f; return *this; }
+		auto no_trans() { _41 = 0.0f; _42 = 0.0f; _43 = 0.0f; return *this; }
 		// вернуть смещение
-		vec3 get_translate() const { return vec3(_41, _42, _43); }
+		Vec3 get_translate() const { return Vec3(_41, _42, _43); }
 		// вернуть масштаб
-		vec3 get_scale() const { return vec3(_11, _22, _33); }
+		Vec3 get_scale() const { return Vec3(_11, _22, _33); }
 		// вернуть углы Эйлера
-		vec3 get_rotateEuler() const;
-		const mtx& from3dsMax(float* f);
+		Vec3 get_rotateEuler() const;
+		const Mtx& from3dsMax(float* f);
 		// приведение типа
-		operator const float*() const { return (const float*)m; }
 		operator float*() const { return (float*)m; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		// члены
 		union
 		{
@@ -449,76 +468,79 @@ namespace ssh
 		};
 	};
 
-	__declspec(align(16)) class SSH quat
+	__declspec(align(16)) class SSH Quat
 	{
 	public:
 		// конструкторы
-		quat() { identity(); }
-		quat(float X, float Y, float Z, float W = 1.0f) : x(X), y(Y), z(Z), w(W) {}
-		quat(float* f) { x = f[0]; y = f[1]; z = f[2]; w = f[3]; }
-		quat(const vec3& v, float f) { rotateAxis(v, f); }
-		quat(const vec4& v) : x(v.x), y(v.y), z(v.z), w(v.w) {}
-		quat(const quat& q) : x(q.x), y(q.y), z(q.z), w(q.w) {}
-		quat(const mtx& m) { fromMatrix(m); }
+		Quat() { identity(); }
+		Quat(float X, float Y, float Z, float W = 1.0f) : x(X), y(Y), z(Z), w(W) {}
+		Quat(float* f) { x = f[0]; y = f[1]; z = f[2]; w = f[3]; }
+		Quat(const Vec3& v, float f) { rotateAxis(v, f); }
+		Quat(const Vec4& v) : x(v.x), y(v.y), z(v.z), w(v.w) {}
+		Quat(const Quat& q) : x(q.x), y(q.y), z(q.z), w(q.w) {}
+		Quat(const Mtx& m) { fromMatrix(m); }
 		// операции
-		const quat& operator + () const { return *this; }
-		quat operator - () const { return quat(-x, -y, -z, -w); }
+		auto operator + () const { return *this; }
+		Quat operator - () const { return Quat(-x, -y, -z, -w); }
 		// бинарные
-		quat operator + (const quat& q) const { return quat(x + q.x, y + q.y, z + q.z, w + q.w); }
-		quat operator + (float f) const { return quat(x + f, y + f, z + f, w + f); }
-		quat operator - (const quat& q) const { return quat(x - q.x, y - q.y, z - q.z, w - q.w); }
-		quat operator - (float f) const { return quat(x - f, y - f, z - f, w - f); }
-		quat operator * (const quat& q) const;
-		quat operator * (float f) const { return quat(x * f, y * f, z * f, w * f); }
-		quat operator / (const quat& q) const { return quat(x / q.x, y / q.y, z / q.z, w / q.w); }
-		quat operator / (float f) const { f = 1.0f / f; return quat(x * f, y * f, z * f, w * f); }
-		const quat& operator += (const quat& q) { x += q.x; y += q.y; z += q.z; w += q.w; return *this; }
-		const quat& operator += (float f) { x += f; y += f; z += f; w += f; return *this; }
-		const quat& operator -= (const quat& q) { x -= q.x; y -= q.y; z -= q.z; w -= q.w; return *this; }
-		const quat& operator -= (float f) { x -= f; y -= f; z -= f; w -= f; return *this; }
-		const quat& operator *= (const quat& q);
-		const quat& operator *= (float f) { x *= f; y *= f; z *= f; w *= f; return *this; }
-		const quat& operator /= (const quat& q) { x /= q.x; y /= q.y; z /= q.z; w /= q.w; return *this; }
-		const quat& operator /= (float f) { f = 1.0f / f; x *= f; y *= f; z *= f; w *= f; return *this; }
-		friend quat operator + (float f, const quat& q) { return quat(f + q.x, f + q.y, f + q.z, f + q.w); }
-		friend quat operator - (float f, const quat& q) { return quat(f - q.x, f - q.y, f - q.z, f - q.w); }
-		friend quat operator * (float f, const quat& q) { return quat(f * q.x, f * q.y, f * q.z, f * q.w); }
-		friend quat operator / (float f, const quat& q) { return quat(f / q.x, f / q.y, f / q.z, f / q.w); }
+		Quat operator + (const Quat& q) const { return Quat(x + q.x, y + q.y, z + q.z, w + q.w); }
+		Quat operator + (float f) const { return Quat(x + f, y + f, z + f, w + f); }
+		Quat operator - (const Quat& q) const { return Quat(x - q.x, y - q.y, z - q.z, w - q.w); }
+		Quat operator - (float f) const { return Quat(x - f, y - f, z - f, w - f); }
+		Quat operator * (const Quat& q) const;
+		Quat operator * (float f) const { return Quat(x * f, y * f, z * f, w * f); }
+		Quat operator / (const Quat& q) const { return Quat(x / q.x, y / q.y, z / q.z, w / q.w); }
+		Quat operator / (float f) const { f = 1.0f / f; return Quat(x * f, y * f, z * f, w * f); }
+		auto operator += (const Quat& q) { x += q.x; y += q.y; z += q.z; w += q.w; return *this; }
+		auto operator += (float f) { x += f; y += f; z += f; w += f; return *this; }
+		auto operator -= (const Quat& q) { x -= q.x; y -= q.y; z -= q.z; w -= q.w; return *this; }
+		auto operator -= (float f) { x -= f; y -= f; z -= f; w -= f; return *this; }
+		const Quat& operator *= (const Quat& q);
+		auto operator *= (float f) { x *= f; y *= f; z *= f; w *= f; return *this; }
+		auto operator /= (const Quat& q) { x /= q.x; y /= q.y; z /= q.z; w /= q.w; return *this; }
+		auto operator /= (float f) { f = 1.0f / f; x *= f; y *= f; z *= f; w *= f; return *this; }
+		friend Quat operator + (float f, const Quat& q) { return Quat(f + q.x, f + q.y, f + q.z, f + q.w); }
+		friend Quat operator - (float f, const Quat& q) { return Quat(f - q.x, f - q.y, f - q.z, f - q.w); }
+		friend Quat operator * (float f, const Quat& q) { return Quat(f * q.x, f * q.y, f * q.z, f * q.w); }
+		friend Quat operator / (float f, const Quat& q) { return Quat(f / q.x, f / q.y, f / q.z, f / q.w); }
 		// логические
-		bool operator == (const quat& q) const { return ((fabs(x - q.x) + fabs(y - q.y) + fabs(z - q.z) + fabs(w - q.w)) < SSH_EPSILON); }
-		bool operator != (const quat& q) const { return !(operator == (q)); }
+		bool operator == (const Quat& q) const { return ((fabs(x - q.x) + fabs(y - q.y) + fabs(z - q.z) + fabs(w - q.w)) < SSH_EPSILON); }
+		bool operator != (const Quat& q) const { return !(operator == (q)); }
 		// присваивание
-		const quat& operator = (const quat& q) { x = q.x; y = q.y; z = q.z; w = q.w; return *this; }
+		auto operator = (const Quat& q) { x = q.x; y = q.y; z = q.z; w = q.w; return *this; }
 		// специальные
 		bool is_identity() const { return (fabs(x - y - z) < SSH_EPSILON2 && fabs(w - 1) < SSH_EPSILON2); }
-		float dot(const quat& q) const { return w * q.w + x * q.x + y * q.y + z * q.z; }
+		float dot(const Quat& q) const { return w * q.w + x * q.x + y * q.y + z * q.z; }
 		float length() const { return sqrtf(x * x + y * y + z * z + w * w); }
 		float lengthSq() const { return (x * x + y * y + z * z + w * w); }
 		float roll() const { return atan2(2 * (x * y + w * z), w * w + x * x - y * y - z * z); }
 		float pitch() const { return atan2(2 * (y * z + w * x), w * w - x * x - y * y + z * z); }
 		float yaw() const { return asin(-2 * (x * z - w * y)); }
-		const quat& set(float X, float Y, float Z, float W) { x = X; y = Y; z = Z; w = W; return *this; }
-		const quat& identity() { x = 0.0f; y = 0.0f; z = 0.0f; w = 1.0f; return *this; }
-		vec3 get_rotate() const { return vec3(yaw(), pitch(), roll()); }
-		void angleAxis(vec3& axis, float& angle) const;
-		quat slerp(const quat& q, float t, bool shortestPath) const;
-		const quat& rotateAxis(const vec3& v, float theta);
+		auto set(float X, float Y, float Z, float W) { x = X; y = Y; z = Z; w = W; return *this; }
+		const Quat& identity() { x = 0.0f; y = 0.0f; z = 0.0f; w = 1.0f; return *this; }
+		Vec3 get_rotate() const { return Vec3(yaw(), pitch(), roll()); }
+		void angleAxis(Vec3& axis, float& angle) const;
+		Quat slerp(const Quat& q, float t, bool shortestPath) const;
+		const Quat& rotateAxis(const Vec3& v, float theta);
 		//Преобразование сферических координат в кватернион
-		const quat& fromSpherical(float latitude, float longitude, float angle);
-		const quat& fromMatrix(const mtx& mm);
-		vec3 xAxis() const;
-		vec3 yAxis() const;
-		vec3 zAxis() const;
-		const quat& inverse();
-		const quat& exp();
-		const quat& ln();
-		const quat& angles(float yaw, float pitch, float roll);
-		quat nlerp(const quat& q, float t, bool shortestPath) const;
-		quat squad(const quat& q1, const quat& q2, const quat& q3, float t, bool shortestPath) const;
-		const quat& normalize() { float factor(1.0f / sqrt(lengthSq())); *this *= factor; return *this; }
+		const Quat& fromSpherical(float latitude, float longitude, float angle);
+		const Quat& fromMatrix(const Mtx& mm);
+		Vec3 xAxis() const;
+		Vec3 yAxis() const;
+		Vec3 zAxis() const;
+		const Quat& inverse();
+		const Quat& exp();
+		const Quat& ln();
+		const Quat& angles(float yaw, float pitch, float roll);
+		Quat nlerp(const Quat& q, float t, bool shortestPath) const;
+		Quat squad(const Quat& q1, const Quat& q2, const Quat& q3, float t, bool shortestPath) const;
+		auto normalize() { float factor(1.0f / sqrt(lengthSq())); *this *= factor; return *this; }
 		// приведение типа
-		operator const float*() const { return (const float*)&x; }
-		operator float*() const { return (float*)&x; }
+		operator float*() const { return (float*)&flt; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		// члены
 		union
 		{
@@ -528,19 +550,19 @@ namespace ssh
 		};
 	};
 
-	__declspec(align(16)) class SSH dual_quat
+	__declspec(align(16)) class SSH Dual_quat
 	{
 	public:
 		// конструкторы
-		dual_quat() { make(quat(), vec3()); }
-		dual_quat(float* f) { make(f, &f[4]); }
-		dual_quat(float* q, float* v) { make(q, v); }
-		dual_quat(const quat& q) { make(q, vec3(0, 0, 0)); }
-		dual_quat(const dual_quat& qq) { ssh_memcpy(this, &qq, sizeof(dual_quat)); }
-		dual_quat(const quat& q, const vec3& v) { make(q, v); }
-		dual_quat(const mtx& m) { make(quat(m), m.get_translate()); }
+		Dual_quat() { make(Quat(), Vec3()); }
+		Dual_quat(float* f) { make(f, &f[4]); }
+		Dual_quat(float* q, float* v) { make(q, v); }
+		Dual_quat(const Quat& q) { make(q, Vec3(0, 0, 0)); }
+		Dual_quat(const Dual_quat& qq) { ssh_memcpy(this, &qq, sizeof(Dual_quat)); }
+		Dual_quat(const Quat& q, const Vec3& v) { make(q, v); }
+		Dual_quat(const Mtx& m) { make(Quat(m), m.get_translate()); }
 		// формирование
-		const dual_quat& make(float* qq, float* t)
+		const Dual_quat& make(float* qq, float* t)
 		{
 			flt[0] = qq[0]; flt[1] = qq[1]; flt[2] = qq[2]; flt[3] = qq[3];
 			flt[4] = -0.5f * (t[0] * qq[1] + t[1] * qq[2] + t[2] * qq[3]);
@@ -551,23 +573,26 @@ namespace ssh
 			return *this;
 		}
 		// логические
-		bool operator == (const dual_quat& qq) const
+		bool operator == (const Dual_quat& qq) const
 		{
 			return ((fabsf(flt[0] - qq.flt[0]) + fabsf(flt[1] - qq.flt[1]) + fabsf(flt[2] - qq.flt[2]) +
 					 fabsf(flt[3] - qq.flt[3]) + fabsf(flt[4] - qq.flt[4]) + fabsf(flt[5] - qq.flt[5]) +
 					 fabsf(flt[6] - qq.flt[6]) + fabsf(flt[7] - qq.flt[7])) < SSH_EPSILON);
 		}
-		bool operator != (const dual_quat& qq) const { return !(operator == (qq)); }
+		bool operator != (const Dual_quat& qq) const { return !(operator == (qq)); }
 		// приведение типа
-		operator const quat() const { return quat((float*)flt); }
-		operator const vec3() const
+		operator const Quat() const { return Quat((float*)flt); }
+		operator const Vec3() const
 		{
-			return vec3(2.0f * (-flt[4] * flt[1] + flt[5] * flt[0] - flt[6] * flt[3] + flt[7] * flt[2]),
+			return Vec3(2.0f * (-flt[4] * flt[1] + flt[5] * flt[0] - flt[6] * flt[3] + flt[7] * flt[2]),
 						2.0f * (-flt[4] * flt[2] + flt[5] * flt[3] + flt[6] * flt[0] - flt[7] * flt[1]),
 						2.0f * (-flt[4] * flt[3] - flt[5] * flt[2] + flt[6] * flt[1] + flt[7] * flt[0]));
 		}
-		operator const float*() const { return (const float*)flt; }
 		operator float*() const { return (float*)flt; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		// члены
 		union
 		{
@@ -576,7 +601,7 @@ namespace ssh
 		};
 	};
 
-	class SSH plane
+	class SSH Plane
 	{
 	public:
 		enum Side
@@ -586,80 +611,86 @@ namespace ssh
 			NEGATIVE_SIDE
 		};
 		// коснтрукторы
-		plane() : x(0), y(0), z(0), d(0) {}
-		plane(float X, float Y, float Z, float D) : x(X), y(Y), z(Z), d(D) {}
-		plane(float* f) { x = f[0]; y = f[1]; z = f[2]; d = f[3]; }
-		plane(const plane& p) : x(p.x), y(p.y), z(p.z), d(p.d) {}
-		plane(const vec4& v) : x(v.x), y(v.y), z(v.z), d(v.w) {}
-		plane(const vec3& v, float dist) : x(v.x), y(v.y), z(0.0f), d(dist) {}
-		plane(const vec3& point, const vec3& normal) : x(normal.x), y(normal.y), z(normal.z), d(point.x * normal.x + point.y * normal.y + point.z * normal.z) {}
-		plane(const vec3& v1, const vec3& v2, const vec3& v3);
-		plane operator * (const mtx& mm) const;
-		const plane& normalize() { vec.normalize(); return *this; }
-		Side side(const vec3& v) const;
+		Plane() : x(0), y(0), z(0), d(0) {}
+		Plane(float X, float Y, float Z, float D) : x(X), y(Y), z(Z), d(D) {}
+		Plane(float* f) { x = f[0]; y = f[1]; z = f[2]; d = f[3]; }
+		Plane(const Plane& p) : x(p.x), y(p.y), z(p.z), d(p.d) {}
+		Plane(const Vec4& v) : x(v.x), y(v.y), z(v.z), d(v.w) {}
+		Plane(const Vec3& v, float dist) : x(v.x), y(v.y), z(0.0f), d(dist) {}
+		Plane(const Vec3& point, const Vec3& normal) : x(normal.x), y(normal.y), z(normal.z), d(point.x * normal.x + point.y * normal.y + point.z * normal.z) {}
+		Plane(const Vec3& v1, const Vec3& v2, const Vec3& v3);
+		Plane operator * (const Mtx& mm) const;
+		auto normalize() { vec.normalize(); return *this; }
+		Side side(const Vec3& v) const;
 		// операции
 		// унарные
-		const plane& operator + () const { return *this; }
-		plane operator - () const { return plane(x, y, z, -d); }
+		auto operator + () const { return *this; }
+		Plane operator - () const { return Plane(x, y, z, -d); }
 		// бинарные
-		friend plane operator * (const mtx& mm, const plane& p);
+		friend Plane operator * (const Mtx& mm, const Plane& p);
 		// логические
-		bool operator == (const plane& p) const { return ((fabs(x - p.x) + fabs(y - p.y) + fabs(z - p.z) + fabs(d - p.d)) < SSH_EPSILON); }
-		bool operator != (const plane& p) const { return !(operator == (p)); }
+		bool operator == (const Plane& p) const { return ((fabs(x - p.x) + fabs(y - p.y) + fabs(z - p.z) + fabs(d - p.d)) < SSH_EPSILON); }
+		bool operator != (const Plane& p) const { return !(operator == (p)); }
 		// присваивание
-		const plane& operator = (const plane& p) { x = p.x; y = p.y; z = p.z; d = p.d; return *this; }
+		auto operator = (const Plane& p) { x = p.x; y = p.y; z = p.z; d = p.d; return *this; }
 		// приведение типов
-		operator float*() const { return (float*)&x; }
-		operator const float*() const { return (const float*)&x; }
+		operator float*() const { return (float*)flt; }
 		// специальные
-		float dot(const vec4& v) const { return x * v.x + y * v.y + z * v.z + d * v.w; }
-		float dotNormal(const vec3& v) const { return x * v.x + y * v.y + z * v.z; }
-		float distance(const vec3& v) const { return normal.dot(v) + scalar; }
+		float dot(const Vec4& v) const { return x * v.x + y * v.y + z * v.z + d * v.w; }
+		float dotNormal(const Vec3& v) const { return x * v.x + y * v.y + z * v.z; }
+		float distance(const Vec3& v) const { return normal.dot(v) + scalar; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		union
 		{
-			struct { vec3 normal; float scalar; };
-			struct { vec4 vec; };
+			struct { Vec3 normal; float scalar; };
+			struct { Vec4 vec; };
 			struct { float x, y, z, d; };
 			float flt[4];
 		};
 	};
 
-	class SSH color
+	class SSH Color
 	{
 	public:
 		// конструкторы
-		color() : r(0), g(0), b(0), a(0) {}
-		color(float red, float green, float blue, float alpha) : r(red), g(green), b(blue), a(alpha) { saturate(); }
-		color(long rgba) { BGRA(rgba); }
-		color(const color& c) : r(c.r), g(c.g), b(c.b), a(c.a) {}
-		color(float* f) { r = f[0]; g = f[1]; b = f[2]; a = f[3]; }
+		Color() : r(0), g(0), b(0), a(0) {}
+		Color(float red, float green, float blue, float alpha) : r(red), g(green), b(blue), a(alpha) { saturate(); }
+		Color(long rgba) { BGRA(rgba); }
+		Color(const Color& c) : r(c.r), g(c.g), b(c.b), a(c.a) {}
+		Color(float* f) { r = f[0]; g = f[1]; b = f[2]; a = f[3]; }
 		// операции
 		// арифметические
-		color operator + (const color& c) const { return color(r + c.r, g + c.g, b + c.b, a + c.a); }
-		color operator - (const color& c) const { return color(r - c.r, g - c.g, b - c.b, a - c.a); }
-		color operator * (float f) const { return color(r * f, g * f, b * f, a * f); }
-		color operator * (const color& c) const { return color(r * c.r, g * c.g, b * c.b, a * c.a); }
-		color operator / (const color& c) const { return color(r / c.r, g / c.g, b / c.b, a / c.a); }
-		color operator / (float f) const { f = 1.0f / f; return color(r * f, g * f, b * f, a * f); }
-		const color& operator += (const color& c) { r += c.r; g += c.g; b += c.b; a += c.a; return *this; }
-		const color& operator -= (const color& c) { r -= c.r; g -= c.g; b -= c.b; a -= c.a; return *this; }
-		const color& operator *= (float f) { r *= f; g *= f; b *= f; a *= f; return *this; }
-		const color& operator /= (float f) { f = 1.0f / f; r *= f; g *= f; b *= f; a *= f; return *this; }
+		Color operator + (const Color& c) const { return Color(r + c.r, g + c.g, b + c.b, a + c.a); }
+		Color operator - (const Color& c) const { return Color(r - c.r, g - c.g, b - c.b, a - c.a); }
+		Color operator * (float f) const { return Color(r * f, g * f, b * f, a * f); }
+		Color operator * (const Color& c) const { return Color(r * c.r, g * c.g, b * c.b, a * c.a); }
+		Color operator / (const Color& c) const { return Color(r / c.r, g / c.g, b / c.b, a / c.a); }
+		Color operator / (float f) const { f = 1.0f / f; return Color(r * f, g * f, b * f, a * f); }
+		auto operator += (const Color& c) { r += c.r; g += c.g; b += c.b; a += c.a; return *this; }
+		auto operator -= (const Color& c) { r -= c.r; g -= c.g; b -= c.b; a -= c.a; return *this; }
+		auto operator *= (float f) { r *= f; g *= f; b *= f; a *= f; return *this; }
+		auto operator /= (float f) { f = 1.0f / f; r *= f; g *= f; b *= f; a *= f; return *this; }
 		// логические
 		float operator [] (ssh_u idx) const { return (idx < 4 ? flt[idx] : 0.0f); }
-		bool operator == (const color& c) const { return ((fabs(r - c.r) + fabs(g - c.g) + fabs(b - c.b) + fabs(a - c.a)) < SSH_EPSILON); }
-		bool operator != (const color& c) const { return !(*this == c); }
-		friend color operator * (float f, const color& c) { return color(f * c.r, f * c.g, f * c.b, f * c.a); }
+		bool operator == (const Color& c) const { return ((fabs(r - c.r) + fabs(g - c.g) + fabs(b - c.b) + fabs(a - c.a)) < SSH_EPSILON); }
+		bool operator != (const Color& c) const { return !(*this == c); }
+		friend Color operator * (float f, const Color& c) { return Color(f * c.r, f * c.g, f * c.b, f * c.a); }
 		// приведение
-		operator const float*() const { return (const float*)&r; }
-		operator float*() const { return (float*)&r; }
+		operator float*() const { return (float*)flt; }
 		// специальные
 		void HSB(float hue, float saturation, float brightness);
 		void RGBA(long val);
 		void BGRA(long val);
 		long RGBA() const;
 		long BGRA() const;
-		const color& saturate();
+		const Color& saturate();
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		// члены
 		union
 		{
@@ -668,66 +699,70 @@ namespace ssh
 		};
 	};
 
-	class SSH sphere
+	class SSH Sphere
 	{
 	public:
-		sphere() { identity(); }
-		sphere(const vec3& v, float f) : c(v), r(f) {}
-		sphere(const sphere& s) : c(s.c), r(s.r) {}
-		sphere(float* f) { ssh_memcpy(flt, f, sizeof(sphere)); }
-		sphere operator + (const sphere& s) const;
-		const sphere& operator += (const sphere& s) { contactSphere(s, c, r); return *this; }
+		Sphere() { identity(); }
+		Sphere(const Vec3& v, float f) : c(v), r(f) {}
+		Sphere(const Sphere& s) : c(s.c), r(s.r) {}
+		Sphere(float* f) { ssh_memcpy(flt, f, sizeof(Sphere)); }
+		Sphere operator + (const Sphere& s) const;
+		const Sphere& operator += (const Sphere& s) { contactSphere(s, c, r); return *this; }
 		void identity() { r = 0.0f; c.x = 0.0f; c.y = 0.0f; c.z = 0.0f; }
 		bool is_identity() const { return (r < SSH_EPSILON && fabs(c.x - c.y - c.z) < SSH_EPSILON); }
 		// установить радиус
 		void setRadius(float f) { r = f; }
 		// установить центр
-		void setCenter(const vec3& v) { c = v; }
+		void setCenter(const Vec3& v) { c = v; }
 		// вернуть радиус
 		float radius() const { return r; }
 		// вернуть центр
-		const vec3& center() const { return c; }
+		const Vec3& center() const { return c; }
 		// проверки на пересечения
-		bool intersects(const bbox& box) const;
-		bool intersects(const sphere& s) const;
-		bool intersects(const plane& plane) const;
-		bool intersects(const vec3& v) const;
+		bool intersects(const Bbox& box) const;
+		bool intersects(const Sphere& s) const;
+		bool intersects(const Plane& Plane) const;
+		bool intersects(const Vec3& v) const;
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		union
 		{
-			struct { vec3 c; float r; };
+			struct { Vec3 c; float r; };
 			float flt[4];
 		};
 	protected:
-		void contactSphere(const sphere& s, vec3& v, float& f) const;
+		void contactSphere(const Sphere& s, Vec3& v, float& f) const;
 	};
 
-	class SSH bbox
+	class SSH Bbox
 	{
 	public:
-		bbox() { setMinimum(-1, -1, -1); setMaximum(1, 1, 1); }
-		bbox(const vec3& min, const vec3& max) { setExtents(min, max); }
-		bbox(float x1, float y1, float z1, float x2, float y2, float z2) { setExtents(x1, y1, z1, x2, y2, z2); }
-		bbox(const bbox& box) { *this = box; }
-		bbox(float* box) { setExtents(box[0], box[1], box[2], box[3], box[4], box[5]); }
-		void setMinimum(const vec3& vec) { mn = vec; updateCorners(); }
+		Bbox() { setMinimum(-1, -1, -1); setMaximum(1, 1, 1); }
+		Bbox(const Vec3& min, const Vec3& max) { setExtents(min, max); }
+		Bbox(float x1, float y1, float z1, float x2, float y2, float z2) { setExtents(x1, y1, z1, x2, y2, z2); }
+		Bbox(const Bbox& box) { *this = box; }
+		Bbox(float* box) { setExtents(box[0], box[1], box[2], box[3], box[4], box[5]); }
+		void setMinimum(const Vec3& vec) { mn = vec; updateCorners(); }
 		void setMinimum(float x, float y, float z) { mn.set(x, y, z); updateCorners(); }
-		void setMaximum(const vec3& vec) { mx = vec; updateCorners(); }
+		void setMaximum(const Vec3& vec) { mx = vec; updateCorners(); }
 		void setMaximum(float x, float y, float z) { mx.set(x, y, z); updateCorners(); }
-		void setExtents(const vec3& min, const vec3& max) { mn = min; mx = max; updateCorners(); }
+		void setExtents(const Vec3& min, const Vec3& max) { mn = min; mx = max; updateCorners(); }
 		void setExtents(float x1, float y1, float z1, float x2, float y2, float z2) { mn.x = x1; mn.y = y1; mn.z = z1; mx.x = x2; mx.y = y2; mx.z = z2; updateCorners(); }
-		void scale(const vec3& s) { setExtents(mn * s, mx * s); }
-		bool intersects(const vec3& v) const { return(v.x >= mn.x && v.x <= mx.x && v.y >= mn.y && v.y <= mx.y && v.z >= mn.z && v.z <= mx.z); }
-		const bbox& operator = (const bbox& box) { setExtents(box.mn, box.mx); return *this; }
-		const vec3& minimum() const { return mn; }
-		const vec3& maximum() const { return mx; }
-		bool intersects(const bbox& b2) const;
-		bool intersects(const sphere& s) const;
-		bbox intersection(const bbox& b2) const;
-		void transform(const mtx& matrix);
-		void merge(const bbox& b2);
-		void merge(const vec3& point);
-		float volume() const { vec3 diff(mx - mn); return diff.x * diff.y * diff.z; }
-		vec3 center() const { return vec3((mx + mn) / 2.0f); }
+		void scale(const Vec3& s) { setExtents(mn * s, mx * s); }
+		bool intersects(const Vec3& v) const { return(v.x >= mn.x && v.x <= mx.x && v.y >= mn.y && v.y <= mx.y && v.z >= mn.z && v.z <= mx.z); }
+		const Bbox& operator = (const Bbox& box) { setExtents(box.mn, box.mx); return *this; }
+		auto minimum() const { return mn; }
+		auto maximum() const { return mx; }
+		bool intersects(const Bbox& b2) const;
+		bool intersects(const Sphere& s) const;
+		Bbox intersection(const Bbox& b2) const;
+		void transform(const Mtx& matrix);
+		void merge(const Bbox& b2);
+		void merge(const Vec3& point);
+		float volume() const { Vec3 diff(mx - mn); return diff.x * diff.y * diff.z; }
+		Vec3 center() const { return Vec3((mx + mn) / 2.0f); }
 		// вернуть массив углов бокса
 		//			       1-----2
 		//			      /|    /|
@@ -737,33 +772,41 @@ namespace ssh
 		//			    | /   | /
 		//			    |/    |/
 		//			    6-----7
-		const vec3* getAllCorners() const { return (const vec3*)corners; }
-		vec3 mn;
-		vec3 mx;
-		vec3 corners[8];
+		auto getAllCorners() const { return (const Vec3*)corners; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
+		Vec3 mn;
+		Vec3 mx;
+		Vec3 corners[8];
 	protected:
 		void updateCorners();
 	};
 
-	class SSH obox
+	class SSH Obox
 	{
 	public:
 		enum Angle
 		{
 			X1Y1Z1, X2Y1Z1, X1Y2Z1, X2Y2Z1, X1Y1Z2, X2Y1Z2, X1Y2Z2, X2Y2Z2
 		};
-		obox() { identity(); }
-		obox(const obox& b) : x1y1z1(b.x1y1z1), x2y1z1(b.x2y1z1), x1y2z1(b.x1y2z1), x2y2z1(b.x2y2z1), x1y1z2(b.x1y1z2), x2y1z2(b.x2y1z2), x1y2z2(b.x1y2z2), x2y2z2(b.x2y2z2) {}
-		obox(const vec3& _x1y1z1, const vec3& _x2y1z1, const vec3& _x1y2z1, const vec3& _x2y2z1, const vec3& _x1y1z2, const vec3& _x2y1z2, const vec3& _x1y2z2, const vec3& _x2y2z2);
-		obox(const bbox& bbox);
-		obox(float* b);
-		void identity() { ssh_memzero(this, sizeof(obox)); }
-		bool intersects(const bbox& b) const;
-		bool intersects(const obox& b) const;
-		bool intersects(const sphere& s) const;
-		bool intersects(const vec3& v) const;
-		obox transform(const mtx& m) const;;
-		vec3 center() const;
+		Obox() { identity(); }
+		Obox(const Obox& b) : x1y1z1(b.x1y1z1), x2y1z1(b.x2y1z1), x1y2z1(b.x1y2z1), x2y2z1(b.x2y2z1), x1y1z2(b.x1y1z2), x2y1z2(b.x2y1z2), x1y2z2(b.x1y2z2), x2y2z2(b.x2y2z2) {}
+		Obox(const Vec3& _x1y1z1, const Vec3& _x2y1z1, const Vec3& _x1y2z1, const Vec3& _x2y2z1, const Vec3& _x1y1z2, const Vec3& _x2y1z2, const Vec3& _x1y2z2, const Vec3& _x2y2z2);
+		Obox(const Bbox& Bbox);
+		Obox(float* b);
+		void identity() { ssh_memzero(this, sizeof(Obox)); }
+		bool intersects(const Bbox& b) const;
+		bool intersects(const Obox& b) const;
+		bool intersects(const Sphere& s) const;
+		bool intersects(const Vec3& v) const;
+		Obox transform(const Mtx& m) const;;
+		Vec3 center() const;
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		//			       5-----6
 		//			      /|    /|
 		//			     / |   / |
@@ -772,42 +815,50 @@ namespace ssh
 		//			    | /   | /
 		//			    |/    |/
 		//			    3-----4
-		vec3 x1y1z1;// 1
-		vec3 x2y1z1;// 2
-		vec3 x1y2z1;// 3
-		vec3 x2y2z1;// 4
-		vec3 x1y1z2;// 5
-		vec3 x2y1z2;// 6
-		vec3 x1y2z2;// 7
-		vec3 x2y2z2;// 8
+		Vec3 x1y1z1;// 1
+		Vec3 x2y1z1;// 2
+		Vec3 x1y2z1;// 3
+		Vec3 x2y2z1;// 4
+		Vec3 x1y1z2;// 5
+		Vec3 x2y1z2;// 6
+		Vec3 x1y2z2;// 7
+		Vec3 x2y2z2;// 8
 	};
 
-	class SSH ray
+	class SSH Ray
 	{
 	public:
-		ray() {}
-		ray(const vec3& position, const vec3& direction) : pos(position), dir(direction) {}
-		ray(const ray& r) : pos(r.pos), dir(r.dir) {}
-		vec3 operator * (float t) const { return point(t); }
-		void setPosition(const vec3& position) { pos = position; }
-		void setDirection(const vec3& direction) { dir = direction; }
-		bool intersects(const sphere& s, float* f) const;
-		bool intersects(const bbox& box, float* f) const;
-		bool intersects(const plane& p, float* f) const;
-		const vec3& position() const { return pos; }
-		const vec3& direction() const { return dir; }
-		vec3 point(float t) const { return vec3(pos + (dir * t)); }
-		vec3 pos;
-		vec3 dir;
+		Ray() {}
+		Ray(const Vec3& position, const Vec3& direction) : pos(position), dir(direction) {}
+		Ray(const Ray& r) : pos(r.pos), dir(r.dir) {}
+		Vec3 operator * (float t) const { return point(t); }
+		void setPosition(const Vec3& position) { pos = position; }
+		void setDirection(const Vec3& direction) { dir = direction; }
+		bool intersects(const Sphere& s, float* f) const;
+		bool intersects(const Bbox& box, float* f) const;
+		bool intersects(const Plane& p, float* f) const;
+		auto position() const { return pos; }
+		auto direction() const { return dir; }
+		Vec3 point(float t) const { return Vec3(pos + (dir * t)); }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
+		Vec3 pos;
+		Vec3 dir;
 	};
 
 	class SSH Angle
 	{
 	public:
-		Angle() :angle(0.0f) {}
+		Angle() : angle(0.0f) {}
 		Angle(float v) : angle(v) {}
 		float Degree() const { return (float)((SSH_PI / 180.0f) * angle); }
 		float Radian() const { return (float)((180.0f / SSH_PI) * angle); }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		float angle;
 	};
 
@@ -842,6 +893,10 @@ namespace ssh
 		static ssh_d const maxD = infC - maxC - 1;
 		static ssh_d const minD = minC - subC - 1;
 
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		ssh_w val;
 	public:
 		Half(float value);
@@ -856,65 +911,65 @@ namespace ssh
 		return Half(f);
 	}
 
-	inline vec3 vec3::operator * (const mtx& m) const
+	inline Vec3 Vec3::operator * (const Mtx& m) const
 	{
-		return vec3(ssh_vec3_mtx(*this, m));
+		return Vec3(ssh_vec3_mtx(*this, m));
 	}
 
-	inline const vec3& vec3::operator *= (const mtx& m)
+	inline const Vec3& Vec3::operator *= (const Mtx& m)
 	{
 		return (*this = ssh_vec3_mtx(*this, m));
 	}
 
-	inline vec3 operator * (const mtx& m, const vec3& v)
+	inline Vec3 operator * (const Mtx& m, const Vec3& v)
 	{
-		return vec3(ssh_mtx_vec3(m, v));
+		return Vec3(ssh_mtx_vec3(m, v));
 	}
 
-	inline vec4 vec4::operator * (const mtx& m) const
+	inline Vec4 Vec4::operator * (const Mtx& m) const
 	{
-		return vec4(ssh_vec4_mtx(*this, m));
+		return Vec4(ssh_vec4_mtx(*this, m));
 	}
 
-	inline const vec4& vec4::operator *= (const mtx& m)
+	inline const Vec4& Vec4::operator *= (const Mtx& m)
 	{
 		return (*this = ssh_vec4_mtx(*this, m));
 	}
 
-	inline vec4 operator * (const mtx& m, const vec4& v)
+	inline Vec4 operator * (const Mtx& m, const Vec4& v)
 	{
-		return vec4(ssh_mtx_vec4(m, v));
+		return Vec4(ssh_mtx_vec4(m, v));
 	}
 
-	inline const mtx& mtx::set_rotateEuler(float yaw, float pitch, float roll)
+	inline const Mtx& Mtx::set_rotateEuler(float yaw, float pitch, float roll)
 	{
-		quat q;
+		Quat q;
 		return fromQuat(q.angles(yaw, pitch, roll));
 	}
 
-	inline const mtx& mtx::set_rotateAngleAxis(const vec3& v, float angle)
+	inline const Mtx& Mtx::set_rotateAngleAxis(const Vec3& v, float angle)
 	{
-		quat q;
+		Quat q;
 		return fromQuat(q.rotateAxis(v, angle));
 	}
 
-	inline vec3 mtx::get_rotateEuler() const
+	inline Vec3 Mtx::get_rotateEuler() const
 	{
-		quat q(*this);
+		Quat q(*this);
 		return q.get_rotate();
 	}
 
-	inline bool sphere::intersects(const sphere& s) const
+	inline bool Sphere::intersects(const Sphere& s) const
 	{
 		float rr(s.r + r); rr *= rr;
 		return ((s.c - c).lengthSq() <= rr);
 	}
-	inline bool sphere::intersects(const plane& plane) const
+	inline bool Sphere::intersects(const Plane& Plane) const
 	{
-		vec3 v((float*)&plane);
+		Vec3 v((float*)&Plane);
 		return (fabs(v.dot(c)) <= r);
 	}
-	inline bool sphere::intersects(const vec3& v) const
+	inline bool Sphere::intersects(const Vec3& v) const
 	{
 		return ((v - c).lengthSq() <= (r * r));
 	}

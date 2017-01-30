@@ -19,13 +19,10 @@ namespace ssh
 		ssh_b* in, *out;
 	};
 
-	#define SSH_BWT_BLOCK_LENGHT		2048
-	
 	class SSH BWT
 	{
+		static const int SSH_BWT_BLOCK_LENGHT = 8192;
 	public:
-		// конструктор
-		BWT() : in(nullptr), RT(nullptr), LT(nullptr) {}
 		// обработка
 		Buffer process(const Buffer& _in, bool is_transform) noexcept { in = _in; return (is_transform ? transform(_in.size()) : untransform(_in.size())); }
 	protected:

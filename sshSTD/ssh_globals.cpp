@@ -31,8 +31,6 @@ namespace ssh
 	Base* Base::root(nullptr);
 	RTTI* RTTI::root(nullptr);
 
-	SSH lconv ssh_stk_locale;
-
 	static int ssh_AVX_hash(ssh_cws _cws)
 	{
 		int hsh(0);
@@ -340,7 +338,7 @@ namespace ssh
 	{
 		if(lst)
 		{
-			regx rx;
+			Regx rx;
 			rx.set_pattern(0, LR"((?mUs)/\*.*\*/)");
 			rx.set_pattern(1, LR"((?m)[\r|\n]{3,})");
 			rx.set_pattern(2, LR"((?m)\s*//.*[\r\n]*)");

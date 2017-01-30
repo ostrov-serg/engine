@@ -11,11 +11,11 @@ namespace ssh
 		RLE rle;
 		Arith ari;
 		ssh_u val(ssh_time_counter(0));
-		for(int i = 0; i < 100; i++)
+		for(int i = 0; i < 1000; i++)
 		{
 			Buffer _bwt(bwt.process(in, true));
 		}
-		val = ssh_time_counter(val) / 100;
+		val = ssh_time_counter(val) / 1000;
 		SSH_MSG(String(val));
 		return Buffer();
 		/*

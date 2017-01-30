@@ -66,6 +66,10 @@ namespace ssh
 		virtual SCHEME* get_scheme() const = 0;
 		virtual void open(const Buffer& buf, bool is_xml);
 		virtual void save(const String& path, bool is_xml);
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 	protected:
 		virtual void readXml(HXML hp, Xml* xml, ssh_l p_offs, ssh_l idx = 0);
 		virtual void writeXml(HXML h, Xml* xml, ssh_l p_offs);

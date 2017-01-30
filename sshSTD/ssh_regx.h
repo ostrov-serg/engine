@@ -3,19 +3,19 @@
 
 namespace ssh
 {
-	class SSH regx
+	class SSH Regx
 	{
 	public:
 		// конструктор по умолчанию
-		regx() { ssh_memzero(patterns, sizeof(patterns)); memset(vector, 0, sizeof(vector)); }
+		Regx() { ssh_memzero(patterns, sizeof(patterns)); memset(vector, 0, sizeof(vector)); }
 		// инициализирующий конструктор
-		regx(ssh_cws* pattern, ssh_u count) : regx()
+		Regx(ssh_cws* pattern, ssh_u count) : Regx()
 		{
 			ssh_u idx(0);
 			while(idx < count) set_pattern(idx, pattern[idx]), idx++;
 		}
 		// деструктор
-		virtual ~regx()
+		virtual ~Regx()
 		{
 			if(ssh_regx_free)
 			{
@@ -74,6 +74,10 @@ namespace ssh
 		ssh_l vec(ssh_l idx, ssh_l offs) const { return (idx < result ? vector[idx * 2 + offs] : -1); }
 		// вернуть длину в массиве совпадений
 		ssh_l len(ssh_l idx) const { return (idx < result ? (vector[idx * 2 + 1] - vector[idx * 2]) : 0); }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 	protected:
 		// компилировать
 		regex16* compile(ssh_cws pattern)

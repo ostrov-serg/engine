@@ -48,42 +48,42 @@ namespace ssh
 		return v.f;
 	}
 
-	bool sphere::intersects(const bbox& box) const
+	bool Sphere::intersects(const Bbox& box) const
 	{
-		const vec3& mnn(box.minimum());
-		const vec3& mxx(box.maximum());
+		const Vec3& mnn(box.minimum());
+		const Vec3& mxx(box.maximum());
 		return ((c.x >= mnn.x && mnn.x - c.x <= r) && (c.x <= mxx.x && c.x - mxx.x <= r) && (c.y >= mnn.y && mnn.y - c.y <= r) && (c.y <= mxx.y && c.y - mxx.y <= r) && (c.z >= mnn.z && mnn.z - c.z <= r) && (c.z <= mxx.z && c.z - mxx.z <= r));
 	}
 
-	vec3 operator * (const quat& q, const vec3& v)
+	Vec3 operator * (const Quat& q, const Vec3& v)
 	{
-		vec3 qvec(q.x, q.y, q.z);
-		vec3 uv(qvec.cross(v));
-		vec3 uuv(qvec.cross(uv));
+		Vec3 qvec(q.x, q.y, q.z);
+		Vec3 uv(qvec.cross(v));
+		Vec3 uuv(qvec.cross(uv));
 
 		uv *= (2.0f * q.w);
 		uuv *= 2.0f;
 		return v + uv + uuv;
 	}
 
-	mtx::mtx(float _f11, float _f12, float _f13, float _f14, float _f21, float _f22, float _f23, float _f24, float _f31, float _f32, float _f33, float _f34, float _f41, float _f42, float _f43, float _f44) :
+	Mtx::Mtx(float _f11, float _f12, float _f13, float _f14, float _f21, float _f22, float _f23, float _f24, float _f31, float _f32, float _f33, float _f34, float _f41, float _f42, float _f43, float _f44) :
 				_11(_f11), _12(_f12), _13(_f13), _14(_f14), _21(_f21), _22(_f22), _23(_f23), _24(_f24),
 				_31(_f31), _32(_f32), _33(_f33), _34(_f34), _41(_f41), _42(_f42), _43(_f43), _44(_f44) {}
 
-	float mtx::MINOR(const mtx& m, int r0, int r1, int r2, int c0, int c1, int c2) const
+	float Mtx::MINOR(const Mtx& m, int r0, int r1, int r2, int c0, int c1, int c2) const
 	{
 		float* f(m);
 		return	f[r0 * 4 + c0] * (f[r1 * 4 + c1] * f[r2 * 4 + c2] - f[r2 * 4 + c1] * f[r1 * 4 + c2]) -
 				f[r0 * 4 + c1] * (f[r1 * 4 + c0] * f[r2 * 4 + c2] - f[r2 * 4 + c0] * f[r1 * 4 + c2]) +
 				f[r0 * 4 + c2] * (f[r1 * 4 + c0] * f[r2 * 4 + c1] - f[r2 * 4 + c0] * f[r1 * 4 + c1]);
 	}
-	float mtx::determinant() const
+	float Mtx::determinant() const
 	{
 		return	_11 * MINOR( * this, 1, 2, 3, 1, 2, 3) - _12 * MINOR( * this, 1, 2, 3, 0, 2, 3) + _13 * MINOR( * this, 1, 2, 3, 0, 1, 3) - _14 * MINOR( * this, 1, 2, 3, 0, 1, 2);
 	}
-	mtx mtx::adjoint() const
+	Mtx Mtx::adjoint() const
 	{
-		return mtx(	MINOR(*this, 1, 2, 3, 1, 2, 3),  -MINOR(*this, 0, 2, 3, 1, 2, 3), 
+		return Mtx(	MINOR(*this, 1, 2, 3, 1, 2, 3),  -MINOR(*this, 0, 2, 3, 1, 2, 3), 
 					MINOR(*this, 0, 1, 3, 1, 2, 3),  -MINOR(*this, 0, 1, 2, 1, 2, 3), 
 
 					-MINOR(*this, 1, 2, 3, 0, 2, 3), MINOR(*this, 0, 2, 3, 0, 2, 3), 
@@ -96,15 +96,15 @@ namespace ssh
 					-MINOR(*this, 0, 1, 3, 0, 1, 2), MINOR(*this, 0, 1, 2, 0, 1, 2));
 	}
 	
-	const mtx& mtx::view(const vec3& pos, const vec3& at, const vec3& up)
+	const Mtx& Mtx::view(const Vec3& pos, const Vec3& at, const Vec3& up)
 	{
-		vec3 vLook(at - pos);
+		Vec3 vLook(at - pos);
 		vLook.normalize();
 
-		vec3 vRight(up.cross(vLook));
+		Vec3 vRight(up.cross(vLook));
 		vRight.normalize();
 
-		vec3 vUp(vLook.cross(vRight));
+		Vec3 vUp(vLook.cross(vRight));
 		vUp.normalize();
 
 		_11 = vRight.x ; _12 = vUp.x ; _13 = vLook.x ; _14 = 0.0f;
@@ -119,9 +119,9 @@ namespace ssh
 		return *this;
 	}
 	
-	const mtx& mtx::shadow(const vec4& l, const plane& pln)
+	const Mtx& Mtx::shadow(const Vec4& l, const Plane& pln)
 	{
-		plane p(pln);
+		Plane p(pln);
 		p.normalize();
 
 		float d(p.dot(l));
@@ -134,7 +134,7 @@ namespace ssh
 		return *this;
 	}
 	
-	const mtx& mtx::fromQuat(const quat& q)
+	const Mtx& Mtx::fromQuat(const Quat& q)
 	{
 		float fTx = 2 * q.x;
 		float fTy = 2 * q.y;
@@ -169,9 +169,9 @@ namespace ssh
 
 	}
 	
-	const mtx& mtx::world(const vec3& position, const vec3& scale, const quat& orientation)
+	const Mtx& Mtx::world(const Vec3& position, const Vec3& scale, const Quat& orientation)
 	{
-		mtx pos, sc, rot(orientation);
+		Mtx pos, sc, rot(orientation);
 		pos.set_translate(position);
 		sc.set_scale(scale);
 
@@ -179,9 +179,9 @@ namespace ssh
 		return *this;
 	}
 
-	const mtx& mtx::reflect(const plane& pl)
+	const Mtx& Mtx::reflect(const Plane& pl)
 	{
-		plane p(pl);
+		Plane p(pl);
 		p.normalize();
 
 		_11 = -2 * p.x * p.x + 1;	_12 = -2 * p.y * p.x;		_13 = -2 * p.z * p.x;		_14 = 0;
@@ -192,7 +192,7 @@ namespace ssh
 		return *this;
 	}
 
-	const mtx& mtx::ortho(float w, float h, float zn, float zf)
+	const Mtx& Mtx::ortho(float w, float h, float zn, float zf)
 	{
 		identity();
 		_11 = 2.0f / w;
@@ -204,9 +204,9 @@ namespace ssh
 		return *this;
 	}
 
-	const mtx& mtx::perspective(float w, float h, float zn, float zf)
+	const Mtx& Mtx::perspective(float w, float h, float zn, float zf)
 	{
-		SSH_MEMZERO(this, sizeof(mtx));
+		SSH_MEMZERO(this, sizeof(Mtx));
 
 		_11 = 2.0f * zn / w;
 		_22 = 2.0f * zn / h;
@@ -217,13 +217,13 @@ namespace ssh
 		return *this;
 	}
 	
-	const mtx& mtx::perspectiveFov(float fovy, float aspect, float zn, float zf)
+	const Mtx& Mtx::perspectiveFov(float fovy, float aspect, float zn, float zf)
 	{
 		float h = (cosf(fovy / 2.0f) / sinf(fovy / 2.0f));
 		float w = (h / aspect);
 		float f = zf / (zf - zn);
 
-		SSH_MEMZERO(this, sizeof(mtx));
+		SSH_MEMZERO(this, sizeof(Mtx));
 		
 		_11 = w;
 		_22 = h;
@@ -234,7 +234,7 @@ namespace ssh
 		return *this;
 	}
 
-	const quat& quat::operator *= (const quat& q)
+	const Quat& Quat::operator *= (const Quat& q)
 	{
 		float xx(w * q.x + x * q.w + y * q.z - z * q.y);
 		float yy(w * q.y + y * q.w + z * q.x - x * q.z);
@@ -244,15 +244,15 @@ namespace ssh
 		return *this;
 	}
 
-	quat quat::operator * (const quat& q) const
+	Quat Quat::operator * (const Quat& q) const
 	{
-		return quat(w * q.x + x * q.w + y * q.z - z * q.y,
+		return Quat(w * q.x + x * q.w + y * q.z - z * q.y,
 					w * q.y + y * q.w + z * q.x - x * q.z,
 					w * q.z + z * q.w + x * q.y - y * q.x,
 					w * q.w - x * q.x - y * q.y - z * q.z);
 	}
 
-	void quat::angleAxis(vec3& axis, float& angle) const
+	void Quat::angleAxis(Vec3& axis, float& angle) const
 	{
 		float fSqrLength(x * x + y * y + z * z);
 
@@ -273,7 +273,7 @@ namespace ssh
 			axis.z = 0;
 		}
 	}
-	quat quat::slerp(const quat& q, float t, bool shortestPath) const
+	Quat Quat::slerp(const Quat& q, float t, bool shortestPath) const
 	{
 		float fCos(dot(q));
 		float fAngle(acos(fCos));
@@ -287,14 +287,14 @@ namespace ssh
 		if(fCos < 0 && shortestPath)
 		{
 			fCoeff0 =- fCoeff0;
-			quat res(*this * fCoeff0 + q * fCoeff1);
+			Quat res(*this * fCoeff0 + q * fCoeff1);
 			res.normalize();
 			return res;
 		}
 		return *this * fCoeff0 + q * fCoeff1;
 	}
 
-	const quat& quat::rotateAxis(const vec3& v, float theta)
+	const Quat& Quat::rotateAxis(const Vec3& v, float theta)
 	{
 		float fHalfAngle(theta / 2.0f);
 		float fSin(sinf(fHalfAngle));
@@ -308,7 +308,7 @@ namespace ssh
 	}
 
 	//Преобразование сферических координат в кватернион
-	const quat& quat::fromSpherical(float latitude, float longitude, float angle)
+	const Quat& Quat::fromSpherical(float latitude, float longitude, float angle)
 	{
 		float sin_a(sin(angle / 2.0f));
 		float cos_a(cos(angle / 2.0f));
@@ -325,7 +325,7 @@ namespace ssh
 		return *this;
 	}
 
-	const quat& quat::fromMatrix(const mtx& mm)
+	const Quat& Quat::fromMatrix(const Mtx& mm)
 	{
 		float* f(mm);
 		float tr(f[0] + f[5] + f[10]), s;
@@ -368,27 +368,27 @@ namespace ssh
 
 		return *this;
 	}
-	vec3 quat::xAxis() const
+	Vec3 Quat::xAxis() const
 	{
 		float fTy(2 * y);
 		float fTz(2 * z);
-		return vec3(1 - ((fTy * y) + (fTz * z)), (fTy * x) + (fTz * w), (fTz * x) - (fTy * w));
+		return Vec3(1 - ((fTy * y) + (fTz * z)), (fTy * x) + (fTz * w), (fTz * x) - (fTy * w));
 	}
-	vec3 quat::yAxis() const
+	Vec3 Quat::yAxis() const
 	{
 		float fTx(2 * x);
 		float fTy(2 * y);
 		float fTz(2 * z);
-		return vec3((fTy * x) - (fTz * w), 1 - ((fTx * x) + (fTz * z)), (fTz * y) + (fTx * w));
+		return Vec3((fTy * x) - (fTz * w), 1 - ((fTx * x) + (fTz * z)), (fTz * y) + (fTx * w));
 	}
-	vec3 quat::zAxis() const
+	Vec3 Quat::zAxis() const
 	{
 		float fTx(2.0f * x);
 		float fTy(2.0f * y);
 		float fTz(2.0f * z);
-		return vec3((fTz * x) + (fTy * w), (fTz * y) - (fTx * w), 1 - ((fTx * x) + (fTy * y)));
+		return Vec3((fTz * x) + (fTy * w), (fTz * y) - (fTx * w), 1 - ((fTx * x) + (fTy * y)));
 	}
-	const quat& quat::inverse()
+	const Quat& Quat::inverse()
 	{
 		float f(x * x + y * y + z * z + w * w);
 		if(f <= SSH_EPSILON)
@@ -403,7 +403,7 @@ namespace ssh
 
 		return *this;
 	}
-	const quat& quat::exp()
+	const Quat& Quat::exp()
 	{
 		float fAngle(sqrt(x * x + y * y + z * z));
 		float fSin(sin(fAngle));
@@ -417,7 +417,7 @@ namespace ssh
 		return *this;
 	}
 
-	const quat& quat::ln()
+	const Quat& Quat::ln()
 	{
 		if(fabs(w) < 1.0f)
 		{
@@ -434,7 +434,7 @@ namespace ssh
 		return *this;
 	}
 
-	const quat& quat::angles(float yaw, float pitch, float roll)
+	const Quat& Quat::angles(float yaw, float pitch, float roll)
 	{
 		float fSinYaw(sin(yaw / 2.0f));
 		float fSinPitch(sin(pitch / 2.0f));
@@ -451,39 +451,39 @@ namespace ssh
 		return *this;
 	}
 
-	quat quat::nlerp(const quat& q, float t, bool shortestPath) const
+	Quat Quat::nlerp(const Quat& q, float t, bool shortestPath) const
 	{
 		float fCos(dot(q));
-		quat result((fCos < 0 && shortestPath) ? *this + t * ((-q) - *this) : *this + t * (q - *this));
+		Quat result((fCos < 0 && shortestPath) ? *this + t * ((-q) - *this) : *this + t * (q - *this));
 		return result.normalize();
 	}
 	
-	quat quat::squad(const quat& q1, const quat& q2, const quat& q3, float t, bool shortestPath) const
+	Quat Quat::squad(const Quat& q1, const Quat& q2, const Quat& q3, float t, bool shortestPath) const
 	{
 		float slerpT(2.0f * t * (1.0f - t));
-		quat slerpP(slerp(q3, t, shortestPath));
-		quat slerpQ(q1.slerp(q2, t, false));
+		Quat slerpP(slerp(q3, t, shortestPath));
+		Quat slerpQ(q1.slerp(q2, t, false));
 		return slerpP.slerp(slerpQ, slerpT, shortestPath);
 	}
 
-	plane::plane(const vec3& v1, const vec3& v2, const vec3& v3)
+	Plane::Plane(const Vec3& v1, const Vec3& v2, const Vec3& v3)
 	{
-		vec3 edge1(v2 - v1);
+		Vec3 edge1(v2 - v1);
 
 		normal = edge1.cross(v3 - v1);
 		normal.normalize();
 		d = -normal.dot(v1);
 	}
 
-	plane plane::operator * (const mtx& m) const
+	Plane Plane::operator * (const Mtx& m) const
 	{
-		mtx inv(m);
-		plane pp;
+		Mtx inv(m);
+		Plane pp;
 
 		inv.inverse();
 		inv.transpose();
 		pp.normal *= inv;
-		vec3 pt(pp.normal);
+		Vec3 pt(pp.normal);
 
 		pt *= -d;
 		pt *= m;
@@ -493,19 +493,19 @@ namespace ssh
 		return pp;
 	}
 
-	plane::Side plane::side(const vec3& v) const
+	Plane::Side Plane::side(const Vec3& v) const
 	{
 		float fDistance(distance(v));
-		if(fDistance < 0) return plane::NEGATIVE_SIDE;
-		if(fDistance > 0) return plane::POSITIVE_SIDE;
-		return plane::NO_SIDE;
+		if(fDistance < 0) return Plane::NEGATIVE_SIDE;
+		if(fDistance > 0) return Plane::POSITIVE_SIDE;
+		return Plane::NO_SIDE;
 	}
 
-	plane operator * (const mtx& mm, const plane& p)
+	Plane operator * (const Mtx& mm, const Plane& p)
 	{
-		plane pp;
-		mtx inv(mm);
-		vec3 pt(p.normal);
+		Plane pp;
+		Mtx inv(mm);
+		Vec3 pt(p.normal);
 
 		inv.inverse();
 		inv.transpose();
@@ -521,7 +521,7 @@ namespace ssh
 		return pp;
 	}
 
-	void color::HSB(float hue, float saturation, float brightness)
+	void Color::HSB(float hue, float saturation, float brightness)
 	{
 		if(hue > 1) hue -= (int)hue;
 		else if(hue < 0) hue += (int)(hue + 1);
@@ -562,7 +562,7 @@ namespace ssh
 		}
 	}
 
-	void color::RGBA(long val)
+	void Color::RGBA(long val)
 	{
 		long val32(val);
 
@@ -572,7 +572,7 @@ namespace ssh
 		r = (ssh_b)(val32) / 255.0f;
 	}
 
-	void color::BGRA(long val)
+	void Color::BGRA(long val)
 	{
 		long val32(val);
 
@@ -582,7 +582,7 @@ namespace ssh
 		b = (ssh_b)(val32) / 255.0f;
 	}
 
-	const color& color::saturate()
+	const Color& Color::saturate()
 	{
 		r = SSH_CLAMP(r, 0.0f, 1.0f);
 		b = SSH_CLAMP(b, 0.0f, 1.0f);
@@ -591,7 +591,7 @@ namespace ssh
 		return *this;
 	}
 	
-	long color::RGBA() const
+	long Color::RGBA() const
 	{
 		ssh_b val8;
 		long val32;
@@ -604,7 +604,7 @@ namespace ssh
 		return val32;
 	}
 	
-	long color::BGRA() const
+	long Color::BGRA() const
 	{
 		ssh_b val8;
 		long val32;
@@ -617,36 +617,36 @@ namespace ssh
 		return val32;
 	}
 
-	sphere sphere::operator + (const sphere& s) const
+	Sphere Sphere::operator + (const Sphere& s) const
 	{
-		vec3 v;
+		Vec3 v;
 		float f;
 		contactSphere(s, v, f);
-		return sphere(v, f);
+		return Sphere(v, f);
 	}
 
-	void sphere::contactSphere(const sphere& s, vec3& v, float& f) const
+	void Sphere::contactSphere(const Sphere& s, Vec3& v, float& f) const
 	{
-		vec3 mn1(c - r), mx1(c + r);
-		vec3 mn2(s.c - s.r), mx2(s.c + s.r);
+		Vec3 mn1(c - r), mx1(c + r);
+		Vec3 mn2(s.c - s.r), mx2(s.c + s.r);
 
 		if(mn2 < mn1) mn1 = mn2;
 		if(mx2 > mx1) mx1 = mx2;
 
-		v = vec3((mx1 + mn1) / 2.0f);
+		v = Vec3((mx1 + mn1) / 2.0f);
 		mn1 = (mx1 - mn1) / 2.0f;
 
 		f = max(mn1.z, max(mn1.x, mn1.y));
 	}
 
-	bool bbox::intersects(const bbox& b2) const
+	bool Bbox::intersects(const Bbox& b2) const
 	{
 		return ((mx.x >= b2.mn.x) && (mx.y >= b2.mn.y) && (mx.z >= b2.mn.z) && (mn.x <= b2.mx.x) && (mn.y <= b2.mx.y) && (mn.z > b2.mx.z));
 	}
 
-	bool bbox::intersects(const sphere& s) const
+	bool Bbox::intersects(const Sphere& s) const
 	{
-		const vec3& center(s.center());
+		const Vec3& center(s.center());
 		float radius(s.radius());
 
 		return ((center.x >= mn.x && (mn.x - center.x) <= radius) &&
@@ -657,13 +657,13 @@ namespace ssh
 			(center.z <= mx.z && (center.z - mx.z) <= radius));
 	}
 
-	bbox bbox::intersection(const bbox& b2) const
+	Bbox Bbox::intersection(const Bbox& b2) const
 	{
-		if(!intersects(b2)) return bbox();
+		if(!intersects(b2)) return Bbox();
 
-		vec3 intMin, intMax;
-		const vec3& b2max(b2.maximum());
-		const vec3& b2min(b2.minimum());
+		Vec3 intMin, intMax;
+		const Vec3& b2max(b2.maximum());
+		const Vec3& b2min(b2.minimum());
 
 		if(b2max.x > mx.x && mx.x > b2min.x) intMax.x = mx.x; else intMax.x = b2max.x;
 		if(b2max.y > mx.y && mx.y > b2min.y) intMax.y = mx.y; else intMax.y = b2max.y;
@@ -672,12 +672,12 @@ namespace ssh
 		if(b2min.y < mn.y && mn.y < b2max.y) intMin.y = mn.y; else intMin.y = b2min.y;
 		if(b2min.z < mn.z && mn.z < b2max.z) intMin.z = mn.z; else intMin.z = b2min.z;
 
-		return bbox(intMin, intMax);
+		return Bbox(intMin, intMax);
 	}
 	
-	void bbox::transform(const mtx& matrix)
+	void Bbox::transform(const Mtx& matrix)
 	{
-		vec3 min, max, temp;
+		Vec3 min, max, temp;
 
 		bool first = true;
 
@@ -696,15 +696,15 @@ namespace ssh
 		setExtents(min, max);
 	}
 	
-	void bbox::merge(const bbox& b2)
+	void Bbox::merge(const Bbox& b2)
 	{
-		vec3 mnn(mn), mxx(mx);
+		Vec3 mnn(mn), mxx(mx);
 		mxx.ceil(b2.mx);
 		mnn.floor(b2.mn);
 		setExtents(mnn, mxx);
 	}
 
-	void bbox::updateCorners()
+	void Bbox::updateCorners()
 	{
 		corners[0] = mn;
 		corners[4] = mx;
@@ -716,50 +716,50 @@ namespace ssh
 		corners[7].x = mx.x ; corners[7].y = mn.y ; corners[7].z = mx.z;
 	}
 
-	obox::obox(const vec3& _x1y1z1, const vec3& _x2y1z1, const vec3& _x1y2z1, const vec3& _x2y2z1, const vec3& _x1y1z2, const vec3& _x2y1z2, const vec3& _x1y2z2, const vec3& _x2y2z2) :
+	Obox::Obox(const Vec3& _x1y1z1, const Vec3& _x2y1z1, const Vec3& _x1y2z1, const Vec3& _x2y2z1, const Vec3& _x1y1z2, const Vec3& _x2y1z2, const Vec3& _x1y2z2, const Vec3& _x2y2z2) :
 							x1y1z1(_x1y1z1), x2y1z1(_x2y1z1), x1y2z1(_x1y2z1), x2y2z1(_x2y2z1), x1y1z2(_x1y1z2), x2y1z2(_x2y1z2), x1y2z2(_x1y2z2), x2y2z2(_x2y2z2) {}
-	obox::obox(const bbox& bbox) :	x1y1z1(vec3(bbox.mn.x, bbox.mn.y, bbox.mx.z)), x2y1z1(vec3(bbox.mx.x, bbox.mn.y, bbox.mx.z)),
-									x1y2z1(vec3(bbox.mn.x, bbox.mx.y, bbox.mx.z)), x2y2z1(vec3(bbox.mx.x, bbox.mx.y, bbox.mx.z)),
-									x1y1z2(vec3(bbox.mn.x, bbox.mn.y, bbox.mn.z)), x2y1z2(vec3(bbox.mx.x, bbox.mn.y, bbox.mn.z)),
-									x1y2z2(vec3(bbox.mn.x, bbox.mx.y, bbox.mn.z)), x2y2z2(vec3(bbox.mx.x, bbox.mx.y, bbox.mn.z)) {}
-	obox::obox(float* b) : x1y1z1(vec3(b[0])), x2y1z1(vec3(b[3])), x1y2z1(vec3(b[6])), x2y2z1(vec3(b[9])), x1y1z2(vec3(b[12])), x2y1z2(vec3(b[15])), x1y2z2(vec3(b[18])), x2y2z2(vec3(b[21])) {}
+	Obox::Obox(const Bbox& Bbox) :	x1y1z1(Vec3(Bbox.mn.x, Bbox.mn.y, Bbox.mx.z)), x2y1z1(Vec3(Bbox.mx.x, Bbox.mn.y, Bbox.mx.z)),
+									x1y2z1(Vec3(Bbox.mn.x, Bbox.mx.y, Bbox.mx.z)), x2y2z1(Vec3(Bbox.mx.x, Bbox.mx.y, Bbox.mx.z)),
+									x1y1z2(Vec3(Bbox.mn.x, Bbox.mn.y, Bbox.mn.z)), x2y1z2(Vec3(Bbox.mx.x, Bbox.mn.y, Bbox.mn.z)),
+									x1y2z2(Vec3(Bbox.mn.x, Bbox.mx.y, Bbox.mn.z)), x2y2z2(Vec3(Bbox.mx.x, Bbox.mx.y, Bbox.mn.z)) {}
+	Obox::Obox(float* b) : x1y1z1(Vec3(b[0])), x2y1z1(Vec3(b[3])), x1y2z1(Vec3(b[6])), x2y2z1(Vec3(b[9])), x1y1z2(Vec3(b[12])), x2y1z2(Vec3(b[15])), x1y2z2(Vec3(b[18])), x2y2z2(Vec3(b[21])) {}
 	
-	obox obox::transform(const mtx& m) const
+	Obox Obox::transform(const Mtx& m) const
 	{
-		return obox(x1y1z1 * m, x2y1z1 * m, x1y2z1 * m, x2y2z1 * m, x1y1z2 * m, x1y1z2 * m, x1y2z2 * m, x2y2z2 * m);
+		return Obox(x1y1z1 * m, x2y1z1 * m, x1y2z1 * m, x2y2z1 * m, x1y1z2 * m, x1y1z2 * m, x1y2z2 * m, x2y2z2 * m);
 	}
 	
-	bool obox::intersects(const bbox& b) const
+	bool Obox::intersects(const Bbox& b) const
 	{
 		return false;
 	}
 	
-	bool obox::intersects(const obox& b) const
+	bool Obox::intersects(const Obox& b) const
 	{
 		return false;
 	}
 	
-	bool obox::intersects(const sphere& s) const
+	bool Obox::intersects(const Sphere& s) const
 	{
 		return false;
 	}
 	
-	bool obox::intersects(const vec3& v) const
+	bool Obox::intersects(const Vec3& v) const
 	{
 		return false;
 	}
 	
-	vec3 obox::center() const
+	Vec3 Obox::center() const
 	{
-		vec3 _1(x1y2z1 + (x2y1z2 - x1y2z1) / 2.0f);
-		vec3 _2(x2y2z1 + (x1y1z2 - x2y2z1) / 2.0f);
-		vec3 _3(x2y1z1 + (x1y2z2 - x2y1z1) / 2.0f);
-		return vec3((_1 + _2 + _3) / 3.0f);
+		Vec3 _1(x1y2z1 + (x2y1z2 - x1y2z1) / 2.0f);
+		Vec3 _2(x2y2z1 + (x1y1z2 - x2y2z1) / 2.0f);
+		Vec3 _3(x2y1z1 + (x1y2z2 - x2y1z1) / 2.0f);
+		return Vec3((_1 + _2 + _3) / 3.0f);
 	}
 
-	bool ray::intersects(const sphere& s, float* f) const
+	bool Ray::intersects(const Sphere& s, float* f) const
 	{
-		const vec3& rayorig(pos - s.center());
+		const Vec3& rayorig(pos - s.center());
 		float radius(s.radius());
 
 		if(f) *f = 0.0f;
@@ -779,11 +779,11 @@ namespace ssh
 		return true;
 	}
 	
-	bool ray::intersects(const bbox& box, float* f) const
+	bool Ray::intersects(const Bbox& box, float* f) const
 	{
-		vec3 hitpoint;
-		const vec3& mnn(box.minimum());
-		const vec3& mxx(box.maximum());
+		Vec3 hitpoint;
+		const Vec3& mnn(box.minimum());
+		const Vec3& mxx(box.maximum());
 
 		float lowt = 0.0f, t;
 		bool hit = false;
@@ -857,9 +857,9 @@ namespace ssh
 		return hit;
 	}
 	
-	bool ray::intersects(const plane& p, float* f) const
+	bool Ray::intersects(const Plane& p, float* f) const
 	{
-		vec3 v((float*)p);
+		Vec3 v((float*)p);
 
 		float denom(v.dot(dir));
 
@@ -873,7 +873,7 @@ namespace ssh
 		return (t >= 0);
 	}
 
-	const mtx& mtx::from3dsMax(float* f)
+	const Mtx& Mtx::from3dsMax(float* f)
 	{
 		_11 = f[0] ; _12 = f[2] ; _13 = f[1] ; _14 = 0.0f;
 		_21 = f[3] ; _22 = f[4] ; _23 = f[5] ; _24 = 0.0f;

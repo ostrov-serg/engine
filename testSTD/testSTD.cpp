@@ -115,11 +115,6 @@ extern "C"
 }
 
 
-#include <list>
-#include <map>
-#include <forward_list>
-
-
 extern "C"
 {
 	ssh_u asm_strstr(void* ptr, ssh_u sz, ssh_u len);
@@ -139,24 +134,40 @@ void get_sz(ssh_u* sz)
 {
 
 }
+
+
 int main() noexcept
 {
-	ssh_log->init(Log::TypeOutput::debug);
+	String str(L"Шаталов Сергей Викторович");
+	Buffer buf1(10);
+	BufferW buf2((ssh_w*)L"Сергей", 20, false);
+	std::multiset<std::string> mymultiset;
 
-	vector<int> vec;
-	String str(L"sergey");
-	memcpy_s(nullptr, 10, nullptr, 10);
-	auto l = ssh_wcslen(nullptr);
-	String str1 = str + L"11";
-	str1.substr(-1, 2);
-	Range<> r;
-	get_sz(r);
-	SIZE* sz = r;
+	mymultiset.emplace("foo");
+	mymultiset.emplace("bar");
+	mymultiset.emplace("1foo");
+
+	for(auto item : mymultiset)
+	{
+		auto i = item;
+	}
+	ssh_i r = ssh_div(23, 4);
+	ssh_log->init(Log::TypeOutput::debug);
 	File f(L"c:\\1", File::open_read);
-	RLE rle;
-	//Buffer r(rle.process(f.read(), true));
-	Buffer out(ssh_compress(f.read()));
+	ssh_compress(f.read());
 	return 0;
+	File f1(L"c:\\1+", File::create_write);
+	File f2(L"c:\\1++", File::create_write);
+	//	RLE rle;
+	//Buffer r(rle.process(f.read(), true));
+	BWT bwt;
+	Buffer out1(bwt.process(f.read(), true));
+	f1.write(out1);
+	Buffer out2(bwt.process(out1, false));
+	f2.write(out2);
+
+	return 0;
+	/*
 	File ff(L"c:\\1.ssh", File::create_write);
 	ff.write(out);
 	f.close();

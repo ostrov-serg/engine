@@ -144,6 +144,24 @@ namespace ssh
 		ssh_u _val((1ULL << idx));
 		return ((_val == val || nearest) ? _val : _val << 1ULL);
 	}
+
+	inline ssh_i ssh_div(ssh_i y, ssh_i z)
+	{
+		ssh_i x = 0;
+		for(int i = 0; i < 32; i++)
+		{
+			//ssh_i t(x >> 31);
+			x = (x << 1) | (y >> 31);
+			y = y << 1;
+			if((x) >= z)
+			{
+				x = x - z;
+				y = y + 1;
+			}
+		}
+		return x;
+	}
+
 	// провер€ет на кратность значени€ степени двойки
 	template <typename T> bool ssh_is_pow2(const T& value)
 	{
@@ -234,6 +252,11 @@ namespace ssh
 		int count = 0;
 	};
 
+	template < typename T> class Allocator
+	{
+	public:
+	};
+
 	template <typename T, bool> struct release_node { static void release(const T& t) { static_assert(false, "release_node invalid!"); } };
 	template <typename T> struct release_node < T, false > { static void release(const T& t) { t.~T(); } static T dummy() { return T(); } };
 	template <typename T> struct release_node < T, true > { static void release(const T& t) { delete t; } static T dummy() { return nullptr; } };
@@ -241,4 +264,8 @@ namespace ssh
 	#define SSH_RELEASE_NODE(T, V)	release_node<T, SSH_IS_PTR(T)>::release(V)
 	#define SSH_DUMMY(T)			release_node<T, SSH_IS_PTR(T)>::dummy()
 
+	template <typename T> using ArraySTL= std::vector<T>;
+	template <typename T> using MapSTL	= std::map<T, Allocator<T>>;
+	template <typename T> using ListSTL	= std::list<T, Allocator<T>>;
+	template <typename T> using TreeSTL	= std::multiset<T, Allocator<T>>;
 }

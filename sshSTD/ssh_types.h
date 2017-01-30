@@ -133,6 +133,10 @@ namespace ssh
 		ssh_u total_set() const { return __popcnt64(value); }
 		// "развернуть" биты
 		ssh_u reverse() const { return ssh_rev_bits((int)(value >> 32)) | ((ssh_u)(ssh_rev_bits((int)value)) << 32); }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		// значение
 		ssh_l value;
 	};
@@ -184,6 +188,10 @@ namespace ssh
 		// Специальные
 		auto empty() { x = y = 0; return *this; }
 		auto set(const T& X, const T& Y) { x = X; y = Y; return *this; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		T x, y;
 	};
 
@@ -234,6 +242,10 @@ namespace ssh
 		bool is_empty() const { return (w == 0 && h == 0); }
 		auto empty() { w = h = 0; return *this; }
 		auto set(const T& W, const T& H) { w = W; h = H; return *this; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		T w, h;
 	};
 
@@ -326,6 +338,10 @@ namespace ssh
 		T right() const { return (x + w); }
 		T bottom() const { return (y + h); }
 		Pts<T> center() const { return Pts<T>(x + (w / 2), y + (h / 2)); }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		union
 		{
 			struct
@@ -374,6 +390,10 @@ namespace ssh
 		// специальные
 		bool is_null() const { return (x == 0 && y == 0 && w == 0 && h == 0 && n == 0 && f == 0); }
 		bool is_empty() const { return (w <= 0 && h <= 0 && n <= 0 && f <= 0); }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 		T1 x, y, w, h;
 		T2 n, f;
 	};

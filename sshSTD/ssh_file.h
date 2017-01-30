@@ -130,6 +130,10 @@ namespace ssh
 			return (h != -1);
 		}
 		String get_path() const { return path; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 	protected:
 		int h;
 		String path;

@@ -51,7 +51,7 @@ namespace ssh
 		buf[pos * width] = 0;
 		caption = (width == 1 ? ssh_convert(L"utf-8", buf, bom8 * 3) : buf.to<ssh_cws>() + 1);
 		buf[pos * width] = _cs;
-		regx rx;
+		Regx rx;
 		if(rx.match(caption, LR"((?im)<\?xml\s+version=.+encoding=["]?(.*?)["]?\s*\?>)", 0) > 0)
 		{
 			charset = rx.substr(1);
