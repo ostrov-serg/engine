@@ -144,13 +144,53 @@ namespace ssh
 		ssh_u _val((1ULL << idx));
 		return ((_val == val || nearest) ? _val : _val << 1ULL);
 	}
-
-	inline ssh_i ssh_div(ssh_i y, ssh_i z)
+	
+	inline long ssh_loop(long x, long y)
+	{
+		long z(y / (x * 2));
+		long y1 = z * x;
+		y -= ((y - y1) >= x) ? y1 * 2 : 0;
+		return x - (y < x ? x - y : y - x);
+	}
+	// логарифм по основанию 2
+	inline int ssh_log2(int i)
+	{
+		int value = 0;
+		while(i >>= 1) { value++; }
+		return value;
+	}
+	// линейна€ интерпол€ци€
+	inline float ssh_lerp(float f0, float f1, float t)
+	{
+		float s = 1.0f - t;
+		return f0 * s + f1 * t;
+	}
+	// наибольшее целое
+	inline float ssh_floor(float f)
+	{
+		return _mm_floor_ss(_mm_set_ss(f), _mm_set_ss(f)).m128_f32[0];
+	}
+	// наименьшее целое
+	inline float ssh_ceil(float f)
+	{
+		return _mm_ceil_ss(_mm_set_ss(f), _mm_set_ss(f)).m128_f32[0];
+	}
+	// отбросить дробную часть
+	inline int ssh_trunc(float f)
+	{
+		return (int)_mm_round_ss(_mm_set_ss(f), _mm_set_ss(f), _MM_FROUND_TO_ZERO).m128_f32[0];
+	}
+	// вернуть дробну часть
+	inline float ssh_frac(float f)
+	{
+		return f - ssh_trunc(f);
+	}
+	// остаток от целочисленного делени€
+	inline ssh_i ssh_mod(ssh_i y, ssh_i z)
 	{
 		ssh_i x = 0;
 		for(int i = 0; i < 32; i++)
 		{
-			//ssh_i t(x >> 31);
 			x = (x << 1) | (y >> 31);
 			y = y << 1;
 			if((x) >= z)

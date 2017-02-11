@@ -729,30 +729,29 @@ namespace ssh
 		return result;
 	}
 
-	SSH float* ssh_vec3_mtx(const float* v, const float* m)
+	SSH float* ssh_vec3_mtx(float* dst, const float* v, const float* m)
 	{
-		static __m128 ret;
 		__m128 _v[4];
 		_v[0] = _mm_set_ss(v[0]);
 		_v[1] = _mm_set_ss(v[1]);
 		_v[2] = _mm_set_ss(v[2]);
 		_v[3] = _mm_set_ss(1.0f);
 		for(ssh_u i = 0; i < 4; i++) _v[i] = _mm_mul_ps(_mm_shuffle_ps(_v[i], _v[i], 0), *(__m128*)&m[i * 4]);
-		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[0], _v[1]), _v[2]), _v[3]);
-		return ret.m128_f32;
+		_mm_storeu_ps(dst, _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[0], _v[1]), _v[2]), _v[3]));
+		return dst;
 	}
 
-	SSH float* ssh_vec4_mtx(const float* v, const float* m)
+	SSH float* ssh_vec4_mtx(float* dst, const float* v, const float* m)
 	{
-		static __m128 ret;
 		__m128 _v[4];
 		_v[0] = _mm_set_ss(v[0]);
 		_v[1] = _mm_set_ss(v[1]);
 		_v[2] = _mm_set_ss(v[2]);
 		_v[3] = _mm_set_ss(v[3]);
-		for(ssh_u i = 0; i < 4; i++) _v[i] = _mm_mul_ps(_mm_shuffle_ps(_v[i], _v[i], 0), *(__m128*)&m[i * 4]);
-		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[0], _v[1]), _v[2]), _v[3]);
-		return ret.m128_f32;
+		for(ssh_u i = 0; i < 4; i++)
+			_v[i] = _mm_mul_ps(_mm_shuffle_ps(_v[i], _v[i], 0), *(__m128*)&m[i * 4]);
+		_mm_storeu_ps(dst, _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[0], _v[1]), _v[2]), _v[3]));
+		return dst;
 	}
 
 	SSH float* ssh_mtx_vec3(const float* m, const float* v)
@@ -763,7 +762,8 @@ namespace ssh
 		_v[1] = _mm_set_ss(v[1]);
 		_v[2] = _mm_set_ss(v[2]);
 		_v[3] = _mm_set_ss(1.0f);
-		for(ssh_u i = 0; i < 4; i++) _v[i] = _mm_mul_ps(*(__m128*)&m[i * 4], _mm_shuffle_ps(_v[i], _v[i], 0));
+		for(ssh_u i = 0; i < 4; i++)
+			_v[i] = _mm_mul_ps(*(__m128*)&m[i * 4], _mm_shuffle_ps(_v[i], _v[i], 0));
 		ret = _mm_add_ps(_mm_add_ps(_mm_add_ps(_v[0], _v[1]), _v[2]), _v[3]);
 		return ret.m128_f32;
 	}

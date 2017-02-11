@@ -138,21 +138,47 @@ void get_sz(ssh_u* sz)
 
 int main() noexcept
 {
+	Vec2 vec2;
+	Vec3 vec3;
+	Vec4 vec4;
+	Ray ray;
+	Sphere sphere;
+	Dual_quat dq;
+	Mtx _mtx;
+	Color _color(0.5,1,0.3,0.25);
+	Half _h;
+	Bits bits;
+	Pts<> pts1;
+	Range<> range1;
+	Bar<> bar1;
+	Box<> box1;
+	Bbox _bbox;
+	Obox _obox(_bbox);
+	Angle angle(30.0f);
+	Angle angle2(0.524317f);
+	Plane plane(1,2,3,4);
+	Quat quat(10,20,30,40);
+	Regx regx;
+	Xml xml;
+	File fdd(L"c:\\1", File::open_read);
+
+	ssh_log->init(Log::TypeOutput::debug);
+	ssh_unit_test();
+
 	String str(L"Шаталов Сергей Викторович");
 	Buffer buf1(10);
-	BufferW buf2((ssh_w*)L"Сергей", 20, false);
-	std::multiset<std::string> mymultiset;
+	BufferW buf2(L"Сергей");
+	std::multiset<String> mymultiset;
 
-	mymultiset.emplace("foo");
-	mymultiset.emplace("bar");
-	mymultiset.emplace("1foo");
+	mymultiset.emplace(str.str());
+	mymultiset.emplace(L"bar");
+	mymultiset.emplace(L"1foo");
 
 	for(auto item : mymultiset)
 	{
 		auto i = item;
 	}
-	ssh_i r = ssh_div(23, 4);
-	ssh_log->init(Log::TypeOutput::debug);
+	ssh_i r = ssh_mod(23, 4);
 	File f(L"c:\\1", File::open_read);
 	ssh_compress(f.read());
 	return 0;

@@ -4,7 +4,7 @@
 
 extern "C"
 {
-	void asm_ssh_bwt_transform(void* _this, int size, int max_block);
+	void asm_ssh_bwt_transform(void* _this, int size);
 	void asm_ssh_bwt_untransform(void* _this, int size, void* vec);
 }
 
@@ -63,11 +63,7 @@ namespace ssh
 
 	void BWT::set_val(int idx) noexcept
 	{
-		if(idx == 1)
-		{
-			*(ssh_w*)_index = idx_lit;
-			_index += 2;
-		}
+		if(idx == 1) *(ssh_w*)_index = idx_lit;
 		idx += keys - 2;
 		if(idx >= keys) idx -= keys;
 		_result[idx_lit++] = in[idx];
@@ -99,9 +95,10 @@ namespace ssh
 			LT[c] = idx;
 		}
 		// Запускаем процесс уточнения положения записей в списке
-		if(is) sort();
+		if(is) sort(); else *_index = -1;
 		in += size + 1;
 		_result += size;
+		_index += 2;
 	}
 
 	void BWT::untransform_block(int size, ssh_w* vec) noexcept
@@ -110,22 +107,26 @@ namespace ssh
 		int count[256];
 		// извлекаем исходный индекс
 		ssh_d idx(*(ssh_w*)_index); _index += 2;
-		// инициализируем вектор
-		ssh_memzero(count, 256 * 4);
-		for(i = 0; i < size; i++)
-			count[in[i]]++;
-		for(i = 0; i < 256; i++)
+		if(idx == -1) _result = (ssh_b*)ssh_memcpy(_result, in, size);
+		else
 		{
-			sum += count[i];
-			count[i] = sum - count[i];
-		}
-		for(i = 0; i < size; i++)
-			vec[count[in[i]]++] = i;
-		// запускаем процесс восстановление в соответствии с вектором
-		for(i = 0; i < size; i++)
-		{
-			idx = vec[idx];
-			*_result++ = in[idx];
+			// инициализируем вектор
+			ssh_memzero(count, 256 * 4);
+			for(i = 0; i < size; i++)
+				count[in[i]]++;
+			for(i = 0; i < 256; i++)
+			{
+				sum += count[i];
+				count[i] = sum - count[i];
+			}
+			for(i = 0; i < size; i++)
+				vec[count[in[i]]++] = i;
+			// запускаем процесс восстановление в соответствии с вектором
+			for(i = 0; i < size; i++)
+			{
+				idx = vec[idx];
+				*_result++ = in[idx];
+			}
 		}
 		in += size;
 	}

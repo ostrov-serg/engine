@@ -50,8 +50,8 @@ namespace ssh
 		PROG_FOLDER, WORK_FOLDER, TEMP_FOLDER, USER_FOLDER, PROG_NAME, USER_NAME, COMP_NAME, CUSTOM, PLATFORM, TOTAL_MEMORY, PHYSICAL_MEMORY, CPU_SPEED
 	};
 
-	SSH float* ssh_vec3_mtx(const float* v, const float* m);
-	SSH float* ssh_vec4_mtx(const float* v, const float* m);
+	SSH float* ssh_vec3_mtx(float* dst, const float* v, const float* m);
+	SSH float* ssh_vec4_mtx(float* dst, const float* v, const float* m);
 	SSH float* ssh_mtx_vec3(const float* m, const float* v);
 	SSH float* ssh_mtx_vec4(const float* m, const float* v);
 	SSH float* ssh_mtx_mtx(const float* m1, const float* m2);

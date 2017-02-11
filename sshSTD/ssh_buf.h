@@ -11,7 +11,7 @@ namespace ssh
 		// по умолчанию
 		_Buffer() : data(nullptr), sz(0), is_owner(false) { }
 		// конструктор копии
-		_Buffer(const _Buffer& buf, ssh_u offs = 0, ssh_u size = -1) : sz(size == -1 ? buf.size() : size), is_owner(true)
+		_Buffer(const _Buffer& buf, ssh_u offs = 0, ssh_u count = -1) : sz(count == -1 ? buf.size() : count), is_owner(true)
 		{
 			const_cast<_Buffer*>(&buf)->is_owner = false;
 			data = (sz ? buf.data + offs : nullptr);
@@ -21,11 +21,14 @@ namespace ssh
 		{
 			buf.data = nullptr;
 			buf.sz = 0;
+			buf.is_owner = false;
 		}
 		// создать буфер определённого размера
 		_Buffer(ssh_u count) : data(new T[count]), sz(count * sizeof(T)), is_owner(true) { }
 		// создать из диапазона
-		_Buffer(const Range<int>& wh, int bpp) : sz(wh.w * wh.h * bpp), data(new T[sz]), is_owner(true) { }
+		_Buffer(const Range<int>& wh, int bpp) : sz(wh.w * wh.h * bpp), is_owner(true) { data = new T[sz]; }
+		// создать из строки
+		_Buffer(ssh_cws p, bool is_own = false) : data((T*)p), sz(ssh_wcslen(p) * 2), is_owner(is_own) { }
 		// создать из существующего неопределённого буфера
 		_Buffer(T* p, ssh_u count, bool is_own = true) : data(p), sz(count * sizeof(T)), is_owner(is_own) {}
 		// деструктор
@@ -63,7 +66,10 @@ namespace ssh
 		template<typename TYPE> TYPE to() const { return (TYPE)data; }
 #ifdef _DEBUG
 		// тест
-		static void unit_test();
+		static void unit_test()
+		{
+
+		}
 #endif
 	protected:
 		// реализация

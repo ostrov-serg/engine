@@ -21,6 +21,7 @@
 #include <sshSTD\ssh_tree.h>
 #include <sshSTD\ssh_stack.h>
 
+#include <sshSTD\ssh_regx.h>
 #include <sshSTD\ssh_xml.h>
 #include <sshSTD\ssh_srlz.h>
 

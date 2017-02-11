@@ -3,47 +3,6 @@
 
 namespace ssh
 {
-	__forceinline long ssh_loop(long x, long y)
-	{
-		long z(y / (x * 2));
-		long y1 = z * x;
-		y -= ((y - y1) >= x) ? y1 * 2 : 0;
-		return x - (y < x ? x - y : y - x);
-	}
-
-	__forceinline int ssh_log2(int i)
-	{
-		int value = 0;
-		while(i >>= 1) { value++; }
-		return value;
-	}
-
-	__forceinline float ssh_lerp(float f0, float f1, float t)
-	{
-		float s = 1.0f - t;
-		return f0 * s + f1 * t;
-	}
-
-	__forceinline float ssh_floor(float f)
-	{
-		return _mm_floor_ss(_mm_set_ss(f), _mm_set_ss(f)).m128_f32[0];
-	}
-
-	__forceinline float ssh_ceil(float f)
-	{
-		return _mm_ceil_ss(_mm_set_ss(f), _mm_set_ss(f)).m128_f32[0];
-	}
-
-	__forceinline int ssh_trunc(float f)
-	{
-		return (int)_mm_round_ss(_mm_set_ss(f), _mm_set_ss(f), 3).m128_f32[0];
-	}
-
-	__forceinline float ssh_frac(float f)
-	{
-		return f - ssh_trunc(f);
-	}
-
 	class Plane;
 	class Color;
 	class Mtx;
@@ -635,6 +594,7 @@ namespace ssh
 		auto operator = (const Plane& p) { x = p.x; y = p.y; z = p.z; d = p.d; return *this; }
 		// приведение типов
 		operator float*() const { return (float*)flt; }
+		operator Vec3() const { return normal; }
 		// специальные
 		float dot(const Vec4& v) const { return x * v.x + y * v.y + z * v.z + d * v.w; }
 		float dotNormal(const Vec3& v) const { return x * v.x + y * v.y + z * v.z; }
@@ -720,9 +680,9 @@ namespace ssh
 		const Vec3& center() const { return c; }
 		// проверки на пересечения
 		bool intersects(const Bbox& box) const;
-		bool intersects(const Sphere& s) const;
-		bool intersects(const Plane& Plane) const;
-		bool intersects(const Vec3& v) const;
+		bool intersects(const Sphere& s) const { float rr(s.r + r); rr *= rr; return ((s.c - c).lengthSq() <= rr); }
+		bool intersects(const Plane& plane) const { return (fabs(plane.dotNormal(c)) <= r); }
+		bool intersects(const Vec3& v) const { return ((v - c).lengthSq() <= (r * r)); }
 #ifdef _DEBUG
 		// тест
 		static void unit_test();
@@ -739,6 +699,11 @@ namespace ssh
 	class SSH Bbox
 	{
 	public:
+		enum Angle
+		{
+			X1Y1Z1, X2Y1Z1, X1Y2Z1, X2Y2Z1, X1Y1Z2, X2Y1Z2, X1Y2Z2, X2Y2Z2
+		};
+		// сделать проверку на то, что минимум реально меньше максимума
 		Bbox() { setMinimum(-1, -1, -1); setMaximum(1, 1, 1); }
 		Bbox(const Vec3& min, const Vec3& max) { setExtents(min, max); }
 		Bbox(float x1, float y1, float z1, float x2, float y2, float z2) { setExtents(x1, y1, z1, x2, y2, z2); }
@@ -764,24 +729,24 @@ namespace ssh
 		float volume() const { Vec3 diff(mx - mn); return diff.x * diff.y * diff.z; }
 		Vec3 center() const { return Vec3((mx + mn) / 2.0f); }
 		// вернуть массив углов бокса
-		//			       1-----2
+		//			       5-----4
 		//			      /|    /|
 		//			     / |   / |
-		//			    5-----4  |
-		//			    |  0--|--3
+		//			    1-----2  |
+		//			    |  6--|--7
 		//			    | /   | /
 		//			    |/    |/
-		//			    6-----7
+		//			    0-----3
 		auto getAllCorners() const { return (const Vec3*)corners; }
 #ifdef _DEBUG
 		// тест
 		static void unit_test();
 #endif
+	protected:
+		void updateCorners();
 		Vec3 mn;
 		Vec3 mx;
 		Vec3 corners[8];
-	protected:
-		void updateCorners();
 	};
 
 	class SSH Obox
@@ -792,7 +757,7 @@ namespace ssh
 			X1Y1Z1, X2Y1Z1, X1Y2Z1, X2Y2Z1, X1Y1Z2, X2Y1Z2, X1Y2Z2, X2Y2Z2
 		};
 		Obox() { identity(); }
-		Obox(const Obox& b) : x1y1z1(b.x1y1z1), x2y1z1(b.x2y1z1), x1y2z1(b.x1y2z1), x2y2z1(b.x2y2z1), x1y1z2(b.x1y1z2), x2y1z2(b.x2y1z2), x1y2z2(b.x1y2z2), x2y2z2(b.x2y2z2) {}
+		Obox(const Obox& b) { ssh_memcpy(this, &b, sizeof(Obox)); }
 		Obox(const Vec3& _x1y1z1, const Vec3& _x2y1z1, const Vec3& _x1y2z1, const Vec3& _x2y2z1, const Vec3& _x1y1z2, const Vec3& _x2y1z2, const Vec3& _x1y2z2, const Vec3& _x2y2z2);
 		Obox(const Bbox& Bbox);
 		Obox(float* b);
@@ -815,14 +780,7 @@ namespace ssh
 		//			    | /   | /
 		//			    |/    |/
 		//			    3-----4
-		Vec3 x1y1z1;// 1
-		Vec3 x2y1z1;// 2
-		Vec3 x1y2z1;// 3
-		Vec3 x2y2z1;// 4
-		Vec3 x1y1z2;// 5
-		Vec3 x2y1z2;// 6
-		Vec3 x1y2z2;// 7
-		Vec3 x2y2z2;// 8
+		Vec3 corners[8];
 	};
 
 	class SSH Ray
@@ -853,8 +811,8 @@ namespace ssh
 	public:
 		Angle() : angle(0.0f) {}
 		Angle(float v) : angle(v) {}
-		float Degree() const { return (float)((SSH_PI / 180.0f) * angle); }
-		float Radian() const { return (float)((180.0f / SSH_PI) * angle); }
+		float RadianToDegree() const { return (float)(angle * 180.0f / SSH_PI); }
+		float DegreeToRadian() const { return (float)(angle * SSH_PI / 180.0f); }
 #ifdef _DEBUG
 		// тест
 		static void unit_test();
@@ -893,17 +851,18 @@ namespace ssh
 		static ssh_d const maxD = infC - maxC - 1;
 		static ssh_d const minD = minC - subC - 1;
 
-#ifdef _DEBUG
-		// тест
-		static void unit_test();
-#endif
 		ssh_w val;
 	public:
+		Half() : val(0) {}
 		Half(float value);
 		Half(double value) : Half((float)value) {}
 		Half(long double value) : Half((float)value) {}
 		operator float() const;
 		operator ssh_w() const { return val; }
+#ifdef _DEBUG
+		// тест
+		static void unit_test();
+#endif
 	};
 
 	inline Half operator ""_half(long double f)
@@ -913,12 +872,15 @@ namespace ssh
 
 	inline Vec3 Vec3::operator * (const Mtx& m) const
 	{
-		return Vec3(ssh_vec3_mtx(*this, m));
+		Vec3 v;
+		ssh_vec3_mtx(v, *this, m);
+		return v;
 	}
 
 	inline const Vec3& Vec3::operator *= (const Mtx& m)
 	{
-		return (*this = ssh_vec3_mtx(*this, m));
+		ssh_vec3_mtx(*this, *this, m);
+		return *this;
 	}
 
 	inline Vec3 operator * (const Mtx& m, const Vec3& v)
@@ -928,12 +890,15 @@ namespace ssh
 
 	inline Vec4 Vec4::operator * (const Mtx& m) const
 	{
-		return Vec4(ssh_vec4_mtx(*this, m));
+		Vec4 dst;
+		ssh_vec4_mtx(dst, *this, m);
+		return dst;
 	}
 
 	inline const Vec4& Vec4::operator *= (const Mtx& m)
 	{
-		return (*this = ssh_vec4_mtx(*this, m));
+		ssh_vec4_mtx(*this, *this, m);
+		return *this;
 	}
 
 	inline Vec4 operator * (const Mtx& m, const Vec4& v)
@@ -957,20 +922,5 @@ namespace ssh
 	{
 		Quat q(*this);
 		return q.get_rotate();
-	}
-
-	inline bool Sphere::intersects(const Sphere& s) const
-	{
-		float rr(s.r + r); rr *= rr;
-		return ((s.c - c).lengthSq() <= rr);
-	}
-	inline bool Sphere::intersects(const Plane& Plane) const
-	{
-		Vec3 v((float*)&Plane);
-		return (fabs(v.dot(c)) <= r);
-	}
-	inline bool Sphere::intersects(const Vec3& v) const
-	{
-		return ((v - c).lengthSq() <= (r * r));
 	}
 }

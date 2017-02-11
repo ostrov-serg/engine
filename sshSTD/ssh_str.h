@@ -5,7 +5,6 @@ namespace ssh
 {
 	class SSH String
 	{
-		friend class Base;
 		static const int SSH_BUFFER_LENGTH = 18;
 	public:
 		// конструкторы
@@ -37,6 +36,12 @@ namespace ssh
 		friend bool operator == (const String& str1, const String& str2) { return (str1.hash() == str2.hash()); }
 		friend bool operator == (const String& str, ssh_cws wcs) { return (ssh_wcscmp(str, wcs) == 0); }
 		friend bool operator == (ssh_cws wcs, const String& str) { return (ssh_wcscmp(wcs, str) == 0); }
+		friend bool operator < (const String& str1, const String& str2) { return (str1.hash() < str2.hash()); }
+		friend bool operator < (const String& str, ssh_cws wcs) { return (ssh_wcscmp(str, wcs) < 0); }
+		friend bool operator < (ssh_cws wcs, const String& str) { return (ssh_wcscmp(wcs, str) < 0); }
+		friend bool operator > (const String& str1, const String& str2) { return (str1.hash() > str2.hash()); }
+		friend bool operator > (const String& str, ssh_cws wcs) { return (ssh_wcscmp(str, wcs) > 0); }
+		friend bool operator > (ssh_cws wcs, const String& str) { return (ssh_wcscmp(wcs, str) > 0); }
 		friend bool operator != (const String& str1, const String& str2) { return !(operator == (str1, str2)); }
 		friend bool operator != (const String& str, ssh_cws wcs) { return !(operator == (str, wcs)); }
 		friend bool operator != (ssh_cws wcs, const String& str) { return !(operator == (wcs, str)); }

@@ -5,6 +5,7 @@
 
 namespace ssh
 {
+	class Vec2;
 	template <typename T> class Bar;
 
 	class SSH Lock
@@ -46,8 +47,10 @@ namespace ssh
 			*obj = (Base*)::operator new(sz);
 			(*obj)->ref = 1;
 			(*obj)->next = root;
-			(*obj)->nm.init(); (*obj)->nm = std::move(name);
-			(*obj)->tp.init(); (*obj)->tp = std::move(type);
+			//(*obj)->nm.init(); 
+			(*obj)->nm = std::move(name);
+			//(*obj)->tp.init(); 
+			(*obj)->tp = std::move(type);
 			root = *obj;
 			return (void*)*obj;
 		}
@@ -148,36 +151,36 @@ namespace ssh
 		constexpr Pts() : x(0), y(0) {}
 		Pts(const T* ptr) { x = ptr[0]; y = ptr[1]; }
 		Pts(const T& X, const T& Y) : x(X), y(Y) {}
-		Pts(const Pts<T>& pt) : x(pt.x), y(pt.y) {}
+		Pts(const Pts& pt) : x(pt.x), y(pt.y) {}
 		Pts(const POINT& pt) : x(pt.x), y(pt.y) {}
 		Pts(const Bar<T> b) : x(b.x), y(b.y) {}
 		// Операции
-		auto operator - (const Pts<T>& p) const { return Pts<T>(x - p.x, y - p.y); }
-		auto operator - (const T& i) const { return Pts<T>(x - i, y - i); }
-		auto operator + (const Pts<T>& p) const { return Pts<T>(x + p.x, y + p.y); }
-		auto operator + (const T& i) const { return Pts<T>(x + i, y + i); }
-		auto operator * (const Pts<T>& p) const { return Pts<T>(x * p.x, y * p.y); }
-		auto operator * (const T& i) const { return Pts<T>(x * i, y * i); }
-		auto operator / (const Pts<T>& p) const { return Pts<T>(x / p.x, y / p.y); }
-		auto operator / (const T& i) const { return Pts<T>(x / i, y / i); }
-		auto operator -= (const Pts<T>& p) { x -= p.x; y -= p.y; return *this; }
+		auto operator - (const Pts& p) const { return Pts(x - p.x, y - p.y); }
+		auto operator - (const T& i) const { return Pts(x - i, y - i); }
+		auto operator + (const Pts& p) const { return Pts(x + p.x, y + p.y); }
+		auto operator + (const T& i) const { return Pts(x + i, y + i); }
+		auto operator * (const Pts& p) const { return Pts(x * p.x, y * p.y); }
+		auto operator * (const T& i) const { return Pts(x * i, y * i); }
+		auto operator / (const Pts& p) const { return Pts(x / p.x, y / p.y); }
+		auto operator / (const T& i) const { return Pts(x / i, y / i); }
+		auto operator -= (const Pts& p) { x -= p.x; y -= p.y; return *this; }
 		auto operator -= (const T& i) { x -= i; y -= i; return *this; }
-		auto operator += (const Pts<T>& p) { x += p.x; y += p.y; return *this; }
+		auto operator += (const Pts& p) { x += p.x; y += p.y; return *this; }
 		auto operator += (const T& i) { x += i; y += i; return *this; }
-		auto operator /= (const Pts<T>& p) { x /= p.x; y /= p.y; return *this; }
+		auto operator /= (const Pts& p) { x /= p.x; y /= p.y; return *this; }
 		auto operator /= (const T& i) { x /= i; y /= i; return *this; }
-		auto operator *= (const Pts<T>& p) { x *= p.x; y *= p.y; return *this; }
+		auto operator *= (const Pts& p) { x *= p.x; y *= p.y; return *this; }
 		auto operator *= (const T& i) { x *= i; y *= i; return *this; }
 		// присваивание
 		auto operator = (const Bar<T>& r) { x = r.x; y = r.y; return *this; }
 		// внешние
-		friend auto operator - (const T& i, const Pts<T>& p) { return Pts<T>(i - p.x, i - p.y); }
-		friend auto operator + (const T& i, const Pts<T>& p) { return Pts<T>(i + p.x, i + p.y); }
-		friend auto operator / (const T& i, const Pts<T>& p) { return Pts<T>(i / p.x, i / p.y); }
-		friend auto operator * (const T& i, const Pts<T>& p) { return Pts<T>(i * p.x, i * p.y); }
+		friend auto operator - (const T& i, const Pts& p) { return Pts(i - p.x, i - p.y); }
+		friend auto operator + (const T& i, const Pts& p) { return Pts(i + p.x, i + p.y); }
+		friend auto operator / (const T& i, const Pts& p) { return Pts(i / p.x, i / p.y); }
+		friend auto operator * (const T& i, const Pts& p) { return Pts(i * p.x, i * p.y); }
 		// Сравнение
-		bool operator == (const Pts<T>& p) const { return (x == p.x && y == p.y); }
-		bool operator != (const Pts<T>& p) const { return (x != p.x || y != p.y); }
+		bool operator == (const Pts& p) const { return (x == p.x && y == p.y); }
+		bool operator != (const Pts& p) const { return (x != p.x || y != p.y); }
 		bool operator == (const Bar<T>& r) const { return (x == r.x && y == r.y); }
 		bool operator != (const Bar<T>& r) const { return (x != r.x || y != r.y); }
 		bool is_empty() const { return (x == 0 && y == 0); }
@@ -190,7 +193,14 @@ namespace ssh
 		auto set(const T& X, const T& Y) { x = X; y = Y; return *this; }
 #ifdef _DEBUG
 		// тест
-		static void unit_test();
+		static void unit_test()
+		{
+			Pts<> test1;
+			Pts<> test2;
+			Pts<> test3;
+			Pts<> test4;
+			Pts<> test5;
+		}
 #endif
 		T x, y;
 	};
@@ -202,37 +212,37 @@ namespace ssh
 		Range() : w(0), h(0) {}
 		Range(const T* ptr) { w = ptr[0]; h = ptr[1]; }
 		Range(const T& W, const T& H) : w(W), h(H) {}
-		Range(const Range<T>& s) : w(s.w), h(s.h) {}
+		Range(const Range& s) : w(s.w), h(s.h) {}
 		Range(const SIZE& s) : w(s.cx), h(s.cy) {}
 		Range(const Bar<T>& r) : w(r.w), h(r.h) {}
 		// Операции
-		auto operator - (const Range<T>& s) const { return Range<T>(w - s.w, h - s.h); }
-		auto operator - (const T& i) const { return Range<T>(w - i, h - i); }
-		auto operator + (const Range<T>& s) const { return Range<T>(w + s.w, h + s.h); }
-		auto operator + (const T& i) const { return Range<T>(w + i, h + i); }
-		auto operator * (const Range<T>& s) const { return Range<T>(w * s.w, h * s.h); }
-		auto operator * (const T& i) const { return Range<T>(w * i, h * i); }
-		auto operator / (const Range<T>& s) const { return Range<T>(w / s.w, h / s.h); }
-		auto operator / (const T& i) const { return Range<T>(w / i, h / i); }
-		auto operator += (const Range<T>& s) { w += s.w; h += s.h; return *this; }
+		auto operator - (const Range& s) const { return Range(w - s.w, h - s.h); }
+		auto operator - (const T& i) const { return Range(w - i, h - i); }
+		auto operator + (const Range& s) const { return Range(w + s.w, h + s.h); }
+		auto operator + (const T& i) const { return Range(w + i, h + i); }
+		auto operator * (const Range& s) const { return Range(w * s.w, h * s.h); }
+		auto operator * (const T& i) const { return Range(w * i, h * i); }
+		auto operator / (const Range& s) const { return Range(w / s.w, h / s.h); }
+		auto operator / (const T& i) const { return Range(w / i, h / i); }
+		auto operator += (const Range& s) { w += s.w; h += s.h; return *this; }
 		auto operator += (const T& s) { w += s; h += s; return *this; }
-		auto operator -= (const Range<T>& s) { w -= s.w; h -= s.h; return *this; }
+		auto operator -= (const Range& s) { w -= s.w; h -= s.h; return *this; }
 		auto operator -= (const T& s) { w -= s; h -= s; return *this; }
-		auto operator /= (const Range<T>& s) { w /= s.w; h /= s.h; return *this; }
+		auto operator /= (const Range& s) { w /= s.w; h /= s.h; return *this; }
 		auto operator /= (const T& s) { w /= s; h /= s; return *this; }
-		auto operator *= (const Range<T>& s) { w *= s.w; h *= s.h; return *this; }
+		auto operator *= (const Range& s) { w *= s.w; h *= s.h; return *this; }
 		auto operator *= (const T& s) { w *= s; h *= s; return *this; }
 		// Присваивание
 		auto operator = (const Bar<T>& r) { w = r.w; h = r.h; return *this; }
 		// внешние
-		friend auto operator - (const T& i, const Range<T>& p) { return Range<T>(i - p.w, i - p.h); }
-		friend auto operator + (const T& i, const Range<T>& p) { return Range<T>(i + p.w, i + p.h); }
-		friend auto operator * (const T& i, const Range<T>& p) { return Range<T>(i * p.w, i * p.h); }
-		friend auto operator / (const T& i, const Range<T>& p) { return Range<T>(i / p.w, i / p.h); }
+		friend auto operator - (const T& i, const Range& p) { return Range(i - p.w, i - p.h); }
+		friend auto operator + (const T& i, const Range& p) { return Range(i + p.w, i + p.h); }
+		friend auto operator * (const T& i, const Range& p) { return Range(i * p.w, i * p.h); }
+		friend auto operator / (const T& i, const Range& p) { return Range(i / p.w, i / p.h); }
 		// Операции
-		bool operator == (const Range<T>& s) const { return (w == s.w && h == s.h); }
+		bool operator == (const Range& s) const { return (w == s.w && h == s.h); }
 		bool operator == (const Bar<T>& r) const { return (w == r.w && h == r.h); }
-		bool operator != (const Range<T>& s) const { return (w != s.w || h != s.h); }
+		bool operator != (const Range& s) const { return (w != s.w || h != s.h); }
 		bool operator != (const Bar<T>& r) const { return (w != r.w || h != r.h); }
 		// Приведение типов
 		operator T*() const { return (T*)&w; }
@@ -244,7 +254,14 @@ namespace ssh
 		auto set(const T& W, const T& H) { w = W; h = H; return *this; }
 #ifdef _DEBUG
 		// тест
-		static void unit_test();
+		static void unit_test()
+		{
+			Range test1;
+			Range test2;
+			Range test3;
+			Range test4;
+			Range test5;
+		}
 #endif
 		T w, h;
 	};
@@ -257,65 +274,65 @@ namespace ssh
 		Bar(const T* ptr) { x = ptr[0]; y = ptr[1]; w = ptr[2]; h = ptr[3]; }
 		Bar(const T& X, const T& Y, const T& W, const T& H) : x(X), y(Y), w(W), h(H) {}
 		Bar(const RECT& r) : x(r.left), y(r.top), w(r.right - x), h(r.bottom - y) {}
-		Bar(const Bar<T>& r) : x(r.x), y(r.y), w(r.w), h(r.h) {}
+		Bar(const Bar& r) : x(r.x), y(r.y), w(r.w), h(r.h) {}
 		Bar(const Pts<T>& pt, const Range<T>& s) : x(pt.x), y(pt.y), w(s.w), h(s.h) {}
 		Bar(const Range<T>& sz) : x(0), y(0), w(sz.w), h(sz.h) {}
 		Bar(const Pts<T>& pt) : x(pt.x), y(pt.y), w(0), h(0) {}
 		// Операции
-		auto operator - (const Bar<T>& r) const { return Bar<T>(x - r.x, y - r.y, w - r.w, h - r.h); }
-		auto operator - (const T& i) const { return Bar<T>(x - i, y - i, w - i, h - i); }
-		auto operator - (const Pts<T>& p) const { return Bar<T>(x - p.x, y - p.y, w, h); }
-		auto operator - (const Range<T>& s) const { return Bar<T>(x, y, w - s.w, h - s.h); }
-		auto operator + (const Bar<T>& r) const { return Bar<T>(x + r.x, y + r.y, w + r.w, h + r.h); }
-		auto operator + (const T& i) const { return Bar<T>(x + i, y + i, w + i, h + i); }
-		auto operator + (const Pts<T>& p) const { return Bar<T>(x + p.x, y + p.y, w, h); }
-		auto operator + (const Range<T>& s) const { return Bar<T>(x, y, w + s.w, h + s.h); }
-		auto operator / (const Bar<T>& r) const { return Bar<T>(x / r.x, y / r.y, w / r.w, h / r.h); }
-		auto operator / (const T& i) const { return Bar<T>(x / i, y / i, w / i, h / i); }
-		auto operator / (const Pts<T>& p) const { return Bar<T>(x / p.x, y / p.y, w, h); }
-		auto operator / (const Range<T>& s) const { return Bar<T>(x, y, w / s.w, h / s.h); }
-		auto operator * (const Bar<T>& r) const { return Bar<T>(x * r.x, y * r.y, w * r.w, h * r.h); }
-		auto operator * (const T& i) const { return Bar<T>(x * i, y * i, w * i, h * i); }
-		auto operator * (const Pts<T>& p) const { return Bar<T>(x * p.x, y * p.y, w, h); }
-		auto operator * (const Range<T>& s) const { return Bar<T>(x, y, w * s.w, h * s.h); }
-		auto operator -= (const Bar<T>& r) { x -= r.x; y -= r.y; w -= r.w; h -= r.h; return *this; }
+		auto operator - (const Bar& r) const { return Bar(x - r.x, y - r.y, w - r.w, h - r.h); }
+		auto operator - (const T& i) const { return Bar(x - i, y - i, w - i, h - i); }
+		auto operator - (const Pts<T>& p) const { return Bar(x - p.x, y - p.y, w, h); }
+		auto operator - (const Range<T>& s) const { return Bar(x, y, w - s.w, h - s.h); }
+		auto operator + (const Bar& r) const { return Bar(x + r.x, y + r.y, w + r.w, h + r.h); }
+		auto operator + (const T& i) const { return Bar(x + i, y + i, w + i, h + i); }
+		auto operator + (const Pts<T>& p) const { return Bar(x + p.x, y + p.y, w, h); }
+		auto operator + (const Range<T>& s) const { return Bar(x, y, w + s.w, h + s.h); }
+		auto operator / (const Bar& r) const { return Bar(x / r.x, y / r.y, w / r.w, h / r.h); }
+		auto operator / (const T& i) const { return Bar(x / i, y / i, w / i, h / i); }
+		auto operator / (const Pts<T>& p) const { return Bar(x / p.x, y / p.y, w, h); }
+		auto operator / (const Range<T>& s) const { return Bar(x, y, w / s.w, h / s.h); }
+		auto operator * (const Bar& r) const { return Bar(x * r.x, y * r.y, w * r.w, h * r.h); }
+		auto operator * (const T& i) const { return Bar(x * i, y * i, w * i, h * i); }
+		auto operator * (const Pts<T>& p) const { return Bar(x * p.x, y * p.y, w, h); }
+		auto operator * (const Range<T>& s) const { return Bar(x, y, w * s.w, h * s.h); }
+		auto operator -= (const Bar& r) { x -= r.x; y -= r.y; w -= r.w; h -= r.h; return *this; }
 		auto operator -= (const Pts<T>& p) { x -= p.x; y -= p.y; return *this; }
 		auto operator -= (const T& i) { x -= i; y -= i; w -= i; h -= i; return *this; }
 		auto operator -= (const Range<T>& s) { w -= s.w; h -= s.h; return *this; }
-		auto operator += (const Bar<T>& r) { x += r.x; y += r.y; w += r.w; h += r.h; return *this; }
+		auto operator += (const Bar& r) { x += r.x; y += r.y; w += r.w; h += r.h; return *this; }
 		auto operator += (const Pts<T>& p) { x += p.x; y += p.y; return *this; }
 		auto operator += (const T& i) { x += i; y += i; w += i; h += i; return *this; }
 		auto operator += (const Range<T>& s) { w += s.w, h += s.h; return *this; }
-		auto operator /= (const Bar<T>& r) { x /= r.x; y /= r.y; w /= r.w; h /= r.h; return *this; }
+		auto operator /= (const Bar& r) { x /= r.x; y /= r.y; w /= r.w; h /= r.h; return *this; }
 		auto operator /= (const Pts<T>& p) { x /= p.x; y /= p.y; return *this; }
 		auto operator /= (const T& i) { x /= i; y /= i; w /= i; h /= i; return *this; }
 		auto operator /= (const Range<T>& s) { w /= s.w; h /= s.h; return *this; }
-		auto operator *= (const Bar<T>& r) { x *= r.x; y *= r.y; w *= r.w; h *= r.h; return *this; }
+		auto operator *= (const Bar& r) { x *= r.x; y *= r.y; w *= r.w; h *= r.h; return *this; }
 		auto operator *= (const Pts<T>& p) { x *= p.x; y *= p.y; return *this; }
 		auto operator *= (const T& i) { x *= i; y *= i; w *= i; h *= i; return *this; }
 		auto operator *= (const Range<T>& s) { w *= s.w; h *= s.h; return *this; }
 		// внешние
-		friend Bar<T> operator - (const Pts<T>& p, const Bar<T>& r) { return Bar<T>(p.x - r.x, p.y - r.y, r.w, r.h); }
-		friend Bar<T> operator - (const T& i, const Bar<T>& r) { return Bar<T>(i - r.x, i - r.y, i - r.w, i - r.h); }
-		friend Bar<T> operator - (const Range<T>& s, const Bar<T>& r) { return Bar<T>(r.x, r.y, s.w - r.w, s.h - r.h); }
-		friend Bar<T> operator + (const Pts<T>& p, const Bar<T>& r) { return Bar<T>(p.x + r.x, p.y + r.y, r.w, r.h); }
-		friend Bar<T> operator + (const T& i, const Bar<T>& r) { return Bar<T>(i + r.x, i + r.y, i + r.w, i + r.h); }
-		friend Bar<T> operator + (const Range<T>& s, const Bar<T>& r) { return Bar<T>(r.x, r.y, s.w + r.w, s.h + r.h); }
-		friend Bar<T> operator / (const Pts<T>& p, const Bar<T>& r) { return Bar<T>(p.x / r.x, p.y / r.y, r.w, r.h); }
-		friend Bar<T> operator / (const T& i, const Bar<T>& r) { return Bar<T>(i / r.x, i / r.y, i / r.w, i / r.h); }
-		friend Bar<T> operator / (const Range<T>& s, const Bar<T>& r) { return Bar<T>(r.x, r.y, s.w / r.w, s.h / r.h); }
-		friend Bar<T> operator * (const Pts<T>& p, const Bar<T>& r) { return Bar<T>(p.x * r.x, p.y * r.y, r.w, r.h); }
-		friend Bar<T> operator * (const T& i, const Bar<T>& r) { return Bar<T>(i * r.x, i * r.y, i * r.w, i * r.h); }
-		friend Bar<T> operator * (const Range<T>& s, const Bar<T>& r) { return Bar<T>(r.x, r.y, s.w * r.w, s.h * r.h); }
+		friend Bar operator - (const Pts<T>& p, const Bar& r) { return Bar(p.x - r.x, p.y - r.y, r.w, r.h); }
+		friend Bar operator - (const T& i, const Bar& r) { return Bar(i - r.x, i - r.y, i - r.w, i - r.h); }
+		friend Bar operator - (const Range<T>& s, const Bar& r) { return Bar(r.x, r.y, s.w - r.w, s.h - r.h); }
+		friend Bar operator + (const Pts<T>& p, const Bar& r) { return Bar(p.x + r.x, p.y + r.y, r.w, r.h); }
+		friend Bar operator + (const T& i, const Bar& r) { return Bar(i + r.x, i + r.y, i + r.w, i + r.h); }
+		friend Bar operator + (const Range<T>& s, const Bar& r) { return Bar(r.x, r.y, s.w + r.w, s.h + r.h); }
+		friend Bar operator / (const Pts<T>& p, const Bar& r) { return Bar(p.x / r.x, p.y / r.y, r.w, r.h); }
+		friend Bar operator / (const T& i, const Bar& r) { return Bar(i / r.x, i / r.y, i / r.w, i / r.h); }
+		friend Bar operator / (const Range<T>& s, const Bar& r) { return Bar(r.x, r.y, s.w / r.w, s.h / r.h); }
+		friend Bar operator * (const Pts<T>& p, const Bar& r) { return Bar(p.x * r.x, p.y * r.y, r.w, r.h); }
+		friend Bar operator * (const T& i, const Bar& r) { return Bar(i * r.x, i * r.y, i * r.w, i * r.h); }
+		friend Bar operator * (const Range<T>& s, const Bar& r) { return Bar(r.x, r.y, s.w * r.w, s.h * r.h); }
 		// Сравнение
 		bool operator == (const Pts<T>& p) const { return (x == p.x && y == p.y); }
-		bool operator == (const Bar<T>& r) const { return (x == r.x && y == r.y && w == r.w && h == r.h); }
+		bool operator == (const Bar& r) const { return (x == r.x && y == r.y && w == r.w && h == r.h); }
 		bool operator == (const Range<T>& s) const { return (w == s.w && h == s.h); }
 		bool operator != (const Pts<T>& p) const { return (x != p.x || y != p.y); }
-		bool operator != (const Bar<T>& r) const { return (x != r.x || y != r.y || w != r.w || h != r.h); }
+		bool operator != (const Bar& r) const { return (x != r.x || y != r.y || w != r.w || h != r.h); }
 		bool operator != (const Range<T>& s) const { return (w != s.w || h != s.h); }
 		// Присваивание
-		auto operator = (const Bar<T>& r) { x = r.x; y = r.y; w = r.w; h = r.h; return *this; }
+		auto operator = (const Bar& r) { x = r.x; y = r.y; w = r.w; h = r.h; return *this; }
 		auto operator = (const RECT& r) { x = r.left; y = r.top; w = r.right - x; h = r.bottom - y; return *this; }
 		auto operator = (const Range<T>& s) { w = s.w; h = s.h; return *this; }
 		auto operator = (const Pts<T>& p) { x = p.x; y = p.y; return *this; }
@@ -334,13 +351,20 @@ namespace ssh
 		bool is_null() const { return (x == 0 && y == 0 && (w <= 0 || h <= 0)); }
 		bool is_empty() const { return (w <= 0 || h <= 0); }
 		bool ptInRc(const Pts<T>& pt) const { return ((pt.x >= x && pt.x < (x + w)) && (pt.y >= y && pt.y < (y + h))); }
-		bool rcInRc(const Bar<T>& rc, RECT* dst) const { return (::IntersectRect(dst, *this, r2) != 0); }
+		bool rcInRc(const Bar& rc, RECT* dst) const { return (::IntersectRect(dst, *this, r2) != 0); }
 		T right() const { return (x + w); }
 		T bottom() const { return (y + h); }
 		Pts<T> center() const { return Pts<T>(x + (w / 2), y + (h / 2)); }
 #ifdef _DEBUG
 		// тест
-		static void unit_test();
+		static void unit_test()
+		{
+			Bar test1;
+			Bar test2;
+			Bar test3;
+			Bar test4;
+			Bar test5;
+		}
 #endif
 		union
 		{
@@ -363,23 +387,23 @@ namespace ssh
 	{
 	public:
 		// конструкторы
-		Box<T1, T2>() : x(0), y(0), w(0), h(0), n(0), f(0) {}
-		Box<T1, T2>(const Bar<T1>& r, const Range<T2>& s) : x(r.x), y(r.y), w(r.w), h(r.h), n(s.w), f(s.h) {}
-		Box<T1, T2>(const T1& X, const T1& Y, const T1& W, const T1& H, const T2& N, const T2& F) : x(X), y(Y), w(W), h(H), n(N), f(F) {}
-		Box<T1, T2>(const Box<T1, T2>& b) : x(b.x), y(b.y), w(b.w), h(b.h), n(b.n), f(b.f) {}
+		Box() : x(0), y(0), w(0), h(0), n(0), f(0) {}
+		Box(const Bar<T1>& r, const Range<T2>& s) : x(r.x), y(r.y), w(r.w), h(r.h), n(s.w), f(s.h) {}
+		Box(const T1& X, const T1& Y, const T1& W, const T1& H, const T2& N, const T2& F) : x(X), y(Y), w(W), h(H), n(N), f(F) {}
+		Box(const Box& b) : x(b.x), y(b.y), w(b.w), h(b.h), n(b.n), f(b.f) {}
 		// операторы
 		// логические
-		bool operator == (const Box<T1, T2>& b) const { return (x == b.x && y == b.y && w == b.w && h == b.h && n == b.n && f == b.f); }
-		bool operator != (const Box<T1, T2>& b) const { return (x != b.x || y != b.y || w != b.w || h != b.h || n != b.n || f != b.f); }
+		bool operator == (const Box& b) const { return (x == b.x && y == b.y && w == b.w && h == b.h && n == b.n && f == b.f); }
+		bool operator != (const Box& b) const { return (x != b.x || y != b.y || w != b.w || h != b.h || n != b.n || f != b.f); }
 		// присваивания
-		auto operator = (const Box<T1, T2>& b) { ssh_memcpy(*this, &b, sizeof(Box<T1, T2>)); return *this; }
+		auto operator = (const Box& b) { ssh_memcpy(*this, &b, sizeof(Box)); return *this; }
 		auto operator = (const Bar<T1>& r) { x = r.x; y = r.y; w = r.w; h = r.h; return *this; }
 		auto operator = (const Range<T2>& s) { n = s.w; f = s.h; return *this; }
 		// арифметические
-		auto operator + (const Bar<T1>& r) const { return Box<T1, T2>(x + r.x, y + r.y, w + r.w, h + r.h, n, f); }
-		auto operator + (const Range<T2>& s) const { return Box<T1, T2>(x, y, w, h, n + s.w, f + s.h); }
-		auto operator - (const Bar<T1>& r) const { return Box<T1, T2>(x - r.x, y - r.y, w - r.w, h - r.h, n, f); }
-		auto operator - (const Range<T2>& s) const { return Box<T1, T2>(x, y, w, h, n - s.w, f - s.h); }
+		auto operator + (const Bar<T1>& r) const { return Box(x + r.x, y + r.y, w + r.w, h + r.h, n, f); }
+		auto operator + (const Range<T2>& s) const { return Box(x, y, w, h, n + s.w, f + s.h); }
+		auto operator - (const Bar<T1>& r) const { return Box(x - r.x, y - r.y, w - r.w, h - r.h, n, f); }
+		auto operator - (const Range<T2>& s) const { return Box(x, y, w, h, n - s.w, f - s.h); }
 		auto operator += (const Bar<T1>& r) { x += r.x; y += r.y; w += r.w; h += r.h; return this; }
 		auto operator += (const Range<T2>& s) { n += s.w; f += s.h; return this; }
 		auto operator -= (const Bar<T1>& r) { x -= r.x; y -= r.y; w -= r.w; h -= r.h; return this; }
@@ -392,9 +416,28 @@ namespace ssh
 		bool is_empty() const { return (w <= 0 && h <= 0 && n <= 0 && f <= 0); }
 #ifdef _DEBUG
 		// тест
-		static void unit_test();
+		static void unit_test()
+		{
+			Box test1;
+			Box test2;
+			Box test3;
+			Box test4;
+			Box test5;
+		}
 #endif
-		T1 x, y, w, h;
-		T2 n, f;
+		union
+		{
+			struct
+			{
+				Pts<T1> pt;
+				Range<T1> rg;
+				Vec2 depth;
+			};
+			struct
+			{
+				T1 x, y, w, h;
+				T2 n, f;
+			};
+		};
 	};
 }

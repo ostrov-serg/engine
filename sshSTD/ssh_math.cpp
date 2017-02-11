@@ -716,17 +716,48 @@ namespace ssh
 		corners[7].x = mx.x ; corners[7].y = mn.y ; corners[7].z = mx.z;
 	}
 
-	Obox::Obox(const Vec3& _x1y1z1, const Vec3& _x2y1z1, const Vec3& _x1y2z1, const Vec3& _x2y2z1, const Vec3& _x1y1z2, const Vec3& _x2y1z2, const Vec3& _x1y2z2, const Vec3& _x2y2z2) :
-							x1y1z1(_x1y1z1), x2y1z1(_x2y1z1), x1y2z1(_x1y2z1), x2y2z1(_x2y2z1), x1y1z2(_x1y1z2), x2y1z2(_x2y1z2), x1y2z2(_x1y2z2), x2y2z2(_x2y2z2) {}
-	Obox::Obox(const Bbox& Bbox) :	x1y1z1(Vec3(Bbox.mn.x, Bbox.mn.y, Bbox.mx.z)), x2y1z1(Vec3(Bbox.mx.x, Bbox.mn.y, Bbox.mx.z)),
-									x1y2z1(Vec3(Bbox.mn.x, Bbox.mx.y, Bbox.mx.z)), x2y2z1(Vec3(Bbox.mx.x, Bbox.mx.y, Bbox.mx.z)),
-									x1y1z2(Vec3(Bbox.mn.x, Bbox.mn.y, Bbox.mn.z)), x2y1z2(Vec3(Bbox.mx.x, Bbox.mn.y, Bbox.mn.z)),
-									x1y2z2(Vec3(Bbox.mn.x, Bbox.mx.y, Bbox.mn.z)), x2y2z2(Vec3(Bbox.mx.x, Bbox.mx.y, Bbox.mn.z)) {}
-	Obox::Obox(float* b) : x1y1z1(Vec3(b[0])), x2y1z1(Vec3(b[3])), x1y2z1(Vec3(b[6])), x2y2z1(Vec3(b[9])), x1y1z2(Vec3(b[12])), x2y1z2(Vec3(b[15])), x1y2z2(Vec3(b[18])), x2y2z2(Vec3(b[21])) {}
-	
+	Obox::Obox(const Vec3& _x1y1z1, const Vec3& _x2y1z1, const Vec3& _x1y2z1, const Vec3& _x2y2z1, const Vec3& _x1y1z2, const Vec3& _x2y1z2,
+			   const Vec3& _x1y2z2, const Vec3& _x2y2z2)
+	{
+		corners[X1Y1Z1] = _x1y1z1;
+		corners[X2Y1Z1] = _x2y1z1;
+		corners[X1Y2Z1] = _x1y2z1;
+		corners[X2Y2Z1] = _x2y2z1;
+		corners[X1Y1Z2] = _x1y1z2;
+		corners[X2Y1Z2] = _x2y1z2;
+		corners[X1Y2Z2] = _x1y2z2;
+		corners[X2Y2Z2] = _x2y2z2;
+	}
+	Obox::Obox(const Bbox& Bbox)
+	{
+		Vec3 mn(Bbox.minimum());
+		Vec3 mx(Bbox.maximum());
+
+		corners[X1Y1Z1] = mn;
+		corners[X2Y1Z1] = Vec3(mx.x, mn.y, mn.z);
+		corners[X1Y2Z1] = Vec3(mn.x, mx.y, mn.z);
+		corners[X2Y2Z1] = Vec3(mx.x, mx.y, mn.z);
+		corners[X1Y1Z2] = Vec3(mn.x, mn.y, mx.z);
+		corners[X2Y1Z2] = Vec3(mx.x, mn.y, mx.z);
+		corners[X1Y2Z2] = Vec3(mn.x, mx.y, mx.z);
+		corners[X2Y2Z2] = mx;
+	}
+	Obox::Obox(float* b)
+	{
+		corners[X1Y1Z1] = Vec3(b[0]);
+		corners[X2Y1Z1] = Vec3(b[3]);
+		corners[X1Y2Z1] = Vec3(b[6]);
+		corners[X2Y2Z1] = Vec3(b[9]);
+		corners[X1Y1Z2] = Vec3(b[12]);
+		corners[X2Y1Z2] = Vec3(b[15]);
+		corners[X1Y2Z2] = Vec3(b[18]);
+		corners[X2Y2Z2] = Vec3(b[21]);
+	}
+
 	Obox Obox::transform(const Mtx& m) const
 	{
-		return Obox(x1y1z1 * m, x2y1z1 * m, x1y2z1 * m, x2y2z1 * m, x1y1z2 * m, x1y1z2 * m, x1y2z2 * m, x2y2z2 * m);
+		return Obox(corners[X1Y1Z1] * m, corners[X2Y1Z1] * m, corners[X1Y2Z1] * m, corners[X2Y2Z1] * m,
+					corners[X1Y1Z2] * m, corners[X2Y1Z2] * m, corners[X1Y2Z2] * m, corners[X2Y2Z2] * m);
 	}
 	
 	bool Obox::intersects(const Bbox& b) const
@@ -751,9 +782,9 @@ namespace ssh
 	
 	Vec3 Obox::center() const
 	{
-		Vec3 _1(x1y2z1 + (x2y1z2 - x1y2z1) / 2.0f);
-		Vec3 _2(x2y2z1 + (x1y1z2 - x2y2z1) / 2.0f);
-		Vec3 _3(x2y1z1 + (x1y2z2 - x2y1z1) / 2.0f);
+		Vec3 _1(corners[X1Y2Z1] + (corners[X2Y1Z2] - corners[X1Y2Z1]) / 2.0f);
+		Vec3 _2(corners[X2Y2Z1] + (corners[X1Y1Z2] - corners[X2Y2Z1]) / 2.0f);
+		Vec3 _3(corners[X2Y1Z1] + (corners[X1Y2Z2] - corners[X2Y1Z1]) / 2.0f);
 		return Vec3((_1 + _2 + _3) / 3.0f);
 	}
 
